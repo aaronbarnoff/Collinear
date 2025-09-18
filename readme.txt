@@ -1,3 +1,7 @@
+Requires
+Cadical: https://github.com/arminbiere/cadical
+Cardinality Cadical: https://github.com/jreeves3/Cardinality-CDCL
+
 The script expects the directories:
 solvers/Cardinality-CDCL-main/Tools/knf2cnf
 solvers/Cardinality-CDCL-main/cardinality-cadical/build/cadical
@@ -39,4 +43,5 @@ options:
   -t T        sat solver wall-clock timeout (s)
   -r R        SAT solver seed
   
+
 
