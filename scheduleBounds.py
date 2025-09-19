@@ -17,7 +17,7 @@ COMMON_ARGS = [
     "-t", "7200",
 ]
 
-# Varying values
+# CNF cardinality encodings from pysat
 ENCODINGS = [
     "seqcounter", "totalizer", "sortnetwrk",
     "cardnetwrk", "mtotalizer", "kmtotalizer",
