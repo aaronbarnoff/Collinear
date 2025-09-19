@@ -2,6 +2,8 @@
 import subprocess
 import time
 
+# this will run the different cardinality encodings, each on their own job, for up to n=180
+
 RUN_SCRIPT = "./runBounds.sh"
 SBATCH_TIME = "72:00:00"
 
