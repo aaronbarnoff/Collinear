@@ -4,6 +4,8 @@
 #SBATCH --mem-per-cpu=8G
 set -euo pipefail
 
+# This will run all points up to n=180 on a single job
+
 # required for pysat
 if [[ $(hostname) == *".fir.alliancecan.ca" || -n "${CC_CLUSTER:-}" ]]; then
     module load python/3.11
