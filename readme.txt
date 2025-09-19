@@ -8,7 +8,7 @@ solvers/Cardinality-CDCL-main/cardinality-cadical/build/cadical
 solvers/cadical-master/build/cadical
 
 run.sh usage:
-e.g. for k=7, n=122, point (33, 88): "./run.sh -k 7 -n 122 -x 33 -y 88 -s 1 -c 0 -v 1 -a 0 -l -0 -b 0 -f 0 -t 0 -r 0"
+e.g. for k=7, n=122, point (33, 88): "./run.sh -k 7 -n 122 -x 33 -y 88 -s 1 -c 0 -v 1 -a 0 -l -0 -b 0 -f 0 -t 0 -r 0 -e seqcounter"
 Options:
   -k   k value
   -n   n value
@@ -23,10 +23,11 @@ Options:
   -f   1=KNF (cardinality cadical), 0=CNF (cadical)
   -t   wall-clock timeout for SAT solver (s)
   -r   SAT solver seed
+  -e   CNF cardinality encoding type: seqcounter, totalizer, sortnetwrk, cardnetwrk, mtotalizer, kmtotalizer
   -h   help
   
 main.py usage:
-e.g. for k=7, n=122, point (33, 88): "python main.py -k 7 -n 122 -x 33 -y 88 -s 1 -c 0 -v 1 -a 0 -l -0 -b 0 -f 0 -t 0 -r 0"
+e.g. for k=7, n=122, point (33, 88): "python main.py -k 7 -n 122 -x 33 -y 88 -s 1 -c 0 -v 1 -a 0 -l -0 -b 0 -f 0 -t 0 -r 0 -e totalizer"
 options:
   -h, --help  show this help message and exit
   -k K        number of collinear points to avoid
@@ -42,6 +43,7 @@ options:
   -f F        0=CNF (cadical), 1=KNF (card. cadical)
   -t T        sat solver wall-clock timeout (s)
   -r R        SAT solver seed
+  -e E        CNF cardinality encoding type: seqcounter, totalizer, sortnetwrk, cardnetwrk, mtotalizer, kmtotalizer
   
 
 
