@@ -32,9 +32,10 @@ def main():
         g.logFile2.write(f"     +Solver Timeout: {g.solverTimeout}s\n")
 
     if g.symBreak:
-        print("     +(0,1) Symmetry Break On")
-        g.logFile2.write("     +(0,1) Symmetry Break On\n")
-        addClause(g.v[0][1])                       
+        if g.n > 1:
+            print("     +(0,1) Symmetry Break On")
+            g.logFile2.write("     +(0,1) Symmetry Break On\n")
+            addClause(g.v[0][1])                       
     else:
         print("     +(0,1) Symmetry Break Off")
         g.logFile2.write("     +(0,1) Symmetry Break Off\n")

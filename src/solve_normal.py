@@ -17,7 +17,13 @@ def solveNormal():
         getCPUTime() # unsat
 
 def solveCNF():
-    
+    if g.cnfEncodingType is not None:
+        print(f"CNF Encode: {g.cnfEncodingType}")
+        g.logFile2.write(f"CNF Encode: {g.cnfEncodingType}\n")
+    else:
+        print(f"CNF Encode: knf2cnf (sequential counter, linear AMO)")
+        g.logFile2.write(f"CNF Encode: knf2cnf (sequential counter, linear AMO)\n")
+
     knf2cnf()
 
     print("Starting (CNF) solver:", time.time() - g.start_time, "seconds")
@@ -27,7 +33,7 @@ def solveCNF():
     logFile = open(logFileN, 'w')
     
     satStart = time.time()
-    result = subprocess.Popen(command, stdout=logFile, stderr=subprocess.DEVNULL)
+    result = subprocess.Popen(command, stdout=logFile, stderr=subprocess.STDOUT)
     result.wait()  
 
     satEnd = time.time()
@@ -56,7 +62,7 @@ def solveKNF():
     logFile = open(logFileN, 'w')
     
     satStart = time.time()
-    result = subprocess.Popen(command, stdout=logFile, stderr=subprocess.DEVNULL)
+    result = subprocess.Popen(command, stdout=logFile, stderr=subprocess.STDOUT)
     result.wait()  
 
     satEnd = time.time()

@@ -23,6 +23,8 @@ def parse_arguments():
     parser.add_argument("-f", default=0, help="0=CNF (cadical), 1=KNF (card. cadical)")
     parser.add_argument("-t", default=0, help="sat solver wall-clock timeout (s)")
 
+    parser.add_argument("-e", default=None, help="CNF cardinality encoding type: seqcounter, totalizer, sortnetwrk, cardnetwrk, mtotalizer, kmtotalizer")
+
     parser.add_argument("-r", default=0, help="SAT solver seed")
     return vars(parser.parse_args())
 
@@ -43,9 +45,15 @@ class Globals:
         self.diff=float(args["b"])
         self.useKNF=int(args["f"])
 
+        self.cnfEncodingType=(args["e"])
+
         self.solverTimeout=int(args["t"])
         self.solverSeed=int(args["r"])
         
+        if self.cnfEncodingType is not None and self.useKNF:
+            print("Must use CNF solver with encoding type.")
+            exit(-1)
+
         self.solvePt = False
         if self.px >0 and self.py > 0:
             if self.px + self.py >= self.n:
@@ -81,7 +89,7 @@ class Globals:
         if not os.path.exists(self.outputFolderPath):
             os.makedirs(self.outputFolderPath)
 
-        self.outputPath = os.path.join(self.outputFolderPath, f'res_k{self.k}_n{self.n}_x{self.px}_y{self.py}_s{self.symBreak}_c{self.vhCard}_v{self.vhLine}_a{self.negDiag}_l{self.lineLen}_b{self.diff}_f{self.useKNF}_r{self.solverSeed}_{self.runID}')
+        self.outputPath = os.path.join(self.outputFolderPath, f'res_k{self.k}_n{self.n}_x{self.px}_y{self.py}_s{self.symBreak}_c{self.vhCard}_v{self.vhLine}_a{self.negDiag}_l{self.lineLen}_b{self.diff}_f{self.useKNF}_r{self.solverSeed}_e{self.cnfEncodingType}_{self.runID}')
         
         #print(self.outputPath)
         if not os.path.exists(self.outputPath):
@@ -102,6 +110,7 @@ class Globals:
         #self.logFile2 = None
         self.logFile2 = open(f'{self.logFilePath2}', 'w+', buffering=1)
 
+        self.pysatEncodePath= f'{self.mainPath}/solvers/Cardinality-CDCL-main/Tools/pysat_encode.py'
         self.knf2cnfPath = f'{self.mainPath}/solvers/Cardinality-CDCL-main/Tools/knf2cnf'
         self.cadknf_path = f'{self.mainPath}/solvers/Cardinality-CDCL-main/cardinality-cadical/build/cadical'
         self.cadcnf_path = f'{self.mainPath}/solvers/cadical-master/build/cadical'
@@ -157,10 +166,16 @@ def knf2cnf():
 
     cnfOutputFile = open(g.cnfDimacsFilePath, 'w+')
 
-    command = f'\'{g.knf2cnfPath}\' \'{g.knfDimacsFilePath}\''
+    if g.cnfEncodingType is None:
+        command = f'\'{g.knf2cnfPath}\' \'{g.knfDimacsFilePath}\''
+        result = subprocess.Popen(command, shell=True, stdout=cnfOutputFile, stderr=subprocess.PIPE, text=True)
+        result.wait()
+    else:
+        command = ["python3", g.pysatEncodePath, "-k", g.knfDimacsFilePath, "-c", g.cnfDimacsFilePath, "-e", g.cnfEncodingType] # requires python-sat module
+        #print(command)
+        result = subprocess.Popen(command, stdout=g.logFile2, stderr=subprocess.STDOUT)
+        result.wait()
 
-    result = subprocess.Popen(command, shell=True, stdout=cnfOutputFile, stderr=subprocess.PIPE, text=True)
-    result.wait()
 
     cnfOutputFile.close()
     time.sleep(1) # Seems to cause problems without

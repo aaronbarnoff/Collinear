@@ -1,8 +1,17 @@
 #!/usr/bin/env bash
-#SBATCH --account=
+#SBATCH --account=def-cbright
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=4G
 set -euo pipefail
+
+# required for pysat
+if [[ $(hostname) == *".fir.alliancecan.ca" || -n "${CC_CLUSTER:-}" ]]; then
+    module load python/3.11
+    virtualenv --no-download "$SLURM_TMPDIR/env"
+    source "$SLURM_TMPDIR/env/bin/activate"
+    #pip install --upgrade pip
+    pip install "python-sat[pblib,aiger]"
+fi
 
 # CNF requires 8-12GB+ past k=7, n=220
 # KNF can stay with 4GB for k=7 until very high n
@@ -11,7 +20,7 @@ usage() {
 cat << EOF
 Usage: $0 -k <k> -n <n> [options]
 
-e.g. ./run.sh -k 7 -n 122 -x 33 -y 88 -s 1 -c 0 -v 1 -a 0 -l -0 -b 0 -f 0 -t 0 -r 0
+e.g. ./run.sh -k 7 -n 122 -x 33 -y 88 -s 1 -c 0 -v 1 -a 0 -l -0 -b 0 -f 0 -t 0 -r 0 -e seqcounter
 
 Options:
   -k   k value
@@ -27,14 +36,15 @@ Options:
   -f   1=KNF (cardinality cadical), 0=CNF (cadical)
   -t   wall-clock timeout for SAT solver (s)
   -r   SAT solver seed
+  -e   CNF cardinality encoding type: seqcounter, totalizer, sortnetwrk, cardnetwrk, mtotalizer, kmtotalizer
   -h   help
 EOF
 }
 
-options=$(getopt "hk:n:l:s:v:a:c:x:y:b:f:t:r:" "$@")
+options=$(getopt "hk:n:l:s:v:a:c:x:y:b:f:t:r:e:" "$@")
 eval set -- "$options"
 
-k= n= l= s= v= a= c= x= y= b= f= t= r=
+k= n= l= s= v= a= c= x= y= b= f= t= r= e=
 
 while true; do
   case "$1" in
@@ -51,7 +61,8 @@ while true; do
     -b) b="$2"; shift 2 ;;
     -f) f="$2"; shift 2 ;;
     -t) t="$2"; shift 2 ;;
-    -r) r="$2"; shift 2 ;;   
+    -r) r="$2"; shift 2 ;;  
+    -e) e="$2"; shift 2 ;;   
     --) shift; break ;;
     *)  echo "Bad option"; usage; exit 2 ;;
   esac
@@ -74,6 +85,10 @@ python3 -u main.py \
   -b "${b:-}" \
   -t "${t:-}" \
   -f "${f:-}" \
-  -r "${r:-}"
+  -r "${r:-}" \
+  -e "${e:-}"
 
 echo "Done."
+
+#build the solvers, then
+#find . -type f -print0 | while IFS= read -r -d '' f; do if file -b "$f" | grep -qE 'executable|script text'; then chmod +x "$f"; fi; done
