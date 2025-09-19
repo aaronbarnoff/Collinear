@@ -36,7 +36,7 @@ Options:
   -f   1=KNF (cardinality cadical), 0=CNF (cadical)
   -t   wall-clock timeout for SAT solver (s)
   -r   SAT solver seed
-  -e   CNF cardinality encoding type: seqcounter, totalizer, sortnetwrk, cardnetwrk, mtotalizer, kmtotalizer
+  -e   (Optional) CNF cardinality encoding type: seqcounter, totalizer, sortnetwrk, cardnetwrk, mtotalizer, kmtotalizer
   -h   help
 EOF
 }
@@ -86,7 +86,7 @@ python3 -u main.py \
   -t "${t:-}" \
   -f "${f:-}" \
   -r "${r:-}" \
-  -e "${e:-}"
+   ${e:+-e "$e"}
 
 echo "Done."
 

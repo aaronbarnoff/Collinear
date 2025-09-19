@@ -50,9 +50,9 @@ class Globals:
         self.solverTimeout=int(args["t"])
         self.solverSeed=int(args["r"])
         
-        if self.cnfEncodingType is not None and self.useKNF:
-            print("Must use CNF solver with encoding type.")
-            exit(-1)
+        #if self.cnfEncodingType is not None and self.useKNF:
+        #    print("Must use CNF solver with encoding type.")
+        #    exit(-1)
 
         self.solvePt = False
         if self.px >0 and self.py > 0:

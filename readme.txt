@@ -23,7 +23,7 @@ Options:
   -f   1=KNF (cardinality cadical), 0=CNF (cadical)
   -t   wall-clock timeout for SAT solver (s)
   -r   SAT solver seed
-  -e   CNF cardinality encoding type: seqcounter, totalizer, sortnetwrk, cardnetwrk, mtotalizer, kmtotalizer
+  -e   (Optional) CNF cardinality encoding type: seqcounter, totalizer, sortnetwrk, cardnetwrk, mtotalizer, kmtotalizer; omitted: use knf2cnf
   -h   help
   
 main.py usage:
@@ -43,7 +43,7 @@ options:
   -f F        0=CNF (cadical), 1=KNF (card. cadical)
   -t T        sat solver wall-clock timeout (s)
   -r R        SAT solver seed
-  -e E        CNF cardinality encoding type: seqcounter, totalizer, sortnetwrk, cardnetwrk, mtotalizer, kmtotalizer
+  -e E        (Optional) CNF cardinality encoding type: seqcounter, totalizer, sortnetwrk, cardnetwrk, mtotalizer, kmtotalizer; omitted: use knf2cnf
   
 
 
