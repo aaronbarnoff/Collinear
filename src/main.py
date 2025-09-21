@@ -17,7 +17,16 @@ def main():
     defineVars()
     stepConstraint()
     cardinalityConstraint()
-
+    """
+    #Problem: Got SAT for k7_n149_x101_y47_s1_c0_v1_a0_l0_b2.0_f1_s12_2025-09-13_04-11-56, but failed collinearity check for: (20,5) (23,7) (29,11) (47,23) (62,33) (71,39) (77,43)
+    addClause(g.v[77][43])
+    addClause(g.v[71][39])
+    addClause(g.v[62][33])
+    addClause(g.v[47][23])
+    addClause(g.v[29][11])
+    addClause(g.v[23][7])
+    addClause(g.v[20][5])
+    """
     print("Config:")
     g.logFile2.write("Config:\n")
     if g.useKNF:

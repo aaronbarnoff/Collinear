@@ -26,6 +26,7 @@ def parse_arguments():
     parser.add_argument("-e", default=None, help="CNF cardinality encoding type: seqcounter, totalizer, sortnetwrk, cardnetwrk, mtotalizer, kmtotalizer")
 
     parser.add_argument("-r", default=0, help="SAT solver seed")
+    
     return vars(parser.parse_args())
 
 class Globals:

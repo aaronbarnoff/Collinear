@@ -91,7 +91,12 @@ def cardinalityConstraint():
     # At most k constraint: slope line
     decN = g.n - 1
     decNcnt = decN
-    tolerance = 1e-14 # is_integer() is failing to identify (3/22)*21 + 3/22 as 3 (2.9999999999999996) due to fp precision
+
+    """
+    I have removed floating point arithmetic to fix the precision/rounding problem; all division involving slope=m_p/m_q and b=b_p/b_q is removed.
+    Still need to do a rigorous test to make sure it's working correctly.
+    """
+
     #print("Slope Constraints:", time.time() - g.start_time, "seconds")
     for m_p in range(0, g.n):
         m_q = 1
@@ -99,10 +104,9 @@ def cardinalityConstraint():
             if (m_p == 0 and m_q != 1) or (math.gcd(m_p, m_q) > 1):
                 m_q += 1
                 continue
-            slope = m_p / m_q
-            if (slope < 1/g.k): 
+            if (m_p * g.k) < m_q: 
                 break
-            if (slope > g.k): # slope > k should be caught by the horizontal/vertical lines
+            if m_p > (g.k * m_q): # slope > k should be caught by the horizontal/vertical lines
                 m_q += 1
                 continue
             for b_q in range(1, m_q+1): # lowest slopes: y = (m_p/m_q)*x - (b_p=m_p/b_q=m_q)*n; highest slopes: y = (m_p/m_q)x + n
@@ -110,22 +114,25 @@ def cardinalityConstraint():
                     if (b_p == 0 and b_q != 1) or (math.gcd(b_p, b_q) > 1) or m_q % b_q != 0:
                         # b_q always divisor of m_q for numPoints >= k?
                         continue
-                    b = b_p / b_q
-                    if (int(b) > g.n or -int(b) < -g.n):
-                        continue
+                    if abs(b_p) > (g.n * b_q): 
+                        continue   
                     tmpStr = []
+                    #tmpStr2 = []  # For debugging the cardinality constraint lines
                     cnt = 0
                     x = 0
                     flag = 0
+                    denominator = m_q*b_q
                     while x < g.n:
                         # first point should be within first n/k x values
-                        y = slope * x + b
-                        if int(y) > g.n:
+                        numerator = m_p*x*b_q + b_p*m_q #y is integer iff (m_p*x*b_q + b_p*m_q) % (m_q*b_q) = 0
+                        y1 = numerator//denominator
+                        if y1 > g.n: 
                             break
-                        if not (abs(y - round(y)) < tolerance):
+                        if numerator % denominator != 0: 
                             x += 1
                             continue
                         else:
+                            y=y1
                             flag = 1
                             break
                     if flag:
@@ -135,6 +142,7 @@ def cardinalityConstraint():
                                 if int(y) < g.n - x:
                                     tmpStr.append(str(-g.v[x][int(y)]))
                                     tmpStr.append(" ")
+                                    #tmpStr2.append(f"({x},{int(y)})")
                                     cnt += 1
                                     
                                     if cnt >= g.k and m_p != 0: # only looking for k or more points
@@ -149,6 +157,8 @@ def cardinalityConstraint():
                         g.numClauses += 1
                         g.dimacsBuffer.append(clauseStr)
                         g.numCardClauses +=1
+                        #if f"(77,43)" in tmpStr2 and f"(71,39)" in tmpStr2:
+                        #    print(", ".join(tmpStr2))
             m_q += 1
             if decNcnt + 2 < g.n:
                 decN = decNcnt + 2
