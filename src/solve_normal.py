@@ -1,34 +1,34 @@
 import time
 import subprocess
 
-from globals import g, checkCollinearK, knf2cnf
+from globals import g, verify_solution, knf2cnf
 
-logFileN = f'{g.outputPath}/{g.logFileName}'
+logFileN = f'{g.result_path}/{g.sat_log_filename}'
 
-def solveNormal():
-    if g.useKNF == 1: 
+def solve_regular():
+    if g.use_KNF == 1: 
         res = solveKNF()
     else:
         res = solveCNF()
     if res:
         extractModel()
-        checkCollinearK(g.pointList)
+        verify_solution(g.point_list)
     else:
         getCPUTime() # unsat
 
 def solveCNF():
-    if g.cnfEncodingType is not None:
-        print(f"CNF Encode: {g.cnfEncodingType}")
-        g.logFile2.write(f"CNF Encode: {g.cnfEncodingType}\n")
+    if g.cnf_encoding is not None:
+        print(f"CNF Encode: {g.cnf_encoding}")
+        g.out_log_file.write(f"CNF Encode: {g.cnf_encoding}\n")
     else:
         print(f"CNF Encode: knf2cnf (sequential counter, linear AMO)")
-        g.logFile2.write(f"CNF Encode: knf2cnf (sequential counter, linear AMO)\n")
+        g.out_log_file.write(f"CNF Encode: knf2cnf (sequential counter, linear AMO)\n")
 
     knf2cnf()
 
     print("Starting (CNF) solver:", time.time() - g.start_time, "seconds")
 
-    command = [g.cadcnf_path, g.cnfDimacsFilePath, "-t", str(g.solverTimeout), f"--seed={str(g.solverSeed)}"]
+    command = [g.CDCL_path, g.cnf_dimacs_filepath, "-t", str(g.solver_timeout), f"--seed={str(g.solver_seed)}"]
     #print(command)
     logFile = open(logFileN, 'w')
     
@@ -37,28 +37,28 @@ def solveCNF():
     result.wait()  
 
     satEnd = time.time()
-    g.satTime = satEnd - satStart
+    g.sat_time_wc = satEnd - satStart
 
     print("Finished SAT solver:", time.time() - g.start_time, "seconds")
 
     logFile.close() 
 
     if result.returncode == 10:
-        print(f'SAT {g.satTime}s (wall)')
-        g.logFile2.write(f"SAT {g.satTime}s (wall)\n") # wall-clock time
+        print(f'SAT {g.sat_time_wc}s (wall)')
+        g.out_log_file.write(f"SAT {g.sat_time_wc}s (wall)\n") # wall-clock time
         return result.returncode
     elif result.returncode == 20:
-        print(f'UNSAT {g.satTime}s')
-        g.logFile2.write(f"UNSAT {g.satTime}s (wall)\n")
+        print(f'UNSAT {g.sat_time_wc}s')
+        g.out_log_file.write(f"UNSAT {g.sat_time_wc}s (wall)\n")
     else:
         print(f'Solver error: exit code {result.returncode}')
-        g.logFile2.write(f"Solver error: exit code {result.returncode}\n")
+        g.out_log_file.write(f"Solver error: exit code {result.returncode}\n")
     return 0
 
 def solveKNF():
     print("Starting (KNF) SAT solver:", time.time() - g.start_time, "seconds")
 
-    command = [g.cadknf_path, g.knfDimacsFilePath, "-t", str(g.solverTimeout), f"--seed={str(g.solverSeed)}", "--ccdclMode=0"] 
+    command = [g.CCDCL_path, g.knf_dimacs_filepath, "-t", str(g.solver_timeout), f"--seed={str(g.solver_seed)}", "--ccdclMode=0"] 
     logFile = open(logFileN, 'w')
     
     satStart = time.time()
@@ -66,22 +66,22 @@ def solveKNF():
     result.wait()  
 
     satEnd = time.time()
-    g.satTime = satEnd - satStart
+    g.sat_time_wc = satEnd - satStart
 
     print("Finished SAT solver:", time.time() - g.start_time, "seconds") 
 
     logFile.close()  
 
     if result.returncode == 10:
-        print(f'SAT {g.satTime}s')
-        g.logFile2.write(f"SAT {g.satTime}s (wall)\n")
+        print(f'SAT {g.sat_time_wc}s')
+        g.out_log_file.write(f"SAT {g.sat_time_wc}s (wall)\n")
         return result.returncode
     elif result.returncode == 20:
-        print(f'UNSAT {g.satTime}s')
-        g.logFile2.write(f"UNSAT {g.satTime}s (wall)\n")
+        print(f'UNSAT {g.sat_time_wc}s')
+        g.out_log_file.write(f"UNSAT {g.sat_time_wc}s (wall)\n")
     else:
         print(f'Solver error: exit code {result.returncode}')
-        g.logFile2.write(f"Solver error: exit code {result.returncode}\n")
+        g.out_log_file.write(f"Solver error: exit code {result.returncode}\n")
     return 0
 
 def getCPUTime(): #UNSAT case
@@ -98,9 +98,9 @@ def getCPUTime(): #UNSAT case
                 solve_time = parts[-2]
 
     if solve_time is not None:
-        g.logFile2.write(f"CPU solve time: {solve_time} seconds\n")
+        g.out_log_file.write(f"CPU solve time: {solve_time} seconds\n")
         print(f'CPU Time: {solve_time} seconds')
-        g.logFile2.flush()
+        g.out_log_file.flush()
 
 def extractModel():
     import time
@@ -121,13 +121,13 @@ def extractModel():
                 solve_time = parts[-2]
 
     log_output = [f'Results n={g.n}, k={g.k} 0\n']
-    g.pointList = []
+    g.point_list = []
     
     for x in range(g.n):
         for y in range(g.n):
             if y < g.n - x:
                 if g.v[x][y] in model:
-                    g.pointList.append((x, y))
+                    g.point_list.append((x, y))
                     if g.debug:
                         print(f'v[{x}][{y}]={g.v[x][y]}')
     
@@ -135,6 +135,6 @@ def extractModel():
         logFile.writelines(log_output)
     
     if solve_time is not None:
-        g.logFile2.write(f"CPU solve time: {solve_time} seconds\n")
+        g.out_log_file.write(f"CPU solve time: {solve_time} seconds\n")
         print(f'CPU Time: {solve_time} seconds')
-        g.logFile2.flush()
+        g.out_log_file.flush()

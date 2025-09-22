@@ -113,7 +113,7 @@ def BUP_SolverFoundPoints():
                         if x+x2 < g.n and y+y2 < g.n and y+y2 < g.n - (x+x2) and x2 + y2 + 1 < g.n:
                             addClause(-g.v[x+x2][y+y2])
                 else: #block unreachable from (x,y) within some distance of it
-                    if g.diff >= 2.000000:
+                    if g.boundary_type >= 2.000000:
                         for x_str,y_str in symPts:
                             x2,y2 = int(x_str), int(y_str)    
                             if x2 + y2 + 1 < g.n:                  
@@ -139,7 +139,7 @@ def BUP_SolverFoundPoints():
                             #print(f"blocking ({x+x2},{y+y2})")
                             addClause(-g.v[x+x2][y+y2])
                 else: #block unreachable from (x,y) within some distance of it
-                    if g.diff >= 2.000000:
+                    if g.boundary_type >= 2.000000:
                         for x_str,y_str in symPts:
                             x2,y2 = int(x_str), int(y_str)    
                             if x2 + y2 + 1 < g.n:                     
@@ -149,7 +149,7 @@ def BUP_SolverFoundPoints():
 
 
 def BUP_EachPoint_VHLine(lineLen): # does not account for symmetry break
-    g.logFile2.write(f"BUP_EachPoint_VHLine: {lineLen}\n") 
+    g.out_log_file.write(f"BUP_EachPoint_VHLine: {lineLen}\n") 
     for x in range(g.n): 
         for y in range(g.n):
             if y < g.n - x:
@@ -169,7 +169,7 @@ def BUP_EachPoint_VHLine(lineLen): # does not account for symmetry break
 
 
 def BUP_EachPoint_NegDiagonalLine(lineLen):
-    g.logFile2.write(f"BUP_EachPoint_NegDiagonalLine: {lineLen}\n") 
+    g.out_log_file.write(f"BUP_EachPoint_NegDiagonalLine: {lineLen}\n") 
     # constraint: if (x,y) is true then all upper/lower negative diagonal are false
     for x in range(g.n): 
         for y in range(g.n):
@@ -191,15 +191,15 @@ def addClauseList(strList):
     tmpStr = []
     strList.append(0)
     clauseStr = ''.join(tmpStr)
-    g.numClauses += 1
-    g.dimacsBuffer.append(clauseStr)
+    g.num_clauses += 1
+    g.dimacs_buffer.append(clauseStr)
     if g.debug:
         print(clauseStr)
 
 
 def addClause(*literals):
     res = toClause(literals)
-    g.dimacsBuffer.append(res)
+    g.dimacs_buffer.append(res)
     if g.debug:
         print(res)
 
@@ -212,10 +212,10 @@ def toClause(*literals):
             tmpStr.append(" ")
     tmpStr.append("0")
     clauseStr = ''.join(tmpStr)
-    g.numClauses += 1
+    g.num_clauses += 1
     return clauseStr
 
 
 def newVar():
-    g.numVars += 1
-    return g.numVars
+    g.num_vars += 1
+    return g.num_vars

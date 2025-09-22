@@ -61,34 +61,24 @@ while true; do
     -b) b="$2"; shift 2 ;;
     -f) f="$2"; shift 2 ;;
     -t) t="$2"; shift 2 ;;
-    -r) r="$2"; shift 2 ;;  
-    -e) e="$2"; shift 2 ;;   
+    -r) r="$2"; shift 2 ;;
+    -e) e="$2"; shift 2 ;;
     --) shift; break ;;
     *)  echo "Bad option"; usage; exit 2 ;;
   esac
 done
 
-cwd="$(pwd)"
-dir_src="$cwd/src"
-cd "$dir_src"
+run_id="$(date +%F_%H-%M-%S)"
+: "${x:=0}" "${y:=0}" "${s:=1}" "${c:=0}" "${v:=1}" "${a:=0}" "${l:=0}" "${b:=0}" "${f:=0}" "${t:=0}" "${r:=0}"
+res_name="res_k${k}_n${n}_x${x}_y${y}_s${s}_c${c}_v${v}_a${a}_l${l}_b${b}_f${f}_r${r}_e${e:-none}_${run_id}"
 
-python3 -u main.py \
-  -k "${k}" \
-  -n "${n}" \
-  -l "${l:-}" \
-  -a "${a:-}" \
-  -v "${v:-}" \
-  -c "${c:-}" \
-  -s "${s:-}" \
-  -x "${x:-}" \
-  -y "${y:-}" \
-  -b "${b:-}" \
-  -t "${t:-}" \
-  -f "${f:-}" \
-  -r "${r:-}" \
-   ${e:+-e "$e"}
+#cwd="$(pwd)"
+#dir_src="$cwd/src"
+#cd "$dir_src"
+
+python3 -u encode.py -k "$k" -n "$n" -l "$l" -a "$a" -v "$v" -c "$c" -s "$s" -x "$x" -y "$y" -b "$b" -t "$t" -f "$f" -r "$r" -p "$res_name" ${e:+-e "$e"}
+python3 -u solve.py  -k "$k" -n "$n" -x "$x" -y "$y" -t "$t" -f "$f" -r "$r" -p "$res_name" ${e:+-e "$e"}
 
 echo "Done."
-
 #build the solvers, then
 #find . -type f -print0 | while IFS= read -r -d '' f; do if file -b "$f" | grep -qE 'executable|script text'; then chmod +x "$f"; fi; done

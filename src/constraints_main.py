@@ -10,7 +10,7 @@ def defineVars():
             for y in range(g.n): # remove
                 if y == b - x:
                     g.v[x][y] = newVar()
-                    g.vCnt += 1
+                    g.var_cnt += 1
             if g.debug:
                 print(f"v[{x}][{y}]={g.v[x][y]}")
 
@@ -45,9 +45,9 @@ def stepConstraint():
 
 
 def cardinalityConstraint():
-    if g.vhCard:
+    if g.vh_card:
         print("* VHCard True")
-        g.logFile2.write("* VHCard True")
+        g.out_log_file.write("* VHCard True")
 
         # At most k constraint: vertical lines
         # print("AMK Vertical Constraints:", time.time() - start_time, "seconds")
@@ -63,8 +63,8 @@ def cardinalityConstraint():
                     break
             if len(tmpStr) > 0 and cnt >= g.k:
                 clauseStr = f'k {cnt - g.k + 1} {"".join(tmpStr)} 0'
-                g.numClauses += 1
-                g.dimacsBuffer.append(clauseStr)
+                g.num_clauses += 1
+                g.dimacs_buffer.append(clauseStr)
                 # print(clauseStr)
 
         # At most k constraint: horizontal lines
@@ -81,12 +81,12 @@ def cardinalityConstraint():
                     break
             if len(tmpStr) > 0 and cnt >= g.k:
                 clauseStr = f'k {cnt - g.k + 1} {"".join(tmpStr)} 0'
-                g.numClauses += 1
-                g.dimacsBuffer.append(clauseStr)
+                g.num_clauses += 1
+                g.dimacs_buffer.append(clauseStr)
                 # print(clauseStr)
     else:
         print("* VHCard False")
-        g.logFile2.write("* VHCard False")
+        g.out_log_file.write("* VHCard False")
 
     # At most k constraint: slope line
     decN = g.n - 1
@@ -154,9 +154,9 @@ def cardinalityConstraint():
                             y += m_p
                     if len(tmpStr) > 0 and cnt >= g.k:
                         clauseStr = f'k {cnt - g.k + 1} {"".join(tmpStr)}0'
-                        g.numClauses += 1
-                        g.dimacsBuffer.append(clauseStr)
-                        g.numCardClauses +=1
+                        g.num_clauses += 1
+                        g.dimacs_buffer.append(clauseStr)
+                        g.num_card_clauses +=1
                         #if f"(77,43)" in tmpStr2 and f"(71,39)" in tmpStr2:
                         #tmpStr3 = "".join(", ".join(tmpStr2))
                         #g.logFile2.write(tmpStr3)
@@ -171,15 +171,15 @@ def addClauseList(strList, debug=False):
     tmpStr = []
     strList.append(0)
     clauseStr = ''.join(tmpStr)
-    g.numClauses += 1
-    g.dimacsBuffer.append(clauseStr)
+    g.num_clauses += 1
+    g.dimacs_buffer.append(clauseStr)
     if debug:
         print(clauseStr)
 
 
 def addClause(*literals):
     res = toClause(literals)
-    g.dimacsBuffer.append(res)
+    g.dimacs_buffer.append(res)
     if g.debug:
         print(res)
 
@@ -192,10 +192,10 @@ def toClause(*literals):
             tmpStr.append(" ")
     tmpStr.append("0")
     clauseStr = ''.join(tmpStr)
-    g.numClauses += 1
+    g.num_clauses += 1
     return clauseStr
 
 
 def newVar():
-    g.numVars += 1
-    return g.numVars
+    g.num_vars += 1
+    return g.num_vars

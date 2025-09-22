@@ -104,15 +104,15 @@ def addClauseList(strList):
     tmpStr = []
     strList.append(0)
     clauseStr = ''.join(tmpStr)
-    g.numClauses += 1
-    g.dimacsBuffer.append(clauseStr)
+    g.num_clauses += 1
+    g.dimacs_buffer.append(clauseStr)
     if g.debug:
         print(clauseStr)
 
 
 def addClause(*literals):
     res = toClause(literals)
-    g.dimacsBuffer.append(res)
+    g.dimacs_buffer.append(res)
     if g.debug:
         print(res)
 
@@ -125,10 +125,10 @@ def toClause(*literals):
             tmpStr.append(" ")
     tmpStr.append("0")
     clauseStr = ''.join(tmpStr)
-    g.numClauses += 1
+    g.num_clauses += 1
     return clauseStr
 
 
 def newVar():
-    g.numVars += 1
-    return g.numVars
+    g.num_vars += 1
+    return g.num_vars
