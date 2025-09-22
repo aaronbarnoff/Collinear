@@ -152,38 +152,36 @@ def encode_path_constraints():
 """
 Cardinality Constraints
 """
-def encode_cardinality_constraints_KNF(): # At most k constraint: slope line
+def encode_cardinality_constraints_KNF(): # At most k constraint: (excluding vertical and horizontal lines)
     global num_clauses, num_card_clauses
     cur_n = n - 1
     next_n = cur_n
     #print("Slope Constraints:", time.time() - start_time, "seconds")
     for m_p in range(0, n):
         m_q = 1
-        while m_q <= cur_n: #decN is max value of m_q that was found in previous m_p loop iteration that had a line with #points >= k
+        while m_q <= cur_n:                                                     # cur_n is set to max value of m_q that was found in previous m_p loop iteration that had a k-collinear line
             if (m_p == 0 and m_q != 1) or (math.gcd(m_p, m_q) > 1):
                 m_q += 1
                 continue
             if (m_p * k) < m_q: 
                 break
-            if m_p > (k * m_q): # slope > k should be caught by the horizontal/vertical lines
+            if m_p > (k * m_q):                                                 # slopes > k should be caught by the horizontal/vertical lines
                 m_q += 1
                 continue
-            for b_q in range(1, m_q+1): # lowest slopes: y = (m_p/m_q)*x - (b_p=m_p/b_q=m_q)*n; highest slopes: y = (m_p/m_q)x + n
-                for b_p in range(-int(m_p*n), int(b_q*n)+1): # was missing b_p = 315, b_q = 5 for y=1/5x+312/5 for k=7, n=261    
-                    if (b_p == 0 and b_q != 1) or (math.gcd(b_p, b_q) > 1) or m_q % b_q != 0:
-                        # b_q always divisor of m_q for numPoints >= k?
+            for b_q in range(1, m_q+1):                                         # lowest slopes: y = (m_p/m_q)*x - (b_p=m_p/b_q=m_q)*n.    highest slopes: y = (m_p/m_q)x + n
+                for b_p in range(-int(m_p*n), int(b_q*n)+1):    
+                    if (b_p == 0 and b_q != 1) or (math.gcd(b_p, b_q) > 1) or m_q % b_q != 0:           # b_q always divisor of m_q for k-collinear lines
                         continue
                     if abs(b_p) > (n * b_q): 
                         continue   
                     tmp_str = []
-                    #tmpStr2 = []  # For debugging the cardinality constraint lines
+                    debug_str = []                                               
                     cnt = 0
                     x = 0
                     flag = 0
                     denominator = m_q*b_q
-                    while x < n:
-                        # first point should be within first n/k x values
-                        numerator = m_p*x*b_q + b_p*m_q #y is integer iff (m_p*x*b_q + b_p*m_q) % (m_q*b_q) = 0
+                    while x < n:                                                # first point should be within first n/k x values
+                        numerator = m_p*x*b_q + b_p*m_q                         # y is integer iff (m_p*x*b_q + b_p*m_q) % (m_q*b_q) = 0    (replaces slope=m_p/m_q and b=b_p/b_q floating point issues)
                         y1 = numerator//denominator
                         if y1 > n: 
                             break
@@ -194,18 +192,16 @@ def encode_cardinality_constraints_KNF(): # At most k constraint: slope line
                             y=y1
                             flag = 1
                             break
-                    if flag:
-                        # once first point is found, include all the rest by adding m_p and m_q
+                    if flag:                                                    # once first point is found, include all the rest by adding m_p and m_q
                         while x < n:
                             if int(y) >= 0:
                                 if int(y) < n - x:
                                     tmp_str.append(str(-v[x][int(y)]))
                                     tmp_str.append(" ")
-                                    #tmpStr2.append(f"({x},{int(y)})")
-                                    cnt += 1
-                                    
-                                    if cnt >= k and m_p != 0: # only looking for k or more points
-                                        next_n = m_q # largest value of m_q always seems to be the last point found where #points >=k
+                                    debug_str.append(f"({x},{int(y)})")
+                                    cnt += 1                         
+                                    if cnt >= k and m_p != 0:                   # only looking for k or more points
+                                        next_n = m_q                            # largest value of m_q in loop was found to be the highest at which further relevant k-collinear lines appear
                                         #print(f"tmpCnt: {cnt}, m_p: {m_p}, m_q: {m_q}, decN: {decN}, slope: {slope}, b_p: {b_p}, b_q: {b_q}, b: {b}, x: {x}, y: {int(y)}, yf: {y}")
                                 else:
                                     break
@@ -216,10 +212,8 @@ def encode_cardinality_constraints_KNF(): # At most k constraint: slope line
                         num_clauses += 1
                         dimacs_buffer.append(clause)
                         num_card_clauses +=1
-                        #if f"(77,43)" in tmpStr2 and f"(71,39)" in tmpStr2:
-                        #tmpStr3 = "".join(", ".join(tmpStr2))
-                        #logFile2.write(tmpStr3)
-                        #logFile2.write("\n")
+                        debug_str2 = "".join(", ".join(debug_str))
+                        #out_log_file.write(f"{debug_str2}\n")
             m_q += 1
             if next_n + 2 < n:
                 cur_n = next_n + 2
