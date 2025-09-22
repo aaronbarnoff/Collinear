@@ -45,5 +45,25 @@ options:
   -r R        SAT solver seed
   -e E        (Optional) CNF cardinality encoding type: seqcounter, totalizer, sortnetwrk, cardnetwrk, mtotalizer, kmtotalizer; omitted: use knf2cnf
   
+Workflow Information:
+1. run.sh executes main.py with the above arguments.
+
+2. main.py applies optional (0,1) symmetry break, and calls
++ constraints_main.py:
+  - defineVars():                      define point variables
+  - stepConstraint():                  create step constraints            
+  - cardinalityConstraint():           create KNF cardinality constraints, including vertical/horizontal constraints (optional)
++ constraints_reachability.py
+  - BUP_EachPoint_VHLine():            vertical/horizontal binary constraints (optional)
+  - BUP_EachPoint_NegDiagonalLine():   antidiagonal line constraints (optional)
++ constraints_symmetry.py (unused)
+  - createLexEncoding                  create lexicographic constraints for breaking reflection and rotation+reflection symmetry
+
+3. main.py then calls solveNormal() in solve_normal.py:
+  - solveCNF():                        call knf2cnf() in globals.py, which uses knf2cnf or pysat_encode.py to encode the KNF cardinality constraints into CNF; then calls the SAT solver and grab SAT/UNSAT result.
+  - solveKNF():                        call the SAT solver and grab SAT/UNSAT result.
+  - extractModel():                    read SAT solver log, grab CPU time, reconstruct solution into point list
+  - checkCollinearK() in globals.py:   check that no k-collinear lines exist in the solution.
+
 
 
