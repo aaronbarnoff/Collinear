@@ -24,3 +24,6 @@ fi
 
 echo "$SOLVERS_DIR/Cardinality-CDCL/cardinality-cadical/build/cadical"
 echo "$SOLVERS_DIR/cadical/build/cadical"
+
+#set everything possible as executable (for CC)
+#find . -type f -print0 | while IFS= read -r -d '' f; do if file -b "$f" | grep -qE 'executable|script text'; then chmod +x "$f"; fi; done

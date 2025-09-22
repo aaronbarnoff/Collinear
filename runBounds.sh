@@ -5,6 +5,7 @@
 set -euo pipefail
 
 # This will run all points up to n=180 on a single job
+# CNF needs 8-12GB past n=180; setting to 8GB just in case new cardinality constraints push it over 4GB
 
 # required for pysat
 if [[ $(hostname) == *".fir.alliancecan.ca" || -n "${CC_CLUSTER:-}" ]]; then
@@ -15,24 +16,23 @@ if [[ $(hostname) == *".fir.alliancecan.ca" || -n "${CC_CLUSTER:-}" ]]; then
     pip install "python-sat[pblib,aiger]"
 fi
 
-#CNF needs 8-12GB past n=180; setting to 8GB just in case new cardinality constraints push it over 4GB
-
 usage() {
 cat << EOF
-Usage: $0 -k <k> [options]
+Usage: $0 e.g. ./runBounds.sh -k 7 -s 1 -c 0 -v 1 -a 0 -l 0 -b 2 -f 0 -t 0 -r 0 -e seqcounter
 
 Options:
   -k   k value
-  -l   line length
-  -s   symmetry break
-  -v   VHLine
-  -a   antidiag
-  -c   VHCard
-  -b   boundary points
-  -f   1:KNF, 0:CNF
-  -t   timeout (s)
-  -r   solver seed
-  -e   CNF encoding type (seqcounter, totalizer, sortnetwrk, cardnetwrk, mtotalizer, kmtotalizer)
+  -s   (0,1) symmetry break (0=off, 1=on)
+  -v   Vertical/horizontal binary clauses (0=off, 1=on)
+  -a   antidiagonal constraints (0=off, 1=on)
+  -l   line length for antidiagonal and v/h binary constraints (0= one point, 5= six points)
+  -c   Vertical/horizontal Cardinality constraints (0=off, 1=on)
+  -b   boundary constraints (0=off, 1=unit, 2=unit+binary)
+  -f   1=KNF (cardinality cadical), 0=CNF (cadical)
+  -t   wall-clock timeout for SAT solver (s)
+  -r   SAT solver seed
+  -e   (Optional) CNF cardinality encoding type: seqcounter, totalizer, sortnetwrk, cardnetwrk, mtotalizer, kmtotalizer
+  -h   help
 EOF
 }
 
@@ -156,10 +156,6 @@ pointsPast180=(
   "(172,91)" "(172,92)" "(173,92)" "(173,93)" "(174,92)" "(174,93)"
 )
 
-cwd="$(pwd)"
-dir_src="$cwd/src"
-cd "$dir_src"
-
 for point in "${points[@]}"; do
   # remove parentheses, split at comma
   point=${point#\(}
@@ -171,23 +167,13 @@ for point in "${points[@]}"; do
 
   n=$((x + y + 1))
 
-  echo "Running main.py for (x=$x, y=$y), n=$n"
+  run_id="$(date +%F_%H-%M-%S)"
+  : "${x:=0}" "${y:=0}" "${s:=1}" "${c:=0}" "${v:=1}" "${a:=0}" "${l:=0}" "${b:=0}" "${f:=0}" "${t:=0}" "${r:=0}"
+  res_name="res_k${k}_n${n}_x${x}_y${y}_s${s}_c${c}_v${v}_a${a}_l${l}_b${b}_f${f}_r${r}_e${e:-none}_${run_id}"
 
-  python3 -u main.py \
-    -k "${k}" \
-    -n "${n}" \
-    -x "${x}" \
-    -y "${y}" \
-    -l "${l:-}" \
-    -a "${a:-}" \
-    -v "${v:-}" \
-    -c "${c:-}" \
-    -s "${s:-}" \
-    -b "${b:-}" \
-    -t "${t:-}" \
-    -f "${f:-}" \
-    -r "${r:-}" \
-    -e "${e:-}"
+  python3 -u encode.py -k "$k" -n "$n" -l "$l" -a "$a" -v "$v" -c "$c" -s "$s" -x "$x" -y "$y" -b "$b" -t "$t" -f "$f" -r "$r" -p "$res_name" ${e:+-e "$e"}
+  python3 -u solve.py  -k "$k" -n "$n" -x "$x" -y "$y" -t "$t" -f "$f" -r "$r" -p "$res_name" ${e:+-e "$e"}
+
 done
 
 echo "All points processed."

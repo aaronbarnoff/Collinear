@@ -144,7 +144,7 @@ def encode_path_constraints():
             elif x > 0 and y > 0:
                 if y < n - x:
                     add_clause(-v[x][y], v[x - 1][y], v[x][y - 1])      # v(x, y) --> v(x - 1, y) or v(x, y - 1)
-                    add_clause(-v[x - 1][y], -v[x][y - 1])                # ~[v(x - 1, y) and v(x, y - 1)]
+                    #add_clause(-v[x - 1][y], -v[x][y - 1])                # ~[v(x - 1, y) and v(x, y - 1)]              # This was duplicate
 
 
 
@@ -546,7 +546,7 @@ def main():
     out_log_file.write(f"{result_folder_path}\n")
 
     print(f"k:{k}, n:{n}, x:{px}, y:{py}, sym_break:{sym_break}, vh_card:{vh_card}, vh_line:{vh_line}, antidiag:{antidiag}, cutoff:{cutoff}, boundary:{boundary_type}, solver:{use_KNF}, encoding: {cnf_encoding}, seed:{solver_seed}, timeout:{solver_timeout}, lex:{use_lex} ")
-    out_log_file.write(f"k:{k}, n:{n}, x:{px}, y:{py}, sym_break:{sym_break}, vh_card:{vh_card}, vh_line:{vh_line}, antidiag:{antidiag}, cutoff:{cutoff}, boundary:{boundary_type}, solver:{use_KNF}, encoding: {cnf_encoding},  seed:{solver_seed}, timeout:{solver_timeout}, lex:{use_lex}\n")
+    out_log_file.write(f"k:{k}, n:{n}, x:{px}, y:{py}, sym_break:{sym_break}, vh_card:{vh_card}, vh_line:{vh_line}, antidiag:{antidiag}, cutoff:{cutoff}, boundary:{boundary_type}, solver:{use_KNF}, encoding: {cnf_encoding}, seed:{solver_seed}, timeout:{solver_timeout}, lex:{use_lex}\n")
 
     define_path_variables()
 
