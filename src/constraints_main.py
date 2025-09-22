@@ -158,7 +158,9 @@ def cardinalityConstraint():
                         g.dimacsBuffer.append(clauseStr)
                         g.numCardClauses +=1
                         #if f"(77,43)" in tmpStr2 and f"(71,39)" in tmpStr2:
-                        #    print(", ".join(tmpStr2))
+                        #tmpStr3 = "".join(", ".join(tmpStr2))
+                        #g.logFile2.write(tmpStr3)
+                        #g.logFile2.write("\n")
             m_q += 1
             if decNcnt + 2 < g.n:
                 decN = decNcnt + 2
