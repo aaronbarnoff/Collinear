@@ -151,6 +151,14 @@ def encode_path_constraints():
 
 """
 Cardinality Constraints
+# Bounds constraints:
++ Vertical Check:           (k-1)*m_p <= n-1            ensures that y-coord still fits inside triangle (given by y=n-x-1) after k-1 steps of m_p (rise)
++ Horizontal Check:         (k-1)*m_q <= n-1            ensures that x-coord still fits after k-1 steps of m_q (run)
++ Slope Check:              1/k <= m_p/m_q <= k         ensures only slopes that need fewer than k horizontal/vertical steps are considered.
++ Lower bound intercept:    m_p*b_p >= -m_p*(n-1)*b_q   ensures the line is not below y=0 by the time x=n-1, so it enters the triangle
++ Upper bound intercept:    b_p <= (n-1)*b_q            ensures the line is not already above y=n-1 when x=0, so it enters the triangle  
++ Duplicate checks:         gcd(m_p,m_q), gcd(b_p,b_q), b_q|m_q              filter out duplicate lines and invalid lines that will not have integer points.
++ Reachability checks:      (x <= (k-2)*y+(k-1)) and (y <= (k-2)*x+(k-1)     ensure that the points on these lines can actually be reached from the origin
 """
 dbg_card = False
 def encode_cardinality_constraints_KNF():   # At most k constraint: (excluding vertical and horizontal lines)
