@@ -20,7 +20,7 @@ usage() {
 cat << EOF
 Usage: $0 -k <k> -n <n> [options]
 
-e.g. ./run.sh -k 7 -n 122 -x 33 -y 88 -s 1 -c 0 -v 1 -a 0 -l -0 -b 0 -f 0 -t 0 -r 0 -e seqcounter
+e.g. ./run.sh -k 7 -n 122 -x 33 -y 88 -s 1 -c 0 -v 1 -a 0 -l -0 -b 0 -f 0 -t 0 -r 0 -e seqcounter -z 0
 
 Options:
   -k   k value

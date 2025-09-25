@@ -3,7 +3,10 @@ import os
 import csv
 import argparse
 
-OUTPUT_DIR = os.path.join(os.getcwd(), "output")
+# Search through output folder for all results folders and collect data
+# Not yet updated for new -e param and change to b param
+
+OUTPUT_DIR = os.path.abspath(os.path.join(os.getcwd(), "..", "output"))
 SUMMARY_FILE = "summary.csv"
 
 def parse_args():

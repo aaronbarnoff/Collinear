@@ -3,6 +3,11 @@ import csv
 import statistics
 from collections import defaultdict
 
+# Group tests and calculate median time from the random seeds
+# Double check how timeout=0 is treated (e.g. used SBATCH timeout rather than SAT solver timeout)
+
+# Not yet updated for -e param etc
+
 INPUT = "summary.csv"
 OUTPUT = "tables.csv"
 

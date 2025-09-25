@@ -9,7 +9,7 @@ import argparse
 lex_debug = 0
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(description="e. for k=7, n=122, point (33, 88): python main.py -k 7 -n 122 -x 33 -y 88 -s 1 -c 0 -v 1 -a 0 -l -0 -b 0 -f 0 -t 0 -r 0")
+    parser = argparse.ArgumentParser(description="e. for k=7, n=122, point (33, 88): python3 encode.py -k 7 -n 122 -x 33 -y 88 -s 1 -c 0 -v 1 -a 0 -l -0 -b 0 -f 0 -t 0 -r 0")
     parser.add_argument("-k", default=5, help="number of collinear points to avoid")
     parser.add_argument("-n", default=28, help="n points; n-1 steps")
     parser.add_argument("-x", default=0, help="point x")
@@ -24,7 +24,7 @@ def parse_arguments():
     parser.add_argument("-t", default=0, help="sat solver wall-clock timeout (s)")
     parser.add_argument("-e", default=None, help="CNF cardinality encoding type: seqcounter, totalizer, sortnetwrk, cardnetwrk, mtotalizer, kmtotalizer")
     parser.add_argument("-r", default=0, help="SAT solver seed")
-    parser.add_argument("-z", default=0, help="Use lexicographic symmetry breaking constraints")
+    parser.add_argument("-o", default=0, help="Use lexicographic symmetry breaking constraints")
     parser.add_argument("-p", default=0, help="results folder name")
     #parser.add_argument("-zl", default=0, help="First/last <num> points for lex constraints")
     
@@ -45,7 +45,7 @@ use_KNF=int(args["f"])
 cnf_encoding=(args["e"])
 solver_timeout=int(args["t"])
 solver_seed=int(args["r"])
-use_lex=int(args["z"])
+use_lex=int(args["o"])
 lex_len=n//2 # hard coded for now
 results_folder_name=str(args["p"])
 
@@ -121,7 +121,7 @@ def define_path_variables():
             if y >= 0:
                     v[x][y] = new_var()
                     var_cnt += 1
-
+    
 
 
 """
@@ -212,8 +212,8 @@ def encode_cardinality_constraints_KNF(): # At most k constraint: (excluding ver
                         num_clauses += 1
                         dimacs_buffer.append(clause)
                         num_card_clauses +=1
-                        debug_str2 = "".join(", ".join(debug_str))
-                        #out_log_file.write(f"{debug_str2}\n")
+                        debug_str2 = "".join(" ".join(debug_str))
+                        out_log_file.write(f"{debug_str2}\n")
             m_q += 1
             if next_n + 2 < n:
                 cur_n = next_n + 2

@@ -2,9 +2,9 @@
 import subprocess
 import time
 
-# this will run the different cardinality encodings, each on their own job, for up to n=180 (given by runBounds.sh)
+# this will run the different cardinality encodings, each on their own job, for the boundary points up to n=180 (given by runBounds.sh)
 
-RUN_SCRIPT = "./runBounds.sh"
+RUN_SCRIPT = "../runBounds.sh"
 SBATCH_TIME = "72:00:00"
 
 COMMON_ARGS = [
