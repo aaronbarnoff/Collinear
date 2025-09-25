@@ -152,71 +152,99 @@ def encode_path_constraints():
 """
 Cardinality Constraints
 """
-def encode_cardinality_constraints_KNF(): # At most k constraint: (excluding vertical and horizontal lines)
+def encode_cardinality_constraints_KNF():  # At most k constraint: (excluding vertical and horizontal lines)
     global num_clauses, num_card_clauses
-    cur_n = n - 1
-    next_n = cur_n
-    #print("Slope Constraints:", time.time() - start_time, "seconds")
     for m_p in range(0, n):
         m_q = 1
-        while m_q <= cur_n:                                                     # cur_n is set to max value of m_q that was found in previous m_p loop iteration that had a k-collinear line
+
+        while (k - 1) * (m_q + m_p) <= (n - 1):       # ensure at least k points can fit inside triangle
             if (m_p == 0 and m_q != 1) or (math.gcd(m_p, m_q) > 1):
                 m_q += 1
                 continue
-            if (m_p * k) < m_q: 
+            if (m_p * k) < m_q:
                 break
-            if m_p > (k * m_q):                                                 # slopes > k should be caught by the horizontal/vertical lines
+            if m_p > (k * m_q):     # slopes > k and < 1/k require at least k vertical/horizontal steps
                 m_q += 1
                 continue
-            for b_q in range(1, m_q+1):                                         # lowest slopes: y = (m_p/m_q)*x - (b_p=m_p/b_q=m_q)*n.    highest slopes: y = (m_p/m_q)x + n
-                for b_p in range(-int(m_p*n), int(b_q*n)+1):    
-                    if (b_p == 0 and b_q != 1) or (math.gcd(b_p, b_q) > 1) or m_q % b_q != 0:           # b_q always divisor of m_q for k-collinear lines
+
+            for b_q in range(1, m_q + 1):       # y = (m_p/m_q) x + (b_p/b_q); b_q must divide m_q         
+                for b_p in range(-m_p * n, (n - 1) * b_q + 1):
+                    
+                    # lower bound on b_p: b >= -m(n-1) when x=n-1, so that y >=0
+                    if m_q * b_p < - m_p * (n - 1) * b_q:
                         continue
-                    if abs(b_p) > (n * b_q): 
-                        continue   
+
+                    # upper bound on b_p: b <= (n-1) when x=0, so that y <= n-x-1
+                    if b_p > (n - 1) * b_q:
+                        break
+                    
+                    if (b_p == 0 and b_q != 1) or (math.gcd(b_p, b_q) > 1) or (m_q % b_q != 0):
+                        continue
+
                     tmp_str = []
-                    debug_str = []                                               
+                    debug_str = []
                     cnt = 0
                     x = 0
-                    flag = 0
-                    denominator = m_q*b_q
-                    while x < n:                                                # first point should be within first n/k x values
-                        numerator = m_p*x*b_q + b_p*m_q                         # y is integer iff (m_p*x*b_q + b_p*m_q) % (m_q*b_q) = 0    (replaces slope=m_p/m_q and b=b_p/b_q floating point issues)
-                        y1 = numerator//denominator
-                        if y1 > n: 
+                    y_is_integer = False
+                    denominator = m_q * b_q
+
+                    while x < n:
+                        # find first valid point on this line
+                        numerator = m_p * x * b_q + b_p * m_q                           # replaced y=slope*x+b and slope=rise/run floating point calculation with this
+                        y = numerator // denominator
+                        if y >= n:
                             break
-                        if numerator % denominator != 0: 
+                        if numerator % denominator != 0:                                # y is not an integer
                             x += 1
-                            continue
-                        else:
-                            y=y1
-                            flag = 1
-                            break
-                    if flag:                                                    # once first point is found, include all the rest by adding m_p and m_q
-                        while x < n:
-                            if int(y) >= 0:
-                                if int(y) < n - x:
-                                    tmp_str.append(str(-v[x][int(y)]))
-                                    tmp_str.append(" ")
-                                    debug_str.append(f"({x},{int(y)})")
-                                    cnt += 1                         
-                                    if cnt >= k and m_p != 0:                   # only looking for k or more points
-                                        next_n = m_q                            # largest value of m_q in loop was found to be the highest at which further relevant k-collinear lines appear
-                                        #print(f"tmpCnt: {cnt}, m_p: {m_p}, m_q: {m_q}, decN: {decN}, slope: {slope}, b_p: {b_p}, b_q: {b_q}, b: {b}, x: {x}, y: {int(y)}, yf: {y}")
-                                else:
-                                    break
+                            continue                                                    
+                        y_is_integer = True
+                        break
+
+                    if y_is_integer:
+                        # step along line until (x,y) is within triangle (y >= 0, x+y < n)
+                        while y < 0 and x < n:
                             x += m_q
                             y += m_p
-                    if len(tmp_str) > 0 and cnt >= k:
+                        if x >= n:
+                            continue
+
+                        # check that at least k points on the line can actually fit inside the triangle
+                        point_cnt = 0
+                        px, py = x, y
+                        while px < n and 0 <= py < n - px and point_cnt < k:
+                            point_cnt += 1
+                            px += m_q
+                            py += m_p
+                        if point_cnt < k:
+                            continue
+                        
+                        # enumerate points on the line within the path triangle
+                        reachable_cnt = 0
+                        while x < n:
+                            if 0 <= y < n - x:
+                                # exclude points that can't be reached from origin without k horizontal/vertical steps
+                                if not ((x <= (k - 1) * (y + 1)) and (y <= (k - 1) * (x + 1))): 
+                                    x += m_q
+                                    y += m_p
+                                    continue
+                                tmp_str.append(str(-v[x][y]))
+                                tmp_str.append(" ")
+                                debug_str.append(f"({x},{y})")
+                                reachable_cnt += 1
+                                cnt += 1
+                            else:
+                                break
+                            x += m_q
+                            y += m_p
+
+                    if tmp_str and cnt >= k and reachable_cnt >= k:
                         clause = f'k {cnt - k + 1} {"".join(tmp_str)}0'
                         num_clauses += 1
                         dimacs_buffer.append(clause)
-                        num_card_clauses +=1
-                        debug_str2 = "".join(" ".join(debug_str))
-                        out_log_file.write(f"{debug_str2}\n")
+                        num_card_clauses += 1
+                        out_log_file.write(" ".join(debug_str) + "\n")
             m_q += 1
-            if next_n + 2 < n:
-                cur_n = next_n + 2
+
 
 def encode_cardinality_constraints_KNF_VH():
     global num_clauses
