@@ -1,29 +1,27 @@
 #!/usr/bin/env bash
-set -e
 
-SOLVERS_DIR="$(pwd)/solvers"
-mkdir -p "$SOLVERS_DIR"
+mkdir -p solvers
+cd solvers
 
-if [ ! -d "$SOLVERS_DIR/Cardinality-CDCL" ]; then
-  git clone git@github.com:jreeves3/Cardinality-CDCL.git "$SOLVERS_DIR/Cardinality-CDCL"
-fi
-if [ ! -f "$SOLVERS_DIR/Cardinality-CDCL/cardinality-cadical/build/cadical" ]; then
-  cd "$SOLVERS_DIR/Cardinality-CDCL"
-  sh build.sh
-  cd - >/dev/null
-fi
+# Cadical
+git clone https://github.com/arminbiere/cadical.git
+cd cadical
+./configure && make
+echo "$(pwd)/build/cadical"
+cd ..
 
-if [ ! -d "$SOLVERS_DIR/cadical" ]; then
-  git clone git@github.com:arminbiere/cadical.git "$SOLVERS_DIR/cadical"
-fi
-if [ ! -f "$SOLVERS_DIR/cadical/build/cadical" ]; then
-  cd "$SOLVERS_DIR/cadical"
-  ./configure && make
-  cd - >/dev/null
-fi
+# Cardinality Cadical
+git clone https://github.com/jreeves3/Cardinality-CDCL.git
+cd Cardinality-CDCL
+sh build.sh
+echo "$(pwd)/cardinality-cadical/build/cadical"
+cd ..
 
-echo "$SOLVERS_DIR/Cardinality-CDCL/cardinality-cadical/build/cadical"
-echo "$SOLVERS_DIR/cadical/build/cadical"
+# Cadical-Exhaust
+git clone https://github.com/curtisbright/cadical-exhaust.git
+cd cadical-exhaust
+./configure && make
+echo "$(pwd)/build/cadical"
 
 #set everything possible as executable (for CC)
 #find . -type f -print0 | while IFS= read -r -d '' f; do if file -b "$f" | grep -qE 'executable|script text'; then chmod +x "$f"; fi; done
