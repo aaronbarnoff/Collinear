@@ -152,18 +152,22 @@ def encode_path_constraints():
 """
 Cardinality Constraints
 """
-def encode_cardinality_constraints_KNF():  # At most k constraint: (excluding vertical and horizontal lines)
+dbg_card = False
+def encode_cardinality_constraints_KNF():   # At most k constraint: (excluding vertical and horizontal lines)
     global num_clauses, num_card_clauses
     for m_p in range(0, n):
-        m_q = 1
+        if (k - 1) * m_p > (n - 1):         # ensure at least k points can span the triangle vertically 
+            continue 
 
-        while (k - 1) * (m_q + m_p) <= (n - 1):       # ensure at least k points can fit inside triangle
+        m_q = 1
+        while (k - 1) * m_q <= (n - 1):     # ensure at least k points can span the triangle horizontally
             if (m_p == 0 and m_q != 1) or (math.gcd(m_p, m_q) > 1):
                 m_q += 1
                 continue
-            if (m_p * k) < m_q:
+
+            if (m_p * k) < m_q:             # slopes > k and slopes < 1/k require at least k vertical/horizontal steps
                 break
-            if m_p > (k * m_q):     # slopes > k and < 1/k require at least k vertical/horizontal steps
+            if m_p > (k * m_q):     
                 m_q += 1
                 continue
 
@@ -183,18 +187,17 @@ def encode_cardinality_constraints_KNF():  # At most k constraint: (excluding ve
 
                     tmp_str = []
                     debug_str = []
-                    cnt = 0
                     x = 0
                     y_is_integer = False
                     denominator = m_q * b_q
 
                     while x < n:
                         # find first valid point on this line
-                        numerator = m_p * x * b_q + b_p * m_q                           # replaced y=slope*x+b and slope=rise/run floating point calculation with this
+                        numerator = m_p * x * b_q + b_p * m_q         # replaced y=(m_p/m_q)*x+(b_p/b_q) floating point calculation with this
                         y = numerator // denominator
                         if y >= n:
                             break
-                        if numerator % denominator != 0:                                # y is not an integer
+                        if numerator % denominator != 0:              # y is not an integer
                             x += 1
                             continue                                                    
                         y_is_integer = True
@@ -208,7 +211,7 @@ def encode_cardinality_constraints_KNF():  # At most k constraint: (excluding ve
                         if x >= n:
                             continue
 
-                        # check that at least k points on the line can actually fit inside the triangle
+                        # ensure at least k points on the line can actually fit inside the triangle before making list
                         point_cnt = 0
                         px, py = x, y
                         while px < n and 0 <= py < n - px and point_cnt < k:
@@ -218,31 +221,37 @@ def encode_cardinality_constraints_KNF():  # At most k constraint: (excluding ve
                         if point_cnt < k:
                             continue
                         
-                        # enumerate points on the line within the path triangle
+                        # enumerate points on the line within the triangle
                         reachable_cnt = 0
                         while x < n:
                             if 0 <= y < n - x:
                                 # exclude points that can't be reached from origin without k horizontal/vertical steps
-                                if not ((x <= (k - 1) * (y + 1)) and (y <= (k - 1) * (x + 1))): 
-                                    x += m_q
-                                    y += m_p
-                                    continue
+                                if sym_break:
+                                    if not ((x <= (k-2)*y+1) and (y <= (k-2)*x+(k-1))): 
+                                        x += m_q
+                                        y += m_p
+                                        continue
+                                else:
+                                    if not ((x <= (k-2)*y+(k-1)) and (y <= (k-2)*x+(k-1))): 
+                                        x += m_q
+                                        y += m_p
+                                        continue
                                 tmp_str.append(str(-v[x][y]))
                                 tmp_str.append(" ")
-                                debug_str.append(f"({x},{y})")
                                 reachable_cnt += 1
-                                cnt += 1
+                                if dbg_card: debug_str.append(f"({x},{y})")
                             else:
                                 break
                             x += m_q
                             y += m_p
-
-                    if tmp_str and cnt >= k and reachable_cnt >= k:
-                        clause = f'k {cnt - k + 1} {"".join(tmp_str)}0'
+                    
+                    # add the line as KNF cardinality constraint
+                    if tmp_str and reachable_cnt >= k:
+                        clause = f'k {reachable_cnt - k + 1} {"".join(tmp_str)}0'
                         num_clauses += 1
                         dimacs_buffer.append(clause)
                         num_card_clauses += 1
-                        out_log_file.write(" ".join(debug_str) + "\n")
+                        if dbg_card: out_log_file.write(" ".join(debug_str) + "\n")
             m_q += 1
 
 
