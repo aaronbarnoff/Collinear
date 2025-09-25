@@ -172,15 +172,11 @@ def encode_cardinality_constraints_KNF():   # At most k constraint: (excluding v
                 continue
 
             for b_q in range(1, m_q + 1):       # y = (m_p/m_q) x + (b_p/b_q); b_q must divide m_q         
-                for b_p in range(-m_p * n, (n - 1) * b_q + 1):
+                for b_p in range(-m_p * n, (n - 1) * b_q + 1):      # upper bound on b_p: b=b_p/b_q < n when x=0, so y <= n-x-1
                     
                     # lower bound on b_p: b >= -m(n-1) when x=n-1, so that y >=0
                     if m_q * b_p < - m_p * (n - 1) * b_q:
                         continue
-
-                    # upper bound on b_p: b <= (n-1) when x=0, so that y <= n-x-1
-                    if b_p > (n - 1) * b_q:
-                        break
                     
                     if (b_p == 0 and b_q != 1) or (math.gcd(b_p, b_q) > 1) or (m_q % b_q != 0):
                         continue
