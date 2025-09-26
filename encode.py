@@ -503,7 +503,7 @@ def create_lexicographic_encoding(num_points):
         return
     print(f"Symmetry break Lexicographic")
     out_log_file.write(f"Symmetry break Lexicographic\n")
-    
+
     NP = min(num_points, n//2)   # only need floor(n/2) to avoid midpoint overlap
 
     for i in range(n):
