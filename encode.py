@@ -233,7 +233,7 @@ def encode_cardinality_constraints_KNF():   # At most k constraint: (excluding v
                         while x < n:
                             if 0 <= y < n - x:
                                 # exclude points that can't be reached from origin without k horizontal/vertical steps
-                                if sym_break:
+                                if sym_break == 1:
                                     if not ((x <= (k-2)*y+1) and (y <= (k-2)*x+(k-1))): 
                                         x += m_q
                                         y += m_p
@@ -593,6 +593,7 @@ def main():
     encode_cardinality_constraints_KNF()
 
     # Optional constraints
+    reflection_symmetry_break()
     encode_cardinality_constraints_KNF_VH()
     encode_VH_binary_constraints(cutoff)         
     encode_antidiagonal_constraints(cutoff)
