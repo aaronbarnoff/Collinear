@@ -589,11 +589,14 @@ def main():
     print(f"k:{k}, n:{n}, x:{px}, y:{py}, sym_break:{sym_break}, vh_card:{vh_card}, vh_line:{vh_line}, antidiag:{antidiag}, cutoff:{cutoff}, boundary:{boundary_type}, solver:{use_KNF}, encoding: {cnf_encoding}, seed:{solver_seed}, timeout:{solver_timeout}, lex:{use_lex} ")
     out_log_file.write(f"k:{k}, n:{n}, x:{px}, y:{py}, sym_break:{sym_break}, vh_card:{vh_card}, vh_line:{vh_line}, antidiag:{antidiag}, cutoff:{cutoff}, boundary:{boundary_type}, solver:{use_KNF}, encoding: {cnf_encoding}, seed:{solver_seed}, timeout:{solver_timeout}, lex:{use_lex}\n")
 
+    if (px > 0 and py > 0):
+        add_clause(v[px][py])
+
     define_path_variables()
 
     # Mandatory constraints
     encode_path_constraints()
-    encode_cardinality_constraints_KNF_heuristic()
+    encode_cardinality_constraints_KNF_no_heuristic() # encode_cardinality_constraints_KNF_heuristic()
 
     # Optional constraints
     reflection_symmetry_break()
@@ -668,16 +671,16 @@ def encode_cardinality_constraints_KNF_heuristic(): # At most k constraint: slop
                         while x < n:
                             if int(y) >= 0:
                                 if int(y) < n - x:
-                                    if sym_break: # added reachability check
-                                        if not ((x <= (k-2)*y+1) and (y <= (k-2)*x+(k-1))): 
-                                            x += m_q
-                                            y += m_p
-                                            continue
-                                    else:
-                                        if not ((x <= (k-2)*y+(k-1)) and (y <= (k-2)*x+(k-1))): 
-                                            x += m_q
-                                            y += m_p
-                                            continue
+                                    #if sym_break: # added reachability check
+                                    #    if not ((x <= (k-2)*y+1) and (y <= (k-2)*x+(k-1))): 
+                                    #        x += m_q
+                                    #        y += m_p
+                                    #        continue
+                                    #else:
+                                    #    if not ((x <= (k-2)*y+(k-1)) and (y <= (k-2)*x+(k-1))): 
+                                    #        x += m_q
+                                    #        y += m_p
+                                    #        continue
                                     tmp_str.append(str(-v[x][int(y)]))
                                     tmp_str.append(" ")
                                     tmpStr2.append(f"({x},{int(y)})")
