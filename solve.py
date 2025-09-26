@@ -144,10 +144,10 @@ def solve_exhaustive():
     for b in range(n):          # Pass cadical-exhaust max var to block
         for x in range(n):
             y = b-x
-            if y >= 0:
-                    v[x][y] = maxVar
-                    maxVar += 1
-
+            if y >= 0 and x+y < n:
+                v[x][y] = maxVar
+                maxVar += 1
+    maxVar -= 1
     command = [CDCLEX_path, cnf_dimacs_filepath, "-t", str(solver_timeout), f"--seed={solver_seed}", f"--order", f"{maxVar}"]
 
     print(f"Starting exhaustive solver:", time.time() - start_time, "seconds")

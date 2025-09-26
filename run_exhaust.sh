@@ -47,7 +47,7 @@ run_point() {
   n_cur="$1"; x="$2"; y="$3"
   s=1; c=0; v=1; a=0; l=0; r=0; b=2; t=0; z=1
   run_id="$(date +%F_%H-%M-%S)"
-  res_name="ex/k${k}_n${n}_$m{m}/res_k${k}_n${n_cur}_x${x}_y${y}_s${s}_c${c}_v${v}_a${a}_l${l}_b${b}_r${r}_${run_id}"
+  res_name="ex/k${k}_n${n}_m{$m}/res_k${k}_n${n_cur}_x${x}_y${y}_s${s}_c${c}_v${v}_a${a}_l${l}_b${b}_r${r}_${run_id}"
   python3 -u encode.py -k "$k" -n "$n_cur" -l "$l" -a "$a" -v "$v" -c "$c" -s "$s" -x "$x" -y "$y" -b "$b" -t "$t" -r "$r" -p "$res_name"
   python3 -u solve.py  -k "$k" -n "$n_cur" -x "$x" -y "$y" -t "$t" -r "$r" -p "$res_name" -z "$z"
   rm -f "output/$res_name/dimacsFile.knf" "output/$res_name/dimacsFile.cnf"
