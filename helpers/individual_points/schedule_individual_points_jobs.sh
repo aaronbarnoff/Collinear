@@ -21,7 +21,7 @@ tests=(
 
 for t in "${tests[@]}"; do
   echo "Running $t"
-  python3 individualRun.py "$t"
+  python3 run_individual_points.py "$t"
   sleep 1
 done
 

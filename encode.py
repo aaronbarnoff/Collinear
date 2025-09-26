@@ -164,8 +164,10 @@ Other:
   + Reachability checks:      (x <= (k-2)*y+(k-1)) and (y <= (k-2)*x+(k-1))    ensure that the points on these lines can actually be reached from the origin
 """
 dbg_card = False
-def encode_cardinality_constraints_KNF():   # At most k constraint: (excluding vertical and horizontal lines)
+def encode_cardinality_constraints_KNF_no_heuristic():   # At most k constraint: (excluding vertical and horizontal lines)
     global num_clauses, num_card_clauses
+    print("cardinality constraint: No heuristic")
+    out_log_file.write("cardinality constraint: No heuristic\n")
     for m_p in range(0, n):
         if (k - 1) * m_p > (n - 1):         # ensure at least k points can span the triangle vertically 
             continue 
@@ -260,6 +262,7 @@ def encode_cardinality_constraints_KNF():   # At most k constraint: (excluding v
                         num_card_clauses += 1
                         if dbg_card: out_log_file.write(" ".join(debug_str) + "\n")
             m_q += 1
+
 
 
 def encode_cardinality_constraints_KNF_VH():
@@ -590,7 +593,7 @@ def main():
 
     # Mandatory constraints
     encode_path_constraints()
-    encode_cardinality_constraints_KNF()
+    encode_cardinality_constraints_KNF_heuristic()
 
     # Optional constraints
     reflection_symmetry_break()
@@ -612,6 +615,93 @@ def main():
     f.close()
 
     print("DimacsFile created: ", time.time() - start_time, "seconds")
+
+
+
+
+def encode_cardinality_constraints_KNF_heuristic(): # At most k constraint: slope line
+    global num_clauses, num_card_clauses
+    print("cardinality constraint: heuristic")
+    out_log_file.write("cardinality constraint: heuristic\n")
+    cur_n = n - 1
+    next_n = cur_n
+    #print("Slope Constraints:", time.time() - start_time, "seconds")
+    for m_p in range(0, n):
+        m_q = 1
+        while m_q <= cur_n: #decN is max value of m_q that was found in previous m_p loop iteration that had a line with #points >= k
+            if (m_p == 0 and m_q != 1) or (math.gcd(m_p, m_q) > 1):
+                m_q += 1
+                continue
+            if (m_p * k) < m_q: 
+                break
+            if m_p > (k * m_q): # slope > k should be caught by the horizontal/vertical lines
+                m_q += 1
+                continue
+            for b_q in range(1, m_q+1): # lowest slopes: y = (m_p/m_q)*x - (b_p=m_p/b_q=m_q)*n; highest slopes: y = (m_p/m_q)x + n
+                for b_p in range(-int(m_p*n), int(b_q*n)+1): # was missing b_p = 315, b_q = 5 for y=1/5x+312/5 for k=7, n=261    
+                    if (b_p == 0 and b_q != 1) or (math.gcd(b_p, b_q) > 1) or m_q % b_q != 0:
+                        # b_q always divisor of m_q for numPoints >= k?
+                        continue
+                    if abs(b_p) > (n * b_q): 
+                        continue   
+                    tmp_str = []
+                    tmpStr2 = []  # For debugging the cardinality constraint lines
+                    cnt = 0
+                    x = 0
+                    flag = 0
+                    denominator = m_q*b_q
+                    while x < n:
+                        # first point should be within first n/k x values
+                        numerator = m_p*x*b_q + b_p*m_q #y is integer iff (m_p*x*b_q + b_p*m_q) % (m_q*b_q) = 0
+                        y1 = numerator//denominator
+                        if y1 > n: 
+                            break
+                        if numerator % denominator != 0: 
+                            x += 1
+                            continue
+                        else:
+                            y=y1
+                            flag = 1
+                            break
+                    if flag:
+                        # once first point is found, include all the rest by adding m_p and m_q
+                        while x < n:
+                            if int(y) >= 0:
+                                if int(y) < n - x:
+                                    if sym_break: # added reachability check
+                                        if not ((x <= (k-2)*y+1) and (y <= (k-2)*x+(k-1))): 
+                                            x += m_q
+                                            y += m_p
+                                            continue
+                                    else:
+                                        if not ((x <= (k-2)*y+(k-1)) and (y <= (k-2)*x+(k-1))): 
+                                            x += m_q
+                                            y += m_p
+                                            continue
+                                    tmp_str.append(str(-v[x][int(y)]))
+                                    tmp_str.append(" ")
+                                    tmpStr2.append(f"({x},{int(y)})")
+                                    cnt += 1
+                                    
+                                    if cnt >= k and m_p != 0: # only looking for k or more points
+                                        next_n = m_q # largest value of m_q always seems to be the last point found where #points >=k
+                                        #print(f"tmpCnt: {cnt}, m_p: {m_p}, m_q: {m_q}, decN: {decN}, slope: {slope}, b_p: {b_p}, b_q: {b_q}, b: {b}, x: {x}, y: {int(y)}, yf: {y}")
+                                else:
+                                    break
+                            x += m_q
+                            y += m_p
+                    if len(tmp_str) > 0 and cnt >= k:
+                        clause = f'k {cnt - k + 1} {"".join(tmp_str)}0'
+                        num_clauses += 1
+                        dimacs_buffer.append(clause)
+                        num_card_clauses +=1
+                        tmpStr3 = "".join(", ".join(tmpStr2))
+                        out_log_file.write(tmpStr3)
+                        out_log_file.write("\n")
+            m_q += 1
+            if next_n + 2 < n:
+                cur_n = next_n + 2
+
 
 if __name__ == "__main__":
     main()
