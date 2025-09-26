@@ -151,7 +151,7 @@ def encode_path_constraints():
 """
 Cardinality Constraints
 """
-def encode_cardinality_constraints_KNF_Heuristic(): # At most k constraint: slope line
+def encode_cardinality_constraints_KNF(): # At most k constraint: slope line
     global num_clauses, num_card_clauses
     cur_n = n - 1
     next_n = cur_n
@@ -198,16 +198,16 @@ def encode_cardinality_constraints_KNF_Heuristic(): # At most k constraint: slop
                         while x < n:
                             if int(y) >= 0:
                                 if int(y) < n - x:
-                                    if sym_break:
-                                        if not ((x <= (k-2)*y+1) and (y <= (k-2)*x+(k-1))): 
-                                            x += m_q
-                                            y += m_p
-                                            continue
-                                    else:
-                                        if not ((x <= (k-2)*y+(k-1)) and (y <= (k-2)*x+(k-1))): 
-                                            x += m_q
-                                            y += m_p
-                                            continue
+                                    #if sym_break:
+                                    #    if not ((x <= (k-2)*y+1) and (y <= (k-2)*x+(k-1))): 
+                                    #        x += m_q
+                                    #        y += m_p
+                                    #        continue
+                                    #else:
+                                    #    if not ((x <= (k-2)*y+(k-1)) and (y <= (k-2)*x+(k-1))): 
+                                    #        x += m_q
+                                    #        y += m_p
+                                    #        continue
                                     tmp_str.append(str(-v[x][int(y)]))
                                     tmp_str.append(" ")
                                     tmpStr2.append(f"({x},{int(y)})")
@@ -225,10 +225,9 @@ def encode_cardinality_constraints_KNF_Heuristic(): # At most k constraint: slop
                         num_clauses += 1
                         dimacs_buffer.append(clause)
                         num_card_clauses +=1
-                        #if f"(77,43)" in tmpStr2 and f"(71,39)" in tmpStr2:
                         tmpStr3 = "".join(", ".join(tmpStr2))
-                        logFile2.write(tmpStr3)
-                        logFile2.write("\n")
+                        out_log_file.write(tmpStr3)
+                        out_log_file.write("\n")
             m_q += 1
             if next_n + 2 < n:
                 cur_n = next_n + 2
