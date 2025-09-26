@@ -671,16 +671,16 @@ def encode_cardinality_constraints_KNF_heuristic(): # At most k constraint: slop
                         while x < n:
                             if int(y) >= 0:
                                 if int(y) < n - x:
-                                    #if sym_break: # added reachability check
-                                    #    if not ((x <= (k-2)*y+1) and (y <= (k-2)*x+(k-1))): 
-                                    #        x += m_q
-                                    #        y += m_p
-                                    #        continue
-                                    #else:
-                                    #    if not ((x <= (k-2)*y+(k-1)) and (y <= (k-2)*x+(k-1))): 
-                                    #        x += m_q
-                                    #        y += m_p
-                                    #        continue
+                                    if sym_break: # added reachability check
+                                        if not ((x <= (k-2)*y+1) and (y <= (k-2)*x+(k-1))): 
+                                            x += m_q
+                                            y += m_p
+                                            continue
+                                    else:
+                                        if not ((x <= (k-2)*y+(k-1)) and (y <= (k-2)*x+(k-1))): 
+                                            x += m_q
+                                            y += m_p
+                                            continue
                                     tmp_str.append(str(-v[x][int(y)]))
                                     tmp_str.append(" ")
                                     tmpStr2.append(f"({x},{int(y)})")
