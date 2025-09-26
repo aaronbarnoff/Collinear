@@ -273,19 +273,25 @@ def verify_solution(point_list):
 
     if collinear_list:
         print(f"Failure: {k} or more points found on the same line.")
+        out_log_file.write(f"Failure: {k} or more points found on the same line.\n")
         for line in collinear_list:
             (x1, y1)= line[0]
             (x2, y2)= line[1]
             if (x2 - x1) == 0:
                 print('vline. points: ', end="")
+                out_log_file.write(f"vline. points: ")
             elif (y2 - y1) == 0:
                 print('hline. points: ', end="")
+                out_log_file.write(f"hline. points: ")
             else:
                 print(f'slope: {((y2 - y1) / (x2 - x1)):.2g}; m_p: {(y2-y1)}, m_q: {(x2-x1)}; points: ',end="")
+                out_log_file.write(f"slope: {((y2 - y1) / (x2 - x1)):.2g}; m_p: {(y2-y1)}, m_q: {(x2-x1)}; points: ")
             for points in line:
                 (x, y)=points
                 print(f'({x},{y}) ', end="")
+                out_log_file.write(f"({x},{y}) ")
             print("")
+            out_log_file.write(f"\n")
 
 
 
