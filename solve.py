@@ -39,7 +39,7 @@ if use_KNF and use_exhaustive_search:
 
 output_folder_path = os.path.join(cwd_path, 'output')
 if not os.path.exists(output_folder_path):
-    os.makedirs(output_folder_path)
+    os.makedirs(output_folder_path, exist_ok=True)
 
 result_folder_path = os.path.join(output_folder_path, results_folder_name)
 knf_dimacs_filename = f'dimacsFile.knf'

@@ -73,11 +73,11 @@ num_card_clauses = 0
 cwd_path = os.getcwd()
 output_folder_path = os.path.join(cwd_path, 'output')
 if not os.path.exists(output_folder_path):
-    os.makedirs(output_folder_path)
+    os.makedirs(output_folder_path, exist_ok=True)
 
 result_folder_path = os.path.join(output_folder_path, results_folder_name)
 if not os.path.exists(result_folder_path):
-    os.makedirs(result_folder_path)
+    os.makedirs(result_folder_path, exist_ok=True)
 
 knf_dimacs_filename = f'dimacsFile.knf'
 knf_dimacs_filepath = f'{result_folder_path}/{knf_dimacs_filename}'
