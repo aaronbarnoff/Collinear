@@ -36,7 +36,7 @@ SOLVER_KNF = [("KNF", 1)]
 SOLVER_CNF= [("CNF", 0)]
 SOLVER_BOTH = [("KNF", 1), ("CNF", 0)]
 
-# vertical/horizontal constraint templates
+# vertical/horizontal constraint templates (-c value: if c=0 then v=1)
 VH_BOTH   = [("ON", 1), ("OFF", 0)]
 VH_BINARY = [("OFF", 0)]
 VH_CARDINALITY = [("ON", 1)]
