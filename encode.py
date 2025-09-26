@@ -269,6 +269,8 @@ def encode_cardinality_constraints_KNF_VH():
     global num_clauses
     if not vh_card:
         return
+    print(f"V/H Cardinality constraints")
+    out_log_file.write(f"V/H Cardinality constraints\n")
     for x in range(0, n):                    # At most k constraint: vertical lines
         tmp_str = []
         cnt = 0
@@ -308,6 +310,8 @@ Boundary Constraints
 def encode_boundary_constraints():
     if boundary_type == 0:
         return
+    print(f"Boundary constraints: {boundary_type}")
+    out_log_file.write(f"Boundary constraints: {boundary_type}\n")
 
     points_k7_upper_bounds_symmetric = """
         (0,6),(1,11),(2,16),(3,21),(4,26),(5,31),(6,0),(6,30),
@@ -435,6 +439,9 @@ Structural Constraints
 def encode_VH_binary_constraints(cutoff):
     if not vh_line:
         return
+    print(f"V/H Binary constraints: {cutoff}")
+    out_log_file.write(f"V/H Binary constraints: {cutoff}\n")
+
     for x in range(n): 
         for y in range(n):
             if y < n - x:
@@ -457,6 +464,9 @@ def encode_VH_binary_constraints(cutoff):
 def encode_antidiagonal_constraints(cutoff):
     if not antidiag:
         return
+    print(f"Antidiagonal constraints: {cutoff}")
+    out_log_file.write(f"Antidiagonal constraints: {cutoff}\n")
+    
     # constraint: if (x,y) is true then all upper/lower negative diagonal are false
     for x in range(n): 
         for y in range(n):
@@ -483,12 +493,17 @@ Symmetry Constraints
 def reflection_symmetry_break():
     if not sym_break:
         return
+    print(f"Symmetry break (0,1)")
+    out_log_file.write(f"Symmetry break (0,1)\n")
     if n > 0:
         add_clause(v[0][1])
 
 def create_lexicographic_encoding(num_points):
     if not use_lex:
         return
+    print(f"Symmetry break Lexicographic")
+    out_log_file.write(f"Symmetry break Lexicographic\n")
+    
     NP = min(num_points, n//2)   # only need floor(n/2) to avoid midpoint overlap
 
     for i in range(n):
@@ -578,7 +593,12 @@ def encode_lexicographic_constraints(seqA, seqB): # from knuth eq 169
 
     return lex_vars
 
-
+def solve_single_point():
+    if (px == 0 and py == 0):
+        return
+    print(f"Single point solve: ({px},{py})")
+    out_log_file.write(f"Single point solve: ({px},{py})\n")
+    add_clause(v[px][py])
 
 def main():
     start_time = time.time()
@@ -589,10 +609,10 @@ def main():
     print(f"k:{k}, n:{n}, x:{px}, y:{py}, sym_break:{sym_break}, vh_card:{vh_card}, vh_line:{vh_line}, antidiag:{antidiag}, cutoff:{cutoff}, boundary:{boundary_type}, solver:{use_KNF}, encoding: {cnf_encoding}, seed:{solver_seed}, timeout:{solver_timeout}, lex:{use_lex} ")
     out_log_file.write(f"k:{k}, n:{n}, x:{px}, y:{py}, sym_break:{sym_break}, vh_card:{vh_card}, vh_line:{vh_line}, antidiag:{antidiag}, cutoff:{cutoff}, boundary:{boundary_type}, solver:{use_KNF}, encoding: {cnf_encoding}, seed:{solver_seed}, timeout:{solver_timeout}, lex:{use_lex}\n")
 
-    if (px > 0 and py > 0):
-        add_clause(v[px][py])
-
     define_path_variables()
+
+    # Single point solve
+    solve_single_point()
 
     # Mandatory constraints
     encode_path_constraints()

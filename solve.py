@@ -85,12 +85,12 @@ def solve_regular():
     mode = "KNF" if use_KNF == 1 else "CNF"
 
     if mode == "CNF":
-        #if cnf_encoding is not None:
-        #    print(f"CNF Encode: {cnf_encoding}")
-        #    out_log_file.write(f"CNF Encode: {cnf_encoding}\n")
-        #else:
-        #    print("CNF Encode: knf2cnf (sequential counter, linear AMO)")
-        #    out_log_file.write("CNF Encode: knf2cnf (sequential counter, linear AMO)\n")
+        if cnf_encoding is not None:
+            print(f"CNF Encode: {cnf_encoding}")
+            out_log_file.write(f"CNF Encode: {cnf_encoding}\n")
+        else:
+            print("CNF Encode: knf2cnf (sequential counter, linear AMO)")
+            out_log_file.write("CNF Encode: knf2cnf (sequential counter, linear AMO)\n")
         knf2cnf()
 
     if mode == "KNF":
