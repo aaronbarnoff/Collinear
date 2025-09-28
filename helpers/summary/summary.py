@@ -16,13 +16,27 @@ def parse_args():
     return ap.parse_args()
 
 def parse_folder_fields(name):
-    # looking for folders in /output with name format e.g. "res_k4_n9_x0_y0_s1_c0_v1_a0_l0_b0.0_f0_r0_2025-09-18_17-48-25"
+    # looking for folders in /output with name format e.g. "res_k4_n9_x0_y0_s1_c0_v1_a0_l0_b0_f0_r0_enone_2025-09-18_17-48-25"
     p = name.split("_")
-    k    = p[1][1:]; n = p[2][1:];  x = p[3][1:];  y = p[4][1:]
-    s    = p[5][1:]; c = p[6][1:];  v = p[7][1:];  a = p[8][1:]
-    l    = p[9][1:]; b = p[10][1:]; f = p[11][1:]; seed = p[12][1:]
-    id_  = "_".join(p[13:]) if len(p) > 13 else ""
-    return k,n,x,y,s,c,v,a,l,b,f,seed,id_
+    if not p or not p[0].startswith("res"):
+        raise ValueError("not a result folder")
+    known = {"k","n","x","y","s","c","v","a","l","b","f","r","e"}
+    vals = {k: "" for k in known}
+    tail = []
+
+    for token in p[1:]:
+        if token and token[0] in known and len(token) >= 2:
+            key = token[0]
+            vals[key] = token[1:]
+        else:
+            tail.append(token)
+
+    k = vals["k"]; n = vals["n"]; x = vals["x"]; y = vals["y"]
+    s = vals["s"]; c = vals["c"]; v = vals["v"]; a = vals["a"]
+    l = vals["l"]; b = vals["b"]; f = vals["f"]; seed = vals["r"]
+    enc = vals["e"] 
+    id_ = "_".join(tail) if tail else ""
+    return k,n,x,y,s,c,v,a,l,b,f,seed,enc,id_
 
 def scan_timeout(log_path):
     try:
@@ -64,7 +78,7 @@ def main():
         w.writerow([
             "k","n","x","y","symBreak","VHCard","VHBinary",
             "antidiag","lineLen","boundary","KNF",
-            "seed","id","status","time","timeout","folder"
+            "seed","encoding","id","status","time","timeout","folder"
         ])
 
         with os.scandir(OUTPUT_DIR) as it:
@@ -77,24 +91,24 @@ def main():
                     break
 
                 try:
-                    k,n,x,y,s,c,v,a,l,b,f,seed,id_ = parse_folder_fields(name)
+                    k,n,x,y,s,c,v,a,l,b,f,seed,enc,id_ = parse_folder_fields(name)
                 except Exception:
                     continue
 
                 d = e.path
-                log_path = os.path.join(d, "logOutput_k.log")
+                log_path = os.path.join(d, "logOutput.log")
                 if not os.path.isfile(log_path):
                     continue
 
                 timeout = scan_timeout(log_path)
-                if timeout != filter_timeout:
-                    continue
+                #if timeout != filter_timeout:
+                #    continue
 
                 status, cpu_time = scan_status_and_cpu_time(log_path)
                 if cpu_time == "0":
                     continue # ignoring cancelled/unfinished results
 
-                w.writerow([k,n,x,y,s,c,v,a,l,b,f,seed,id_,status,cpu_time,timeout,d])
+                w.writerow([k,n,x,y,s,c,v,a,l,b,f,seed,enc,id_,status,cpu_time,timeout,d])
                 processed += 1
 
     print(f"processed {processed} folders into {SUMMARY_FILE}")

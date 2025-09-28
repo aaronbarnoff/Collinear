@@ -6,8 +6,6 @@ from collections import defaultdict
 # Group tests and calculate median time from the random seeds
 # Double check how timeout=0 is treated (e.g. used SBATCH timeout rather than SAT solver timeout)
 
-# Not yet updated for -e param etc
-
 INPUT = "summary.csv"
 OUTPUT = "tables.csv"
 
@@ -17,7 +15,8 @@ keys = [
     "VHCard","VHBinary",
     "antidiag","lineLen","boundary",
     "KNF",
-    "timeout"
+    "timeout",
+    "encoding",
 ]
 
 def main():
@@ -51,7 +50,6 @@ def main():
     print(f"Writing grouped table: {OUTPUT}")
     print(f"Sum of medians across {len(out_tests)} groups: {sum_medians}")
 
-    # check for times near timeout (if provided)
     flagged = []
     for r in out_tests:
         try:
@@ -66,7 +64,7 @@ def main():
         for r in flagged:
             print(
                 f"k={r['k']} n={r['n']} x={r['x']} y={r['y']} "
-                f"f={r['KNF']} b={r['boundary']} "
+                f"f={r['KNF']} b={r['boundary']} enc={r['encoding']} "
                 f"count={r['count']} max={r['max']} timeout={r['timeout']}"
             )
 
@@ -83,8 +81,10 @@ def sort_cols(r):
         int(r["VHCard"]), int(r["VHBinary"]),
         int(r["antidiag"]), int(r["lineLen"]),
         float(r["boundary"]), int(r["KNF"]),
-        int(float(r["timeout"])) if r["timeout"] != "" else 0
+        int(float(r["timeout"])) if r["timeout"] != "" else 0,
+        r["encoding"] or ""
     )
 
 if __name__ == "__main__":
     main()
+    
