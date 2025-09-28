@@ -495,7 +495,7 @@ def reflection_symmetry_break():
         return
     print(f"Symmetry break (0,1)")
     out_log_file.write(f"Symmetry break (0,1)\n")
-    if n > 0:
+    if n > 1:
         add_clause(v[0][1])
 
 def create_lexicographic_encoding(num_points):
