@@ -4,7 +4,7 @@ import time
 
 # this will run the different cardinality encodings, each on their own job, for the boundary points up to n=180 (given by runBounds.sh)
 
-RUN_SCRIPT = "../runBounds.sh"
+RUN_SCRIPT = "./run_bounds.sh"
 SBATCH_TIME = "72:00:00"
 
 COMMON_ARGS = [

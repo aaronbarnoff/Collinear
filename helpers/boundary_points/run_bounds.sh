@@ -19,7 +19,7 @@ fi
 
 usage() {
 cat << EOF
-Usage: $0 e.g. ./runBounds.sh -k 7 -s 1 -c 0 -v 1 -a 0 -l 0 -b 2 -f 0 -t 0 -r 0 -e seqcounter
+Usage: $0 e.g. ./run_bounds.sh -k 7 -s 1 -c 0 -v 1 -a 0 -l 0 -b 2 -f 0 -t 0 -r 0 -e seqcounter
 
 Options:
   -k   k value
