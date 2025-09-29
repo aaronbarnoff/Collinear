@@ -26,6 +26,7 @@ def parse_arguments():
     parser.add_argument("-r", default=0, help="SAT solver seed")
     parser.add_argument("-o", default=0, help="Use lexicographic symmetry breaking constraints")
     parser.add_argument("-p", default=0, help="results folder name")
+    parser.add_argument("-u", default=0, help="(temporary) for cardinality constraints. 0=no heuristic, 1=heuristic")
     #parser.add_argument("-zl", default=0, help="First/last <num> points for lex constraints")
     
     return vars(parser.parse_args())
@@ -48,6 +49,8 @@ solver_seed=int(args["r"])
 use_lex=int(args["o"])
 lex_len=n//2 # hard coded for now
 results_folder_name=str(args["p"])
+use_heuristic=int(args["u"])
+
 
 if px > 0 and py > 0:
     if px + py >= n:
@@ -157,7 +160,7 @@ Slope(= m_p/m_q):                                         only positive slopes a
   + Horizontal Check:         (k-1)*m_q <= n-1            ensures that x-coord still fits after k-1 steps of m_q (run)
   + Valid Slope Check:        1/k <= m_p/m_q <= k         ensures only slopes that allow fewer than k horizontal/vertical steps are considered.
 y-intercept(= b_p/b_q):
-  + Lower bound intercept:    m_p*b_p >= -m_p*(n-1)*b_q   ensures the line is not below y=0 by the time x=n-1, so it enters the triangle
+  + Lower bound intercept:    m_q*b_p >= -m_p*(n-1)*b_q   ensures the line is not below y=0 by the time x=n-1, so it enters the triangle
   + Upper bound intercept:    b_p <= (n-1)*b_q            ensures the line is not already above y=n-1 when x=0, so it enters the triangle  
 Other:
   + Duplicate checks:         gcd(m_p,m_q), gcd(b_p,b_q), b_q|m_q              filter out duplicate lines and invalid lines that will not have integer points.
@@ -616,7 +619,10 @@ def main():
 
     # Mandatory constraints
     encode_path_constraints()
-    encode_cardinality_constraints_KNF_no_heuristic() # encode_cardinality_constraints_KNF_heuristic()
+    if use_heuristic:
+        encode_cardinality_constraints_KNF_heuristic()
+    else:
+        encode_cardinality_constraints_KNF_no_heuristic() # encode_cardinality_constraints_KNF_heuristic()
 
     # Optional constraints
     reflection_symmetry_break()

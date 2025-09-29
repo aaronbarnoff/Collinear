@@ -39,13 +39,14 @@ Options:
   -e   (Optional) CNF cardinality encoding type: seqcounter, totalizer, sortnetwrk, cardnetwrk, mtotalizer, kmtotalizer
   -z   0=regular solve (cadical), 1=exhaustive search (cadical-exhaust)
   -h   help
+  -u   (temporary) for cardinality constraints. 0=no heuristic, 1=heuristic
 EOF
 }
 
-options=$(getopt "hk:n:l:s:v:a:c:x:y:b:f:t:r:e:z:" "$@")
+options=$(getopt "hk:n:l:s:v:a:c:x:y:b:f:t:r:e:z:u:" "$@")
 eval set -- "$options"
 
-k= n= l= s= v= a= c= x= y= b= f= t= r= e= z=
+k= n= l= s= v= a= c= x= y= b= f= t= r= e= z= u=
 
 while true; do
   case "$1" in
@@ -65,13 +66,14 @@ while true; do
     -r) r="$2"; shift 2 ;;
     -e) e="$2"; shift 2 ;;
     -z) z="$2"; shift 2 ;;
+    -u) u="$2"; shift 2 ;;
     --) shift; break ;;
     *)  echo "Bad option"; usage; exit 2 ;;
   esac
 done
 
 run_id="$(date +%F_%H-%M-%S)"
-: "${x:=0}" "${y:=0}" "${s:=1}" "${c:=0}" "${v:=1}" "${a:=0}" "${l:=0}" "${b:=2}" "${f:=1}" "${t:=0}" "${r:=0}" "${z:=0}"
+: "${x:=0}" "${y:=0}" "${s:=1}" "${c:=0}" "${v:=1}" "${a:=0}" "${l:=0}" "${b:=2}" "${f:=1}" "${t:=0}" "${r:=0}" "${z:=0}" "${u:=0}"
 
 if ((z==0))
 then
@@ -81,7 +83,7 @@ else
   res_name="ex/res_k${k}_n${n}_x${x}_y${y}_s${s}_c${c}_v${v}_a${a}_l${l}_b${b}_f${f}_r${r}_e${e:-none}_${run_id}"
 fi
 
-python3 -u encode.py -k "$k" -n "$n" -l "$l" -a "$a" -v "$v" -c "$c" -s "$s" -x "$x" -y "$y" -b "$b" -t "$t" -f "$f" -r "$r" -p "$res_name" ${e:+-e "$e"}
+python3 -u encode.py -k "$k" -n "$n" -l "$l" -a "$a" -v "$v" -c "$c" -s "$s" -x "$x" -y "$y" -b "$b" -t "$t" -f "$f" -r "$r" -p "$res_name" ${e:+-e "$e"} -u "$u"
 python3 -u solve.py  -k "$k" -n "$n" -x "$x" -y "$y" -t "$t" -f "$f" -r "$r" -p "$res_name" ${e:+-e "$e"} -z "$z"
 
 #python3 -u print_solution.py -k "$k" -n "$n" -f "$PWD/output/$res_name/satOutput.log"
