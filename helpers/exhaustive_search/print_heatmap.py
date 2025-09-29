@@ -76,7 +76,7 @@ def main():
     args = parse_args()
     k, n, m = args.k, args.n, args.m
 
-    base = Path(f"/mnt/e/Msc/Collinear New/CollinearMain/output/ex/k{k}_n{n}_m{m}")
+    base = Path("../output/ex") / f"k{k}_n{n}_m{m}"
     if not base.exists():
         print(f"Base folder not found: {base}")
         return

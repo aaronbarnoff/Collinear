@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 #SBATCH --account=def-cbright
 #SBATCH --cpus-per-task=1
-#SBATCH --mem-per-cpu=8G
+#SBATCH --mem-per-cpu=4G
 set -euo pipefail
 
 # This will run all points up to n=180 on a single job
 # CNF needs 8-12GB past n=180; setting to 8GB just in case new cardinality constraints push it over 4GB
+# The sortnetwrk and cardnetwrk both use more RAM
 
 # required for pysat
 if [[ $(hostname) == *".fir.alliancecan.ca" || -n "${CC_CLUSTER:-}" ]]; then
