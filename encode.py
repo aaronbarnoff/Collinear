@@ -166,7 +166,7 @@ Other:
   + Duplicate checks:         gcd(m_p,m_q), gcd(b_p,b_q), b_q|m_q              filter out duplicate lines and invalid lines that will not have integer points.
   + Reachability checks:      (x <= (k-2)*y+(k-1)) and (y <= (k-2)*x+(k-1))    ensure that the points on these lines can actually be reached from the origin
 """
-dbg_card = False
+dbg_card = True
 def encode_cardinality_constraints_KNF_no_heuristic():   # At most k constraint: (excluding vertical and horizontal lines)
     global num_clauses, num_card_clauses
     print("cardinality constraint: No heuristic")
@@ -196,7 +196,7 @@ def encode_cardinality_constraints_KNF_no_heuristic():   # At most k constraint:
                     
                     if (b_p == 0 and b_q != 1) or (math.gcd(b_p, b_q) > 1) or (m_q % b_q != 0):
                         continue
-
+                    #out_log_file.write(f"m_p:{m_p} m_q:{m_q} b_p:{b_p} b_q:{b_q}\n")
                     tmp_str = []
                     debug_str = []
                     x = 0
@@ -264,6 +264,7 @@ def encode_cardinality_constraints_KNF_no_heuristic():   # At most k constraint:
                         dimacs_buffer.append(clause)
                         num_card_clauses += 1
                         if dbg_card: out_log_file.write(" ".join(debug_str) + "\n")
+            print(f"m_p{m_p} m_q{m_q} b_p{b_p} b_q{b_q}")
             m_q += 1
 
 
@@ -619,8 +620,12 @@ def main():
 
     # Mandatory constraints
     encode_path_constraints()
-    if use_heuristic:
-        encode_cardinality_constraints_KNF_heuristic()
+    if use_heuristic == 1:
+        encode_cardinality_constraints_KNF_heuristic() #mq_cap and different y-intercepts than no_heuristic; slope ranges are different too; only thing fixed was floating point truncation
+    elif use_heuristic == 2:
+        encode_cardinality_constraints_KNF_heuristic_mqcap_only()
+    elif use_heuristic == 3:
+        encode_cardinality_constraints_KNF_heuristic_intercept_only()
     else:
         encode_cardinality_constraints_KNF_no_heuristic() # encode_cardinality_constraints_KNF_heuristic()
 
@@ -645,42 +650,52 @@ def main():
 
     print("DimacsFile created: ", time.time() - start_time, "seconds")
 
-
-
-
-def encode_cardinality_constraints_KNF_heuristic(): # At most k constraint: slope line
+# This one uses mq_cap and has different y-intercept ranges
+def encode_cardinality_constraints_KNF_heuristic():
     global num_clauses, num_card_clauses
     print("cardinality constraint: heuristic")
     out_log_file.write("cardinality constraint: heuristic\n")
-    cur_n = n - 1
-    next_n = cur_n
-    #print("Slope Constraints:", time.time() - start_time, "seconds")
+    mq_cap = n - 1
+    last_good_mq = mq_cap
+
     for m_p in range(0, n):
         m_q = 1
-        while m_q <= cur_n: #decN is max value of m_q that was found in previous m_p loop iteration that had a line with #points >= k
+        if (k - 1) * m_p > (n - 1):         #ADDED. These tighter m_p and m_q checks dont change result
+            continue 
+        while m_q <= mq_cap: #mq_cap is max value of m_q that was found in previous m_p loop iteration that had a line with #points >= k
             if (m_p == 0 and m_q != 1) or (math.gcd(m_p, m_q) > 1):
                 m_q += 1
                 continue
+            if (k - 1) * m_q > (n - 1):    #ADDED.
+                break
             if (m_p * k) < m_q: 
                 break
-            if m_p > (k * m_q): # slope > k should be caught by the horizontal/vertical lines
+            if m_p > (k * m_q): 
                 m_q += 1
                 continue
-            for b_q in range(1, m_q+1): # lowest slopes: y = (m_p/m_q)*x - (b_p=m_p/b_q=m_q)*n; highest slopes: y = (m_p/m_q)x + n
-                for b_p in range(-int(m_p*n), int(b_q*n)+1): # was missing b_p = 315, b_q = 5 for y=1/5x+312/5 for k=7, n=261    
+            for b_q in range(1, m_q+1): 
+                for b_p in range(-int(m_p*n), int(b_q*n)+1): 
                     if (b_p == 0 and b_q != 1) or (math.gcd(b_p, b_q) > 1) or m_q % b_q != 0:
-                        # b_q always divisor of m_q for numPoints >= k?
                         continue
-                    if abs(b_p) > (n * b_q): 
+
+
+                    if abs(b_p) > (n * b_q): # Combination of this constraint and mq_cap gives much fewer lines. It is replaced by the below checks in no_heuristic
                         continue   
+                    """
+                    if b_p >= (n-1)*b_q: 
+                        break
+
+                    if m_q * b_p < - m_p * (n - 1) * b_q:
+                        continue
+                    """
+
                     tmp_str = []
-                    tmpStr2 = []  # For debugging the cardinality constraint lines
+                    dbg_str = []
                     cnt = 0
                     x = 0
                     flag = 0
                     denominator = m_q*b_q
                     while x < n:
-                        # first point should be within first n/k x values
                         numerator = m_p*x*b_q + b_p*m_q #y is integer iff (m_p*x*b_q + b_p*m_q) % (m_q*b_q) = 0
                         y1 = numerator//denominator
                         if y1 > n: 
@@ -693,11 +708,10 @@ def encode_cardinality_constraints_KNF_heuristic(): # At most k constraint: slop
                             flag = 1
                             break
                     if flag:
-                        # once first point is found, include all the rest by adding m_p and m_q
                         while x < n:
                             if int(y) >= 0:
                                 if int(y) < n - x:
-                                    if sym_break: # added reachability check
+                                    if sym_break: # reachability check
                                         if not ((x <= (k-2)*y+1) and (y <= (k-2)*x+(k-1))): 
                                             x += m_q
                                             y += m_p
@@ -709,12 +723,12 @@ def encode_cardinality_constraints_KNF_heuristic(): # At most k constraint: slop
                                             continue
                                     tmp_str.append(str(-v[x][int(y)]))
                                     tmp_str.append(" ")
-                                    tmpStr2.append(f"({x},{int(y)})")
+                                    dbg_str.append(f"({x},{int(y)})")
                                     cnt += 1
                                     
                                     if cnt >= k and m_p != 0: # only looking for k or more points
-                                        next_n = m_q # largest value of m_q always seems to be the last point found where #points >=k
-                                        #print(f"tmpCnt: {cnt}, m_p: {m_p}, m_q: {m_q}, decN: {decN}, slope: {slope}, b_p: {b_p}, b_q: {b_q}, b: {b}, x: {x}, y: {int(y)}, yf: {y}")
+                                        last_good_mq = m_q # largest value of m_q always seems to be the last point found where #points >=k
+                                        #print(f"tmpCnt: {cnt}, m_p: {m_p}, m_q: {m_q}, mq_cap: {mq_cap}, slope: {slope}, b_p: {b_p}, b_q: {b_q}, b: {b}, x: {x}, y: {int(y)}, yf: {y}")
                                 else:
                                     break
                             x += m_q
@@ -724,12 +738,208 @@ def encode_cardinality_constraints_KNF_heuristic(): # At most k constraint: slop
                         num_clauses += 1
                         dimacs_buffer.append(clause)
                         num_card_clauses +=1
-                        tmpStr3 = "".join(", ".join(tmpStr2))
+                        tmpStr3 = "".join(", ".join(dbg_str))
                         out_log_file.write(tmpStr3)
                         out_log_file.write("\n")
+            print(f"m_p:{m_p} m_q:{m_q} b_p:{b_p} b_q:{b_q}. m={m_p/m_q:.2f}. b={b_p/b_q:.2f}. mq_cap:{mq_cap}. last_good_mq:{last_good_mq}")       
             m_q += 1
-            if next_n + 2 < n:
-                cur_n = next_n + 2
+            if last_good_mq + 2 < n:
+                mq_cap = last_good_mq + 2
+        print("")
+
+# This one has different y-intercept ranges only; also m_p is too loose.
+def encode_cardinality_constraints_KNF_heuristic_intercept_only():
+    global num_clauses, num_card_clauses
+    print("cardinality constraint: heuristic intercept only")
+    out_log_file.write("cardinality constraint: heuristic intercept only\n")
+    mq_cap = n - 1
+    last_good_mq = mq_cap
+
+    for m_p in range(0, n):
+        m_q = 1
+
+        if (k - 1) * m_p > (n - 1):         #ADDED. 
+            continue 
+
+        while m_q <= mq_cap: #mq_cap is max value of m_q that was found in previous m_p loop iteration that had a line with #points >= k
+            if (m_p == 0 and m_q != 1) or (math.gcd(m_p, m_q) > 1):
+                m_q += 1
+                continue
+
+            if (k - 1) * m_q > (n - 1):    #ADDED.
+                break
+
+            if (m_p * k) < m_q: 
+                break
+            if m_p > (k * m_q): 
+                m_q += 1
+                continue
+            for b_q in range(1, m_q+1): 
+                for b_p in range(-int(m_p*n), int(b_q*n)+1): 
+                    if (b_p == 0 and b_q != 1) or (math.gcd(b_p, b_q) > 1) or m_q % b_q != 0:
+                        continue
+
+                    if abs(b_p) > (n * b_q): # This is untouched
+                        continue   
+
+                    tmp_str = []
+                    dbg_str = []
+                    cnt = 0
+                    x = 0
+                    flag = 0
+                    denominator = m_q*b_q
+                    while x < n:
+                        numerator = m_p*x*b_q + b_p*m_q #y is integer iff (m_p*x*b_q + b_p*m_q) % (m_q*b_q) = 0
+                        y1 = numerator//denominator
+                        if y1 > n: 
+                            break
+                        if numerator % denominator != 0: 
+                            x += 1
+                            continue
+                        else:
+                            y=y1
+                            flag = 1
+                            break
+                    if flag:
+                        while x < n:
+                            if int(y) >= 0:
+                                if int(y) < n - x:
+                                    if sym_break: # reachability check
+                                        if not ((x <= (k-2)*y+1) and (y <= (k-2)*x+(k-1))): 
+                                            x += m_q
+                                            y += m_p
+                                            continue
+                                    else:
+                                        if not ((x <= (k-2)*y+(k-1)) and (y <= (k-2)*x+(k-1))): 
+                                            x += m_q
+                                            y += m_p
+                                            continue
+                                    tmp_str.append(str(-v[x][int(y)]))
+                                    tmp_str.append(" ")
+                                    dbg_str.append(f"({x},{int(y)})")
+                                    cnt += 1
+                                    
+                                    if cnt >= k and m_p != 0: # only looking for k or more points
+                                        last_good_mq = m_q # largest value of m_q always seems to be the last point found where #points >=k
+                                        #print(f"tmpCnt: {cnt}, m_p: {m_p}, m_q: {m_q}, mq_cap: {mq_cap}, slope: {slope}, b_p: {b_p}, b_q: {b_q}, b: {b}, x: {x}, y: {int(y)}, yf: {y}")
+                                else:
+                                    break
+                            x += m_q
+                            y += m_p
+                    if len(tmp_str) > 0 and cnt >= k:
+                        clause = f'k {cnt - k + 1} {"".join(tmp_str)}0'
+                        num_clauses += 1
+                        dimacs_buffer.append(clause)
+                        num_card_clauses +=1
+                        tmpStr3 = "".join(", ".join(dbg_str))
+                        out_log_file.write(tmpStr3)
+                        out_log_file.write("\n")
+            print(f"m_p:{m_p} m_q:{m_q} b_p:{b_p} b_q:{b_q}. m={m_p/m_q:.2f}. b={b_p/b_q:.2f}.") 
+            m_q += 1
+            #if last_good_mq + 2 < n:
+            #    mq_cap = last_good_mq + 2
+        print("")
+
+# This one should be about the same as no_heuristic except for having mq_cap; the y intercept ranges should match no_heuristic.
+def encode_cardinality_constraints_KNF_heuristic_mqcap_only():
+    global num_clauses, num_card_clauses
+    print("cardinality constraint: heuristic mq_cap only")
+    out_log_file.write("cardinality constraint: heuristic mq_cap only\n")
+    mq_cap = n - 1
+    last_good_mq = mq_cap
+
+    for m_p in range(0, n):
+
+        if (k - 1) * m_p > (n - 1):         #ADDED. 
+            continue 
+
+        m_q = 1
+        while m_q <= mq_cap: # mq_cap is max value of m_q that was found in previous m_p loop iteration that had a line with #points >= k                      
+            if (m_p == 0 and m_q != 1) or (math.gcd(m_p, m_q) > 1):
+                m_q += 1
+                continue
+            
+            if (k - 1) * m_q > (n - 1):    #ADDED.
+                break
+
+            if (m_p * k) < m_q: 
+                break
+            if m_p > (k * m_q):
+                m_q += 1
+                continue
+            for b_q in range(1, m_q+1):
+                for b_p in range(-int(m_p*n), int(b_q*n)+1):   
+                    if (b_p == 0 and b_q != 1) or (math.gcd(b_p, b_q) > 1) or m_q % b_q != 0:
+                        continue
+
+                    #if abs(b_p) > (n * b_q): #REMOVED.
+                    #    continue  
+
+                    if b_p >= (n-1)*b_q: #ADDED.
+                        break
+
+                    if m_q * b_p < - m_p * (n - 1) * b_q: #ADDED.
+                        continue
+
+                    tmp_str = []
+                    dbg_str = []  
+                    cnt = 0
+                    x = 0
+                    flag = 0
+                    denominator = m_q*b_q
+                    while x < n:
+                        numerator = m_p*x*b_q + b_p*m_q #y is integer iff (m_p*x*b_q + b_p*m_q) % (m_q*b_q) = 0
+                        y1 = numerator//denominator
+                        if y1 > n: 
+                            break
+                        if numerator % denominator != 0: 
+                            x += 1
+                            continue
+                        else:
+                            y=y1
+                            flag = 1
+                            break
+                    if flag:
+                        while x < n:
+                            if int(y) >= 0:
+                                if int(y) < n - x:
+                                    if sym_break: # reachability check
+                                        if not ((x <= (k-2)*y+1) and (y <= (k-2)*x+(k-1))): 
+                                            x += m_q
+                                            y += m_p
+                                            continue
+                                    else:
+                                        if not ((x <= (k-2)*y+(k-1)) and (y <= (k-2)*x+(k-1))): 
+                                            x += m_q
+                                            y += m_p
+                                            continue
+                                    tmp_str.append(str(-v[x][int(y)]))
+                                    tmp_str.append(" ")
+                                    if dbg_card: 
+                                        dbg_str.append(f"({x},{int(y)})")
+                                    cnt += 1
+                                    
+                                    if cnt >= k and m_p != 0: # only looking for k or more points
+                                        last_good_mq = m_q # largest value of m_q always seems to be the last point found where #points >=k
+                                        #print(f"tmpCnt: {cnt}, m_p: {m_p}, m_q: {m_q}, mq_cap: {mq_cap}, slope: {slope}, b_p: {b_p}, b_q: {b_q}, b: {b}, x: {x}, y: {int(y)}, yf: {y}")
+                                else:
+                                    break
+                            x += m_q
+                            y += m_p
+                    if len(tmp_str) > 0 and cnt >= k:
+                        clause = f'k {cnt - k + 1} {"".join(tmp_str)}0'
+                        num_clauses += 1
+                        dimacs_buffer.append(clause)
+                        num_card_clauses +=1
+                        if dbg_card:
+                            tmpStr3 = "".join(" ".join(dbg_str))
+                            out_log_file.write(tmpStr3)
+                            out_log_file.write("\n")
+            print(f"m_p:{m_p} m_q:{m_q} b_p:{b_p} b_q:{b_q}. m={m_p/m_q:.2f}. b={b_p/b_q:.2f}. mq_cap:{mq_cap}. last_good_mq:{last_good_mq}")                
+            m_q += 1
+            if last_good_mq + 2 < n:
+                mq_cap = last_good_mq + 2
+        print("")           
 
 
 if __name__ == "__main__":
