@@ -65,6 +65,9 @@ while true; do
   esac
 done
 
+run_id="$(date +%F_%H-%M-%S)"
+: "${x:=0}" "${y:=0}" "${s:=1}" "${c:=0}" "${v:=1}" "${a:=0}" "${l:=0}" "${b:=2}" "${f:=1}" "${t:=0}" "${r:=0}" "${z:=0}" "${u:=0}" "${j:=0}"
+
 # required for pysat and encoding types
 if [[ -n "${e:-}" ]]; then
   if [[ $(hostname) == *".fir.alliancecan.ca" || -n "${CC_CLUSTER:-}" ]]; then
@@ -75,20 +78,31 @@ if [[ -n "${e:-}" ]]; then
   fi
 fi
 
+while :; do
 run_id="$(date +%F_%H-%M-%S)"
-: "${x:=0}" "${y:=0}" "${s:=1}" "${c:=0}" "${v:=1}" "${a:=0}" "${l:=0}" "${b:=2}" "${f:=1}" "${t:=0}" "${r:=0}" "${z:=0}" "${u:=0}" "${j:=0}"
-
-if ((z==0)) # non-exhaustive search
+if ((z==0)) 
 then
   res_name="res_k${k}_n${n}_x${x}_y${y}_s${s}_c${c}_v${v}_a${a}_l${l}_b${b}_f${f}_r${r}_e${e:-none}_${run_id}"
 else
-  mkdir -p "$PWD/output/ex"  # exhaustive search
+  mkdir -p "$PWD/output/ex" 
   res_name="ex/res_k${k}_n${n}_x${x}_y${y}_s${s}_c${c}_v${v}_a${a}_l${l}_b${b}_f${f}_r${r}_e${e:-none}_${run_id}"
 fi
 
-python3 -u encode.py -k "$k" -n "$n" -l "$l" -a "$a" -v "$v" -c "$c" -s "$s" -x "$x" -y "$y" -b "$b" -t "$t" -f "$f" -r "$r" -p "$res_name" ${e:+-e "$e"} -u "$u" -j "$j"
-python3 -u solve.py  -k "$k" -n "$n" -x "$x" -y "$y" -t "$t" -f "$f" -r "$r" -p "$res_name" ${e:+-e "$e"} -z "$z" 
+  log="$PWD/output/$res_name/logOutput.log"
 
-#python3 -u print_solution.py -k "$k" -n "$n" -f "$PWD/output/$res_name/satOutput.log"
+  python3 -u encode.py -k "$k" -n "$n" -l "$l" -a "$a" -v "$v" -c "$c" -s "$s" -x "$x" -y "$y" -b "$b" -t "$t" -f "$f" -r "$r" -p "$res_name" ${e:+-e "$e"} -u "$u" -j "$j"
+  python3 -u solve.py  -k "$k" -n "$n" -x "$x" -y "$y" -t "$t" -f "$f" -r "$r" -p "$res_name" ${e:+-e "$e"} -z "$z"
 
-echo "Done."
+  # make sure log has time to write
+    #for _ in {1..50}; do
+    #[ -s "$log" ] && break
+    #sleep 0.1
+    #done
+    sleep 1
+
+  if grep -q "Failure" "$log"; then
+      j=$(( j >= 2 ? j - 2 : 0 ))
+  else
+    break
+  fi
+done
