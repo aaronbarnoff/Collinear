@@ -181,7 +181,7 @@ def encode_cardinality_constraints_KNF_no_heuristic():   # At most k constraint:
                 m_q += 1
                 continue
 
-            if (m_p * (k-1)) <= m_q:             # slopes >= (k-1) and slopes <= 1/(k-1) require at least k vertical/horizontal steps to reach k points
+            if (m_p * (k-1)) <= m_q:             # Changed to block slopes >= (k-1) and slopes <= 1/(k-1) require at least k vertical/horizontal steps to reach k points
                 break
             if m_p >= ((k-1) * m_q):     
                 m_q += 1
@@ -666,13 +666,16 @@ def encode_cardinality_constraints_KNF_heuristic():
             if (m_p == 0 and m_q != 1) or (math.gcd(m_p, m_q) > 1):
                 m_q += 1
                 continue
+            
             if (k - 1) * m_q > (n - 1):    #ADDED.
                 break
-            if (m_p * k) <= m_q: 
+
+            if (m_p * (k-1)) <= m_q:             # Changed to block slopes >= (k-1) and slopes <= 1/(k-1) require at least k vertical/horizontal steps to reach k points
                 break
-            if m_p >= (k * m_q): 
+            if m_p >= ((k-1) * m_q):     
                 m_q += 1
                 continue
+
             for b_q in range(1, m_q+1): 
                 for b_p in range(-int(m_p*n), int(b_q*n)+1): 
                     if (b_p == 0 and b_q != 1) or (math.gcd(b_p, b_q) > 1) or m_q % b_q != 0:
@@ -770,11 +773,12 @@ def encode_cardinality_constraints_KNF_heuristic_intercept_only():
             if (k - 1) * m_q > (n - 1):    #ADDED.
                 break
 
-            if (m_p * k) <= m_q: 
+            if (m_p * (k-1)) <= m_q:             # Changed to block slopes >= (k-1) and slopes <= 1/(k-1) require at least k vertical/horizontal steps to reach k points
                 break
-            if m_p >= (k * m_q): 
+            if m_p >= ((k-1) * m_q):     
                 m_q += 1
                 continue
+
             for b_q in range(1, m_q+1): 
                 for b_p in range(-int(m_p*n), int(b_q*n)+1): 
                     if (b_p == 0 and b_q != 1) or (math.gcd(b_p, b_q) > 1) or m_q % b_q != 0:
@@ -863,11 +867,12 @@ def encode_cardinality_constraints_KNF_heuristic_mqcap_only():
             if (k - 1) * m_q > (n - 1):    #ADDED.
                 break
 
-            if (m_p * k) <= m_q: 
+            if (m_p * (k-1)) <= m_q:             # Changed to block slopes >= (k-1) and slopes <= 1/(k-1) require at least k vertical/horizontal steps to reach k points
                 break
-            if m_p >= (k * m_q):
+            if m_p >= ((k-1) * m_q):     
                 m_q += 1
                 continue
+
             for b_q in range(1, m_q+1):
                 for b_p in range(-int(m_p*n), int(b_q*n)+1):   
                     if (b_p == 0 and b_q != 1) or (math.gcd(b_p, b_q) > 1) or m_q % b_q != 0:
