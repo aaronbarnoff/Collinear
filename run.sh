@@ -92,3 +92,5 @@ python3 -u solve.py  -k "$k" -n "$n" -x "$x" -y "$y" -t "$t" -f "$f" -r "$r" -p 
 #python3 -u print_solution.py -k "$k" -n "$n" -f "$PWD/output/$res_name/satOutput.log"
 
 echo "Done."
+
+# grep -r "Failure" --include="logOutput.log" .

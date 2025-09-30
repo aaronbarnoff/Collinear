@@ -202,7 +202,7 @@ def submit_job(*, walltime, runner, K,N,X,Y, S, C_VAL, V_VAL, A_VAL, L_VAL, B_VA
         runner,
         "-k", str(K), "-n", str(N), "-x", str(X), "-y", str(Y), "-s", str(S),
         "-c", str(C_VAL), "-v", str(V_VAL), "-a", str(A_VAL), "-l", str(L_VAL), "-b", str(B_VAL),
-        "-f", str(F_VAL), "-r", str(seed), "-t", str(0), "-j", str(filter_thresh)
+        "-f", str(F_VAL), "-r", str(seed), "-t", str(0), "-j", str(filter_thresh), "-u", str("4")
     ]
     job_name = build_job_name(K,N, 'KNF' if F_VAL==1 else 'CNF', C_VAL, f"v{V_VAL}_a{A_VAL}_l{L_VAL}_b{B_VAL}", seed)
     cmd[2] = f"--job-name={job_name}"
