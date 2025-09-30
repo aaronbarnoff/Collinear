@@ -181,9 +181,9 @@ def encode_cardinality_constraints_KNF_no_heuristic():   # At most k constraint:
                 m_q += 1
                 continue
 
-            if (m_p * k) < m_q:             # slopes > k and slopes < 1/k require at least k vertical/horizontal steps
+            if (m_p * (k-1)) <= m_q:             # slopes >= (k-1) and slopes <= 1/(k-1) require at least k vertical/horizontal steps to reach k points
                 break
-            if m_p > (k * m_q):     
+            if m_p >= ((k-1) * m_q):     
                 m_q += 1
                 continue
 
@@ -239,12 +239,12 @@ def encode_cardinality_constraints_KNF_no_heuristic():   # At most k constraint:
                             if 0 <= y < n - x:
                                 # exclude points that can't be reached from origin without k horizontal/vertical steps
                                 if sym_break == 1:
-                                    if not ((x <= (k-2)*y+1) and (y <= (k-2)*x+(k-1))): 
+                                    if not ((x < (k-2)*y+1) and (y < (k-2)*x+(k-1))): 
                                         x += m_q
                                         y += m_p
                                         continue
                                 else:
-                                    if not ((x <= (k-2)*y+(k-1)) and (y <= (k-2)*x+(k-1))): 
+                                    if not ((x < (k-2)*y+(k-1)) and (y < (k-2)*x+(k-1))): 
                                         x += m_q
                                         y += m_p
                                         continue
@@ -668,9 +668,9 @@ def encode_cardinality_constraints_KNF_heuristic():
                 continue
             if (k - 1) * m_q > (n - 1):    #ADDED.
                 break
-            if (m_p * k) < m_q: 
+            if (m_p * k) <= m_q: 
                 break
-            if m_p > (k * m_q): 
+            if m_p >= (k * m_q): 
                 m_q += 1
                 continue
             for b_q in range(1, m_q+1): 
@@ -713,12 +713,12 @@ def encode_cardinality_constraints_KNF_heuristic():
                             if int(y) >= 0:
                                 if int(y) < n - x:
                                     if sym_break: # reachability check
-                                        if not ((x <= (k-2)*y+1) and (y <= (k-2)*x+(k-1))): 
+                                        if not ((x < (k-2)*y+1) and (y < (k-2)*x+(k-1))): 
                                             x += m_q
                                             y += m_p
                                             continue
                                     else:
-                                        if not ((x <= (k-2)*y+(k-1)) and (y <= (k-2)*x+(k-1))): 
+                                        if not ((x < (k-2)*y+(k-1)) and (y < (k-2)*x+(k-1))): 
                                             x += m_q
                                             y += m_p
                                             continue
@@ -770,9 +770,9 @@ def encode_cardinality_constraints_KNF_heuristic_intercept_only():
             if (k - 1) * m_q > (n - 1):    #ADDED.
                 break
 
-            if (m_p * k) < m_q: 
+            if (m_p * k) <= m_q: 
                 break
-            if m_p > (k * m_q): 
+            if m_p >= (k * m_q): 
                 m_q += 1
                 continue
             for b_q in range(1, m_q+1): 
@@ -806,12 +806,12 @@ def encode_cardinality_constraints_KNF_heuristic_intercept_only():
                             if int(y) >= 0:
                                 if int(y) < n - x:
                                     if sym_break: # reachability check
-                                        if not ((x <= (k-2)*y+1) and (y <= (k-2)*x+(k-1))): 
+                                        if not ((x < (k-2)*y+1) and (y < (k-2)*x+(k-1))): 
                                             x += m_q
                                             y += m_p
                                             continue
                                     else:
-                                        if not ((x <= (k-2)*y+(k-1)) and (y <= (k-2)*x+(k-1))): 
+                                        if not ((x < (k-2)*y+(k-1)) and (y < (k-2)*x+(k-1))): 
                                             x += m_q
                                             y += m_p
                                             continue
@@ -863,9 +863,9 @@ def encode_cardinality_constraints_KNF_heuristic_mqcap_only():
             if (k - 1) * m_q > (n - 1):    #ADDED.
                 break
 
-            if (m_p * k) < m_q: 
+            if (m_p * k) <= m_q: 
                 break
-            if m_p > (k * m_q):
+            if m_p >= (k * m_q):
                 m_q += 1
                 continue
             for b_q in range(1, m_q+1):
@@ -905,12 +905,12 @@ def encode_cardinality_constraints_KNF_heuristic_mqcap_only():
                             if int(y) >= 0:
                                 if int(y) < n - x:
                                     if sym_break: # reachability check
-                                        if not ((x <= (k-2)*y+1) and (y <= (k-2)*x+(k-1))): 
-                                            x += m_q
-                                            y += m_p
-                                            continue
+                                        if not ((x < (k-2)*y+1) and (y < (k-2)*x+(k-1))): 
+                                                x += m_q
+                                                y += m_p
+                                                continue
                                     else:
-                                        if not ((x <= (k-2)*y+(k-1)) and (y <= (k-2)*x+(k-1))): 
+                                        if not ((x < (k-2)*y+(k-1)) and (y < (k-2)*x+(k-1))): 
                                             x += m_q
                                             y += m_p
                                             continue
