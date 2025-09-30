@@ -264,7 +264,7 @@ def encode_cardinality_constraints_KNF_no_heuristic():   # At most k constraint:
                         dimacs_buffer.append(clause)
                         num_card_clauses += 1
                         if dbg_card: out_log_file.write(" ".join(debug_str) + "\n")
-            print(f"m_p{m_p} m_q{m_q} b_p{b_p} b_q{b_q}")
+            #print(f"m_p{m_p} m_q{m_q} b_p{b_p} b_q{b_q}")
             m_q += 1
 
 
@@ -627,7 +627,7 @@ def main():
     elif use_heuristic == 3:
         encode_cardinality_constraints_KNF_heuristic_intercept_only()
     else:
-        encode_cardinality_constraints_KNF_no_heuristic() # encode_cardinality_constraints_KNF_heuristic()
+        encode_cardinality_constraints_KNF_no_heuristic() # fix the slope cutoff as it is including slopes =k and 1/k
 
     # Optional constraints
     reflection_symmetry_break()
@@ -678,7 +678,8 @@ def encode_cardinality_constraints_KNF_heuristic():
                     if (b_p == 0 and b_q != 1) or (math.gcd(b_p, b_q) > 1) or m_q % b_q != 0:
                         continue
 
-
+                    # This rejects lines with large negative intercepts that are still within the triangle.
+                    # eg fails on k7n201. y-int=-215, xint=71.67. slope=3; m_p: 3, m_q: 1; points: (93,64) (94,67) (95,70) (99,82) (100,85) (101,88) (102,91)
                     if abs(b_p) > (n * b_q): # Combination of this constraint and mq_cap gives much fewer lines. It is replaced by the below checks in no_heuristic
                         continue   
                     """
@@ -741,11 +742,11 @@ def encode_cardinality_constraints_KNF_heuristic():
                         tmpStr3 = "".join(", ".join(dbg_str))
                         out_log_file.write(tmpStr3)
                         out_log_file.write("\n")
-            print(f"m_p:{m_p} m_q:{m_q} b_p:{b_p} b_q:{b_q}. m={m_p/m_q:.2f}. b={b_p/b_q:.2f}. mq_cap:{mq_cap}. last_good_mq:{last_good_mq}")       
+            #print(f"m_p:{m_p} m_q:{m_q} b_p:{b_p} b_q:{b_q}. m={m_p/m_q:.2f}. b={b_p/b_q:.2f}. mq_cap:{mq_cap}. last_good_mq:{last_good_mq}")       
             m_q += 1
             if last_good_mq + 2 < n:
                 mq_cap = last_good_mq + 2
-        print("")
+        #print("")
 
 # This one has different y-intercept ranges only; also m_p is too loose.
 def encode_cardinality_constraints_KNF_heuristic_intercept_only():
@@ -779,7 +780,7 @@ def encode_cardinality_constraints_KNF_heuristic_intercept_only():
                     if (b_p == 0 and b_q != 1) or (math.gcd(b_p, b_q) > 1) or m_q % b_q != 0:
                         continue
 
-                    if abs(b_p) > (n * b_q): # This is untouched
+                    if abs(b_p) > (n * b_q): # This rejects lines with large negative intercepts that are still within the triangle.
                         continue   
 
                     tmp_str = []
@@ -834,11 +835,11 @@ def encode_cardinality_constraints_KNF_heuristic_intercept_only():
                         tmpStr3 = "".join(", ".join(dbg_str))
                         out_log_file.write(tmpStr3)
                         out_log_file.write("\n")
-            print(f"m_p:{m_p} m_q:{m_q} b_p:{b_p} b_q:{b_q}. m={m_p/m_q:.2f}. b={b_p/b_q:.2f}.") 
+            #print(f"m_p:{m_p} m_q:{m_q} b_p:{b_p} b_q:{b_q}. m={m_p/m_q:.2f}. b={b_p/b_q:.2f}.") 
             m_q += 1
             #if last_good_mq + 2 < n:
             #    mq_cap = last_good_mq + 2
-        print("")
+        #print("")
 
 # This one should be about the same as no_heuristic except for having mq_cap; the y intercept ranges should match no_heuristic.
 def encode_cardinality_constraints_KNF_heuristic_mqcap_only():
@@ -935,11 +936,11 @@ def encode_cardinality_constraints_KNF_heuristic_mqcap_only():
                             tmpStr3 = "".join(" ".join(dbg_str))
                             out_log_file.write(tmpStr3)
                             out_log_file.write("\n")
-            print(f"m_p:{m_p} m_q:{m_q} b_p:{b_p} b_q:{b_q}. m={m_p/m_q:.2f}. b={b_p/b_q:.2f}. mq_cap:{mq_cap}. last_good_mq:{last_good_mq}")                
+            #print(f"m_p:{m_p} m_q:{m_q} b_p:{b_p} b_q:{b_q}. m={m_p/m_q:.2f}. b={b_p/b_q:.2f}. mq_cap:{mq_cap}. last_good_mq:{last_good_mq}")                
             m_q += 1
             if last_good_mq + 2 < n:
                 mq_cap = last_good_mq + 2
-        print("")           
+        #print("")           
 
 
 if __name__ == "__main__":
