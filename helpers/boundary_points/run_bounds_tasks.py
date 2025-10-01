@@ -28,7 +28,7 @@ TEMPLATES = {
 }
 
 def submit(template_name, f_flag, i_val, seed):
-    jobname = f"{template_name}_seed{seed}"
+    jobname = f"{template_name}_{seed}"
     cmd = [
         "sbatch",
         f"--time={SBATCH_TIME}",

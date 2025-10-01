@@ -127,6 +127,7 @@ def define_path_variables():
                     v[x][y] = new_var()
                     var_cnt += 1
     
+    
 def block_extremal_points():    
     # Block points too close to the x or y axis that cannot avoid k-1 vertical/horizontal steps
     for x in range(n):
