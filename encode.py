@@ -26,8 +26,8 @@ def parse_arguments():
     parser.add_argument("-r", default=0, help="SAT solver seed")
     parser.add_argument("-o", default=0, help="Use lexicographic symmetry breaking constraints")
     parser.add_argument("-p", default=0, help="results folder name")
-    parser.add_argument("-u", default=0, help="(temporary) for cardinality constraints. 0=no heuristic, 1=heuristic")
-    parser.add_argument("-j", default=0, help="collinearity heuristic line-length filter threshold value")
+    parser.add_argument("-u", default=0, help="(Unused, will remove soon) Line-Filter Heuristic. 0=no heuristic, 1=heuristic")
+    parser.add_argument("-j", default=0, help="Line-Filter Heuristic; only block lines with length at least k+j points")
     #parser.add_argument("-zl", default=0, help="First/last <num> points for lex constraints")
     
     return vars(parser.parse_args())
@@ -173,7 +173,7 @@ Cardinality Constraints
 Slope(= m_p/m_q):                                         only positive slopes are considered
   + Vertical Check:           (k-1)*m_p <= n-1            ensures that y-coord still fits inside triangle (given by y=n-x-1) after k-1 steps of m_p (rise)
   + Horizontal Check:         (k-1)*m_q <= n-1            ensures that x-coord still fits after k-1 steps of m_q (run)
-  + Valid Slope Check:        1/k <= m_p/m_q <= k         ensures only slopes that allow fewer than k horizontal/vertical steps are considered.
+  + Valid Slope Check:        1/(k-2) < m_p/m_q < (k-2)   ensures only slopes that allow fewer than k horizontal/vertical steps are considered.
 y-intercept(= b_p/b_q):
   + Lower bound intercept:    m_q*b_p >= -m_p*(n-1)*b_q   ensures the line is not below y=0 by the time x=n-1, so it enters the triangle
   + Upper bound intercept:    b_p <= (n-1)*b_q            ensures the line is not already above y=n-1 when x=0, so it enters the triangle  
@@ -182,10 +182,20 @@ Other:
   + Reachability checks:      (x <= (k-2)*y+(k-1)) and (y <= (k-2)*x+(k-1))    ensure that the points on these lines can actually be reached from the origin
 """
 dbg_card = False
-def encode_cardinality_constraints_KNF_no_heuristic():   # At most k constraint: (excluding vertical and horizontal lines)
-    global num_clauses, num_card_clauses
-    print("cardinality constraint: No heuristic")
-    out_log_file.write("cardinality constraint: No heuristic\n")
+def encode_cardinality_constraints_KNF():   # At most k constraint: (excluding vertical and horizontal lines)
+    global num_clauses, num_card_clauses, filter_threshold
+    # filter threshold: 0=no filter, block lines with k+0 or more points
+    # lengths where a correct SAT/UNSAT was found (single-seed test)
+    # k6: 8 works for n97 and n98; n50 =0
+    # k7: 20 works for n180 and n261; n50 <=2; n100 <= 7; n120 <= 15;  n150 <= 14; n200 <= 19; n250 <= 21; n261 ~= 20
+
+    if filter_threshold > 0:
+        print(f"cardinality constraint: Line-length filter heuristic - only include length at least k+{filter_threshold}")
+        out_log_file.write(f"cardinality constraint: Linelength filter heuristic - only include length at least k+{filter_threshold}\n")
+    else:
+        print("cardinality constraint: No heuristic")
+        out_log_file.write("cardinality constraint: No heuristic\n")
+
     for m_p in range(0, n):
         if (k - 1) * m_p > (n - 1):         # ensure at least k points can span the triangle vertically 
             continue 
@@ -273,7 +283,7 @@ def encode_cardinality_constraints_KNF_no_heuristic():   # At most k constraint:
                             y += m_p
                     
                     # add the line as KNF cardinality constraint
-                    if tmp_str and reachable_cnt >= k:
+                    if tmp_str and reachable_cnt >= k+filter_threshold:
                         clause = f'k {reachable_cnt - k + 1} {"".join(tmp_str)}0'
                         num_clauses += 1
                         dimacs_buffer.append(clause)
@@ -281,6 +291,7 @@ def encode_cardinality_constraints_KNF_no_heuristic():   # At most k constraint:
                         if dbg_card: out_log_file.write(" ".join(debug_str) + "\n")
             #print(f"m_p{m_p} m_q{m_q} b_p{b_p} b_q{b_q}")
             m_q += 1
+
 
 
 
@@ -333,94 +344,59 @@ def encode_boundary_constraints():
     out_log_file.write(f"Boundary constraints: {boundary_type}\n")
 
     points_k7_upper_bounds_symmetric = """
-        (0,6),(1,11),(2,16),(3,21),(4,26),(5,31),(6,0),(6,30),
-        (7,33),(8,37),(9,41),(10,44),(11,1),(11,45),(12,47),(13,49),
-        (14,52),(15,55),(16,2),(16,58),(17,60),(18,63),(19,65),(20,67),
-        (21,3),(21,69),(22,70),(23,71),(24,73),(25,75),(26,4),(26,78),
-        (27,80),(28,82),(29,83),(30,6),(30,86),(31,5),(31,86),(32,88),
-        (33,7),(33,88),(34,89),(35,91),(36,92),(37,8),(37,91),(38,90),
-        (39,91),(40,93),(41,9),(41,95),(42,97),(43,99),(44,10),(44,101),
-        (45,11),(45,102),(46,104),(47,12),(47,106),(48,108),(49,13),(49,109),
-        (50,111),(51,113),(52,14),(52,115),(53,117),(54,119),(55,15),(55,121),
-        (56,123),(57,125),(58,16),(58,126),(59,128),(60,17),(60,130),(61,131),
-        (62,133),(63,18),(63,135),(64,136),(65,19),(65,138),(66,140),(67,20),
-        (67,141),(68,143),(69,21),(69,144),(70,22),(70,146),(71,23),(71,148),
-        (72,149),(73,24),(73,151),(74,153),(75,25),(75,155),(76,156),(77,156),
-        (78,26),(78,157),(79,156),(80,27),(80,158),(81,159),(82,28),(82,162),
-        (83,29),(83,163),(84,165),(85,166),(86,30),(86,31),(86,167),(87,168),
-        (88,32),(88,33),(88,170),(89,34),(89,171),(90,38),(91,35),(91,37),
-        (91,39),(92,36),(93,40),(95,41),(97,42),(99,43),(101,44),(102,45),
-        (104,46),(106,47),(108,48),(109,49),(111,50),(113,51),(115,52),(117,53),
-        (119,54),(121,55),(123,56),(125,57),(126,58),(128,59),(130,60),(131,61),
-        (133,62),(135,63),(136,64),(138,65),(140,66),(141,67),(143,68),(144,69),
-        (146,70),(148,71),(149,72),(151,73),(153,74),(155,75),(156,76),(156,77),
-        (156,79),(157,78),(158,80),(159,81),(162,82),(163,83),(165,84),(166,85),
+        (0,6),(1,11),(2,16),(3,21),(4,26),(5,31),(6,0),(6,30),                      (7,33),(8,37),(9,41),(10,44),(11,1),(11,45),(12,47),(13,49),
+        (14,52),(15,55),(16,2),(16,58),(17,60),(18,63),(19,65),(20,67),             (21,3),(21,69),(22,70),(23,71),(24,73),(25,75),(26,4),(26,78),
+        (27,80),(28,82),(29,83),(30,6),(30,86),(31,5),(31,86),(32,88),              (33,7),(33,88),(34,89),(35,91),(36,92),(37,8),(37,91),(38,90),
+        (39,91),(40,93),(41,9),(41,95),(42,97),(43,99),(44,10),(44,101),            (45,11),(45,102),(46,104),(47,12),(47,106),(48,108),(49,13),(49,109),
+        (50,111),(51,113),(52,14),(52,115),(53,117),(54,119),(55,15),(55,121),      (56,123),(57,125),(58,16),(58,126),(59,128),(60,17),(60,130),(61,131),
+        (62,133),(63,18),(63,135),(64,136),(65,19),(65,138),(66,140),(67,20),       (67,141),(68,143),(69,21),(69,144),(70,22),(70,146),(71,23),(71,148),
+        (72,149),(73,24),(73,151),(74,153),(75,25),(75,155),(76,156),(77,156),      (78,26),(78,157),(79,156),(80,27),(80,158),(81,159),(82,28),(82,162),
+        (83,29),(83,163),(84,165),(85,166),(86,30),(86,31),(86,167),(87,168),       (88,32),(88,33),(88,170),(89,34),(89,171),(90,38),(91,35),(91,37),
+        (91,39),(92,36),(93,40),(95,41),(97,42),(99,43),(101,44),(102,45),          (104,46),(106,47),(108,48),(109,49),(111,50),(113,51),(115,52),(117,53),
+        (119,54),(121,55),(123,56),(125,57),(126,58),(128,59),(130,60),(131,61),    (133,62),(135,63),(136,64),(138,65),(140,66),(141,67),(143,68),(144,69),
+        (146,70),(148,71),(149,72),(151,73),(153,74),(155,75),(156,76),(156,77),    (156,79),(157,78),(158,80),(159,81),(162,82),(163,83),(165,84),(166,85),
         (167,86),(168,87),(170,88),(171,89)
     """
 
     points_k7_upper_bounds = """
-        (0,6),(1,11),(2,16),(3,21),(4,26),(5,31),(6,30),(7,33),(8,37),
-        (9,41),(10,44),(11,45),(12,47),(13,49),(14,52),(15,55),(16,58),
-        (17,60),(18,63),(19,65),(20,67),(21,69),(22,70),(23,71),(24,73),
-        (25,75),(26,78),(27,80),(28,82),(29,83),(30,86),(31,86),(32,88),
-        (33,88),(34,89),(35,91),(36,92),(37,91),(38,90),(39,91),(40,93),
-        (41,95),(42,97),(43,99),(44,101),(45,102),(46,104),(47,106),(48,108),
-        (49,109),(50,111),(51,113),(52,115),(53,117),(54,119),(55,121),(56,123),
-        (57,125),(58,126),(59,128),(60,130),(61,131),(62,133),(63,135),(64,136),
-        (65,138),(66,140),(67,141),(68,143),(69,144),(70,146),(71,148),(72,149),
-        (73,151),(74,153),(75,155),(76,156),(77,156),(78,157),(79,156),(80,158),
-        (81,159),(82,162),(83,163),(84,165),(85,166),(86,167),(87,168),(88,170),
-        (89,171)
+        (0,6),(1,11),(2,16),(3,21),(4,26),(5,31),(6,30),(7,33),(8,37),             (9,41),(10,44),(11,45),(12,47),(13,49),(14,52),(15,55),(16,58),
+        (17,60),(18,63),(19,65),(20,67),(21,69),(22,70),(23,71),(24,73),           (25,75),(26,78),(27,80),(28,82),(29,83),(30,86),(31,86),(32,88),
+        (33,88),(34,89),(35,91),(36,92),(37,91),(38,90),(39,91),(40,93),           (41,95),(42,97),(43,99),(44,101),(45,102),(46,104),(47,106),(48,108),
+        (49,109),(50,111),(51,113),(52,115),(53,117),(54,119),(55,121),(56,123),   (57,125),(58,126),(59,128),(60,130),(61,131),(62,133),(63,135),(64,136),
+        (65,138),(66,140),(67,141),(68,143),(69,144),(70,146),(71,148),(72,149),   (73,151),(74,153),(75,155),(76,156),(77,156),(78,157),(79,156),(80,158),
+        (81,159),(82,162),(83,163),(84,165),(85,166),(86,167),(87,168),(88,170),   (89,171)
     """
 
     points_k7_lower_bounds = """
-        (1,0),(6,1),(11,2),(16,3),(21,4),(26,5),(30,6),(30,7),
-        (33,8),(37,9),(41,10),(43,11),(45,12),(45,13),(48,14),
-        (51,15),(54,16),(57,17),(59,18),(62,19),(64,20),(66,21),
-        (67,22),(69,23),(71,24),(73,25),(75,26),(78,27),(79,28),
-        (82,29),(83,30),(86,31),(86,32),(88,33),(88,34),(89,35),
-        (89,38),(89,39),(90,36),(90,37),(90,40),(92,41),(94,42),
-        (96,43),(98,44),(100,45),(102,46),(104,47),(105,48),(107,49),
-        (109,50),(111,51),(112,52),(115,53),(116,54),(118,55),(120,56),
-        (122,57),(124,58),(126,59),(127,60),(129,61),(131,62),(132,63),
-        (134,64),(136,65),(137,66),(139,67),(141,68),(142,69),(144,70),
-        (145,71),(147,72),(149,73),(151,74),(153,75),(154,76),(154,77),
-        (155,78),(156,79),(156,80),(158,81),(159,82),(160,83),(162,84),
-        (165,85),(165,86),(166,87),(168,88),(169,89),(171,90),(172,91),
-        (174,92)
+        (1,0),(6,1),(11,2),(16,3),(21,4),(26,5),(30,6),(30,7),            (33,8),(37,9),(41,10),(43,11),(45,12),(45,13),(48,14),
+        (51,15),(54,16),(57,17),(59,18),(62,19),(64,20),(66,21),          (67,22),(69,23),(71,24),(73,25),(75,26),(78,27),(79,28),
+        (82,29),(83,30),(86,31),(86,32),(88,33),(88,34),(89,35),          (89,38),(89,39),(90,36),(90,37),(90,40),(92,41),(94,42),
+        (96,43),(98,44),(100,45),(102,46),(104,47),(105,48),(107,49),     (109,50),(111,51),(112,52),(115,53),(116,54),(118,55),(120,56),
+        (122,57),(124,58),(126,59),(127,60),(129,61),(131,62),(132,63),   (134,64),(136,65),(137,66),(139,67),(141,68),(142,69),(144,70),
+        (145,71),(147,72),(149,73),(151,74),(153,75),(154,76),(154,77),   (155,78),(156,79),(156,80),(158,81),(159,82),(160,83),(162,84),
+        (165,85),(165,86),(166,87),(168,88),(169,89),(171,90),(172,91),   (174,92)
     """
     
     # k6 bounds don't include internal boundary points
     points_k6_upper_bounds_symmetric = """
-        (0,5),(1,9),(2,13),(3,17),(4,21),(5,20),(6,22),(7,24),
-        (8,26),(9,28),(10,29),(11,29),(12,31),(13,33),(14,35),
-        (15,36),(16,38),(17,39),(18,41),(19,41),(20,42),(21,43),
-        (22,45),(23,46),(24,48),(25,49),(26,51),(27,53),(28,55),
-        (29,56),(30,57),(31,55),(32,57),(33,57),(34,59),(35,59),
-        (36,57),(37,58),(38,58),(39,57),(5,0),(9,1),(13,2),(17,3),
-        (20,5),(21,4),(22,6),(24,7),(26,8),(28,9),(29,10),(29,11),
-        (31,12),(33,13),(35,14),(36,15),(38,16),(39,17),(41,18),(41,19),
-        (42,20),(43,21),(45,22),(46,23),(48,24),(49,25),(51,26),(53,27),
-        (55,28),(55,31),(56,29),(57,30),(57,32),(57,33),(57,36),(57,39),
+        (0,5),(1,9),(2,13),(3,17),(4,21),(5,20),(6,22),(7,24),            (8,26),(9,28),(10,29),(11,29),(12,31),(13,33),(14,35),
+        (15,36),(16,38),(17,39),(18,41),(19,41),(20,42),(21,43),          (22,45),(23,46),(24,48),(25,49),(26,51),(27,53),(28,55),
+        (29,56),(30,57),(31,55),(32,57),(33,57),(34,59),(35,59),          (36,57),(37,58),(38,58),(39,57),(5,0),(9,1),(13,2),(17,3),
+        (20,5),(21,4),(22,6),(24,7),(26,8),(28,9),(29,10),(29,11),        (31,12),(33,13),(35,14),(36,15),(38,16),(39,17),(41,18),(41,19),
+        (42,20),(43,21),(45,22),(46,23),(48,24),(49,25),(51,26),(53,27),  (55,28),(55,31),(56,29),(57,30),(57,32),(57,33),(57,36),(57,39),
         (58,37),(58,38),(59,34),(59,35),
     """
 
     points_k6_upper_bounds = """
-        (0,5),(1,9),(2,13),(3,17),(4,21),(5,20),(6,22),(7,24),
-        (8,26),(9,28),(10,29),(11,29),(12,31),(13,33),(14,35),
-        (15,36),(16,38),(17,39),(18,41),(19,41),(20,42),(21,43),
-        (22,45),(23,46),(24,48),(25,49),(26,51),(27,53),(28,55),
-        (29,56),(30,57),(31,55),(32,57),(33,57),(34,59),(35,59),
-        (36,57),(37,58),(38,58),(39,57)
+        (0,5),(1,9),(2,13),(3,17),(4,21),(5,20),(6,22),(7,24),    (8,26),(9,28),(10,29),(11,29),(12,31),(13,33),(14,35),
+        (15,36),(16,38),(17,39),(18,41),(19,41),(20,42),(21,43),  (22,45),(23,46),(24,48),(25,49),(26,51),(27,53),(28,55),
+        (29,56),(30,57),(31,55),(32,57),(33,57),(34,59),(35,59),  (36,57),(37,58),(38,58),(39,57)
     """
 
     points_k6_lower_bounds= """
-        (1,0),(5,1),(9,2),(13,3),(17,4),(20,5),(20,6),(22,7),
-        (24,8),(26,9),(27,10),(27,11),(28,12),(30,13),(32,14),
-        (34,15),(36,16),(37,17),(38,18),(39,19),(40,20),(41,21),
-        (42,22),(44,23),(45,24),(47,25),(49,26),(51,27),(52,28),
-        (54,29),(55,30),(55,31),(55,32),(56,33),(56,34),(59,35),
-        (57,36),(57,37),(57,38),(57,39),(58,36),
+        (1,0),(5,1),(9,2),(13,3),(17,4),(20,5),(20,6),(22,7),     (24,8),(26,9),(27,10),(27,11),(28,12),(30,13),(32,14),
+        (34,15),(36,16),(37,17),(38,18),(39,19),(40,20),(41,21),  (42,22),(44,23),(45,24),(47,25),(49,26),(51,27),(52,28),
+        (54,29),(55,30),(55,31),(55,32),(56,33),(56,34),(59,35),  (57,36),(57,37),(57,38),(57,39),(58,36),
     """
 
     if k == 7:
@@ -641,17 +617,7 @@ def main():
 
     # Mandatory constraints
     encode_path_constraints()
-
-    if use_heuristic == 1:
-        encode_cardinality_constraints_KNF_heuristic() #mq_cap and different y-intercepts than no_heuristic; slope ranges are different too; only thing fixed was floating point truncation
-    elif use_heuristic == 2:
-        encode_cardinality_constraints_KNF_heuristic_mqcap_only()
-    elif use_heuristic == 3:
-        encode_cardinality_constraints_KNF_heuristic_intercept_only()
-    elif use_heuristic == 4:
-        encode_cardinality_constraints_KNF_heuristic_line_filter()
-    else:
-        encode_cardinality_constraints_KNF_no_heuristic() # fix the slope cutoff as it is including slopes =k and 1/k
+    encode_cardinality_constraints_KNF() # Includes line-filter heuristic, if enabled
 
     # Optional constraints
     reflection_symmetry_break()
@@ -673,411 +639,6 @@ def main():
     f.close()
 
     print("DimacsFile created: ", time.time() - start_time, "seconds")
-
-# This one uses mq_cap and has different y-intercept ranges
-def encode_cardinality_constraints_KNF_heuristic():
-    global num_clauses, num_card_clauses
-    print("cardinality constraint: heuristic")
-    out_log_file.write("cardinality constraint: heuristic\n")
-    mq_cap = n - 1
-    last_good_mq = mq_cap
-
-    for m_p in range(0, n):
-        m_q = 1
-        if (k - 1) * m_p > (n - 1):         #ADDED. These tighter m_p and m_q checks dont change result
-            continue 
-        while m_q <= mq_cap: #mq_cap is max value of m_q that was found in previous m_p loop iteration that had a line with #points >= k
-            if (m_p == 0 and m_q != 1) or (math.gcd(m_p, m_q) > 1):
-                m_q += 1
-                continue
-
-            if (k - 1) * m_q > (n - 1):    #ADDED.
-                break
-
-            if (m_p * (k-2)) < m_q:             # Trying slope > (k-2) and slope < 1/(k-2) now instead of slope >= (k-1) and slope <= 1/(k-2)
-                break
-            if m_p > ((k-2) * m_q):     
-                m_q += 1
-                continue
-
-            for b_q in range(1, m_q+1): 
-                for b_p in range(-int(m_p*n), int(b_q*n)+1): 
-                    if (b_p == 0 and b_q != 1) or (math.gcd(b_p, b_q) > 1) or m_q % b_q != 0:
-                        continue
-
-                    # This rejects lines with large negative intercepts that are still within the triangle.
-                    # eg fails on k7n201. y-int=-215, xint=71.67. slope=3; m_p: 3, m_q: 1; points: (93,64) (94,67) (95,70) (99,82) (100,85) (101,88) (102,91)
-                    if abs(b_p) > (n * b_q): # Combination of this constraint and mq_cap gives much fewer lines. It is replaced by the below checks in no_heuristic
-                        continue   
-                    """
-                    if b_p >= (n-1)*b_q: 
-                        break
-
-                    if m_q * b_p < - m_p * (n - 1) * b_q:
-                        continue
-                    """
-
-                    tmp_str = []
-                    dbg_str = []
-                    cnt = 0
-                    x = 0
-                    flag = 0
-                    denominator = m_q*b_q
-                    while x < n:
-                        numerator = m_p*x*b_q + b_p*m_q #y is integer iff (m_p*x*b_q + b_p*m_q) % (m_q*b_q) = 0
-                        y1 = numerator//denominator
-                        if y1 > n: 
-                            break
-                        if numerator % denominator != 0: 
-                            x += 1
-                            continue
-                        else:
-                            y=y1
-                            flag = 1
-                            break
-                    if flag:
-                        while x < n:
-                            if int(y) >= 0:
-                                if int(y) < n - x:
-                                    if sym_break: # reachability check
-                                        if not ((x < (k-2)*y+1) and (y < (k-2)*x+(k-1))): 
-                                            x += m_q
-                                            y += m_p
-                                            continue
-                                    else:
-                                        if not ((x < (k-2)*y+(k-1)) and (y < (k-2)*x+(k-1))): 
-                                            x += m_q
-                                            y += m_p
-                                            continue
-                                    tmp_str.append(str(-v[x][int(y)]))
-                                    tmp_str.append(" ")
-                                    dbg_str.append(f"({x},{int(y)})")
-                                    cnt += 1
-                                    
-                                    if cnt >= k and m_p != 0: # only looking for k or more points
-                                        last_good_mq = m_q # largest value of m_q always seems to be the last point found where #points >=k
-                                        #print(f"tmpCnt: {cnt}, m_p: {m_p}, m_q: {m_q}, mq_cap: {mq_cap}, slope: {slope}, b_p: {b_p}, b_q: {b_q}, b: {b}, x: {x}, y: {int(y)}, yf: {y}")
-                                else:
-                                    break
-                            x += m_q
-                            y += m_p
-                    if len(tmp_str) > 0 and cnt >= k:
-                        clause = f'k {cnt - k + 1} {"".join(tmp_str)}0'
-                        num_clauses += 1
-                        dimacs_buffer.append(clause)
-                        num_card_clauses +=1
-                        tmpStr3 = "".join(", ".join(dbg_str))
-                        out_log_file.write(tmpStr3)
-                        out_log_file.write("\n")
-            #print(f"m_p:{m_p} m_q:{m_q} b_p:{b_p} b_q:{b_q}. m={m_p/m_q:.2f}. b={b_p/b_q:.2f}. mq_cap:{mq_cap}. last_good_mq:{last_good_mq}")       
-            m_q += 1
-            if last_good_mq + 2 < n:
-                mq_cap = last_good_mq + 2
-        #print("")
-
-# This one has different y-intercept ranges only; also m_p is too loose.
-def encode_cardinality_constraints_KNF_heuristic_intercept_only():
-    global num_clauses, num_card_clauses
-    print("cardinality constraint: heuristic intercept only")
-    out_log_file.write("cardinality constraint: heuristic intercept only\n")
-    mq_cap = n - 1
-    last_good_mq = mq_cap
-
-    for m_p in range(0, n):
-        m_q = 1
-
-        if (k - 1) * m_p > (n - 1):         #ADDED. 
-            continue 
-
-        while m_q <= mq_cap: #mq_cap is max value of m_q that was found in previous m_p loop iteration that had a line with #points >= k
-            if (m_p == 0 and m_q != 1) or (math.gcd(m_p, m_q) > 1):
-                m_q += 1
-                continue
-
-            if (k - 1) * m_q > (n - 1):    #ADDED.
-                break
-
-            if (m_p * (k-2)) < m_q:             # Trying slope > (k-2) and slope < 1/(k-2) now instead of slope >= (k-1) and slope <= 1/(k-2)
-                break
-            if m_p > ((k-2) * m_q):     
-                m_q += 1
-                continue
-
-            for b_q in range(1, m_q+1): 
-                for b_p in range(-int(m_p*n), int(b_q*n)+1): 
-                    if (b_p == 0 and b_q != 1) or (math.gcd(b_p, b_q) > 1) or m_q % b_q != 0:
-                        continue
-
-                    if abs(b_p) > (n * b_q): # This rejects lines with large negative intercepts that are still within the triangle.
-                        continue   
-
-                    tmp_str = []
-                    dbg_str = []
-                    cnt = 0
-                    x = 0
-                    flag = 0
-                    denominator = m_q*b_q
-                    while x < n:
-                        numerator = m_p*x*b_q + b_p*m_q #y is integer iff (m_p*x*b_q + b_p*m_q) % (m_q*b_q) = 0
-                        y1 = numerator//denominator
-                        if y1 > n: 
-                            break
-                        if numerator % denominator != 0: 
-                            x += 1
-                            continue
-                        else:
-                            y=y1
-                            flag = 1
-                            break
-                    if flag:
-                        while x < n:
-                            if int(y) >= 0:
-                                if int(y) < n - x:
-                                    if sym_break: # reachability check
-                                        if not ((x < (k-2)*y+1) and (y < (k-2)*x+(k-1))): 
-                                            x += m_q
-                                            y += m_p
-                                            continue
-                                    else:
-                                        if not ((x < (k-2)*y+(k-1)) and (y < (k-2)*x+(k-1))): 
-                                            x += m_q
-                                            y += m_p
-                                            continue
-                                    tmp_str.append(str(-v[x][int(y)]))
-                                    tmp_str.append(" ")
-                                    dbg_str.append(f"({x},{int(y)})")
-                                    cnt += 1
-                                    
-                                    if cnt >= k and m_p != 0: # only looking for k or more points
-                                        last_good_mq = m_q # largest value of m_q always seems to be the last point found where #points >=k
-                                        #print(f"tmpCnt: {cnt}, m_p: {m_p}, m_q: {m_q}, mq_cap: {mq_cap}, slope: {slope}, b_p: {b_p}, b_q: {b_q}, b: {b}, x: {x}, y: {int(y)}, yf: {y}")
-                                else:
-                                    break
-                            x += m_q
-                            y += m_p
-                    if len(tmp_str) > 0 and cnt >= k:
-                        clause = f'k {cnt - k + 1} {"".join(tmp_str)}0'
-                        num_clauses += 1
-                        dimacs_buffer.append(clause)
-                        num_card_clauses +=1
-                        tmpStr3 = "".join(", ".join(dbg_str))
-                        out_log_file.write(tmpStr3)
-                        out_log_file.write("\n")
-            #print(f"m_p:{m_p} m_q:{m_q} b_p:{b_p} b_q:{b_q}. m={m_p/m_q:.2f}. b={b_p/b_q:.2f}.") 
-            m_q += 1
-            #if last_good_mq + 2 < n:
-            #    mq_cap = last_good_mq + 2
-        #print("")
-
-# This one should be about the same as no_heuristic except for having mq_cap; the y intercept ranges should match no_heuristic.
-def encode_cardinality_constraints_KNF_heuristic_mqcap_only():
-    global num_clauses, num_card_clauses
-    print("cardinality constraint: heuristic mq_cap only")
-    out_log_file.write("cardinality constraint: heuristic mq_cap only\n")
-    mq_cap = n - 1
-    last_good_mq = mq_cap
-
-    for m_p in range(0, n):
-
-        if (k - 1) * m_p > (n - 1):         #ADDED. 
-            continue 
-
-        m_q = 1
-        while m_q <= mq_cap: # mq_cap is max value of m_q that was found in previous m_p loop iteration that had a line with #points >= k                      
-            if (m_p == 0 and m_q != 1) or (math.gcd(m_p, m_q) > 1):
-                m_q += 1
-                continue
-            
-            if (k - 1) * m_q > (n - 1):    #ADDED.
-                break
-
-            if (m_p * (k-2)) < m_q:             # Trying slope > (k-2) and slope < 1/(k-2) now instead of slope >= (k-1) and slope <= 1/(k-2)
-                break
-            if m_p > ((k-2) * m_q):     
-                m_q += 1
-                continue
-
-            for b_q in range(1, m_q+1):
-                for b_p in range(-int(m_p*n), int(b_q*n)+1):   
-                    if (b_p == 0 and b_q != 1) or (math.gcd(b_p, b_q) > 1) or m_q % b_q != 0:
-                        continue
-
-                    #if abs(b_p) > (n * b_q): #REMOVED.
-                    #    continue  
-
-                    if b_p >= (n-1)*b_q: #ADDED.
-                        break
-
-                    if m_q * b_p < - m_p * (n - 1) * b_q: #ADDED.
-                        continue
-
-                    tmp_str = []
-                    dbg_str = []  
-                    cnt = 0
-                    x = 0
-                    flag = 0
-                    denominator = m_q*b_q
-                    while x < n:
-                        numerator = m_p*x*b_q + b_p*m_q #y is integer iff (m_p*x*b_q + b_p*m_q) % (m_q*b_q) = 0
-                        y1 = numerator//denominator
-                        if y1 > n: 
-                            break
-                        if numerator % denominator != 0: 
-                            x += 1
-                            continue
-                        else:
-                            y=y1
-                            flag = 1
-                            break
-                    if flag:
-                        while x < n:
-                            if int(y) >= 0:
-                                if int(y) < n - x:
-                                    if sym_break: # reachability check
-                                        if not ((x < (k-2)*y+1) and (y < (k-2)*x+(k-1))): 
-                                                x += m_q
-                                                y += m_p
-                                                continue
-                                    else:
-                                        if not ((x < (k-2)*y+(k-1)) and (y < (k-2)*x+(k-1))): 
-                                            x += m_q
-                                            y += m_p
-                                            continue
-                                    tmp_str.append(str(-v[x][int(y)]))
-                                    tmp_str.append(" ")
-                                    if dbg_card: 
-                                        dbg_str.append(f"({x},{int(y)})")
-                                    cnt += 1
-                                    
-                                    if cnt >= k and m_p != 0: # only looking for k or more points
-                                        last_good_mq = m_q # largest value of m_q always seems to be the last point found where #points >=k
-                                        #print(f"tmpCnt: {cnt}, m_p: {m_p}, m_q: {m_q}, mq_cap: {mq_cap}, slope: {slope}, b_p: {b_p}, b_q: {b_q}, b: {b}, x: {x}, y: {int(y)}, yf: {y}")
-                                else:
-                                    break
-                            x += m_q
-                            y += m_p
-                    if len(tmp_str) > 0 and cnt >= k:
-                        clause = f'k {cnt - k + 1} {"".join(tmp_str)}0'
-                        num_clauses += 1
-                        dimacs_buffer.append(clause)
-                        num_card_clauses +=1
-                        if dbg_card:
-                            tmpStr3 = "".join(" ".join(dbg_str))
-                            out_log_file.write(tmpStr3)
-                            out_log_file.write("\n")
-            #print(f"m_p:{m_p} m_q:{m_q} b_p:{b_p} b_q:{b_q}. m={m_p/m_q:.2f}. b={b_p/b_q:.2f}. mq_cap:{mq_cap}. last_good_mq:{last_good_mq}")                
-            m_q += 1
-            if last_good_mq + 2 < n:
-                mq_cap = last_good_mq + 2
-        #print("")           
-
-
-def encode_cardinality_constraints_KNF_heuristic_line_filter():
-    global num_clauses, num_card_clauses, filter_threshold
-
-    # filter threshold: 0=no filter, block lines with k+0 or more points
-    # lengths where a correct SAT/UNSAT was found (single-seed test)
-    # k6: 8 works for n97 and n98; n50 =0
-    # k7: 20 works for n180 and n261; n50 <=2; n100 <= 7; n120 <= 15;  n150 <= 14; n200 <= 19; n250 <= 21; n261 ~= 20
-
-    print(f"cardinality constraint: Line-length filter heuristic - only include length at least k+{filter_threshold}")
-    out_log_file.write(f"cardinality constraint: Linelength filter heuristic - only include length at least k+{filter_threshold}\n")
-
-    for m_p in range(0, n):
-        if (k - 1) * m_p > (n - 1):         # ensure at least k points can span the triangle vertically 
-            continue 
-
-        m_q = 1
-        while (k - 1) * m_q <= (n - 1):     # ensure at least k points can span the triangle horizontally
-            if (m_p == 0 and m_q != 1) or (math.gcd(m_p, m_q) > 1):
-                m_q += 1
-                continue
-
-            if (m_p * (k-2)) < m_q:             # Trying slope > (k-2) and slope < 1/(k-2) now instead of slope >= (k-1) and slope <= 1/(k-1)
-                break
-            if m_p > ((k-2) * m_q):     
-                m_q += 1
-                continue
-
-            for b_q in range(1, m_q + 1):       # y = (m_p/m_q) x + (b_p/b_q); b_q must divide m_q         
-                for b_p in range(-m_p * n, (n - 1) * b_q + 1):      # upper bound on b_p: b=b_p/b_q < n when x=0, so y <= n-x-1
-                    
-                    # lower bound on b_p: b >= -m(n-1) when x=n-1, so that y >=0
-                    if m_q * b_p < - m_p * (n - 1) * b_q:
-                        continue
-                    
-                    if (b_p == 0 and b_q != 1) or (math.gcd(b_p, b_q) > 1) or (m_q % b_q != 0):
-                        continue
-
-                    tmp_str = []
-                    debug_str = []
-                    x = 0
-                    y_is_integer = False
-                    denominator = m_q * b_q
-
-                    while x < n:
-                        # find first valid point on this line
-                        numerator = m_p * x * b_q + b_p * m_q         # replaced y=(m_p/m_q)*x+(b_p/b_q) floating point calculation with this
-                        y = numerator // denominator
-                        if y >= n:
-                            break
-                        if numerator % denominator != 0:              # y is not an integer
-                            x += 1
-                            continue                                                    
-                        y_is_integer = True
-                        break
-
-                    if y_is_integer:
-                        # step along line until (x,y) is within triangle (y >= 0, x+y < n)
-                        while y < 0 and x < n:
-                            x += m_q
-                            y += m_p
-                        if x >= n:
-                            continue
-
-                        # ensure at least k points on the line can actually fit inside the triangle before making list
-                        point_cnt = 0
-                        px, py = x, y
-                        while px < n and 0 <= py < n - px and point_cnt < k:
-                            point_cnt += 1
-                            px += m_q
-                            py += m_p
-                        if point_cnt < k:
-                            continue
-                        
-                        # enumerate points on the line within the triangle
-                        reachable_cnt = 0
-                        while x < n:
-                            if 0 <= y < n - x:
-                                # exclude points that can't be reached from origin without k horizontal/vertical steps
-                                if sym_break == 1:
-                                    if not ((x < (k-2)*y+1) and (y < (k-2)*x+(k-1))): 
-                                        x += m_q
-                                        y += m_p
-                                        continue
-                                else:
-                                    if not ((x < (k-2)*y+(k-1)) and (y < (k-2)*x+(k-1))): 
-                                        x += m_q
-                                        y += m_p
-                                        continue
-                                tmp_str.append(str(-v[x][y]))
-                                tmp_str.append(" ")
-                                reachable_cnt += 1
-                                if dbg_card: debug_str.append(f"({x},{y})")
-                            else:
-                                break
-                            x += m_q
-                            y += m_p
-                    
-                    # add the line as KNF cardinality constraint
-                    if tmp_str and reachable_cnt >= k+filter_threshold:
-                        clause = f'k {reachable_cnt - k + 1} {"".join(tmp_str)}0'
-                        num_clauses += 1
-                        dimacs_buffer.append(clause)
-                        num_card_clauses += 1
-                        if dbg_card: out_log_file.write(" ".join(debug_str) + "\n")
-            #print(f"m_p{m_p} m_q{m_q} b_p{b_p} b_q{b_q}")
-            m_q += 1
 
 
 if __name__ == "__main__":
