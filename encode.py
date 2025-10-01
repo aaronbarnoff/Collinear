@@ -127,6 +127,19 @@ def define_path_variables():
                     v[x][y] = new_var()
                     var_cnt += 1
     
+def block_extremal_points():    
+    # Block points too close to the x or y axis that cannot avoid k-1 vertical/horizontal steps
+    for x in range(n):
+        for y in range(n):
+            if x + y < n:
+                if sym_break:
+                    if not ((x < (k-2)*y+1) and (y < (k-2)*x+(k-1))): 
+                        add_clause(-v[x][y])
+                        #print(f"blocking ({x},{y})")
+                else:
+                    if not ((x < (k-2)*y+(k-1)) and (y < (k-2)*x+(k-1))): 
+                        add_clause(-v[x][y])
+                        #print(f"blocking ({x},{y})")
 
 
 """
@@ -599,12 +612,16 @@ def encode_lexicographic_constraints(seqA, seqB): # from knuth eq 169
 
     return lex_vars
 
+
+
 def solve_single_point():
     if (px == 0 and py == 0):
         return
     print(f"Single point solve: ({px},{py})")
     out_log_file.write(f"Single point solve: ({px},{py})\n")
     add_clause(v[px][py])
+
+
 
 def main():
     start_time = time.time()
@@ -617,11 +634,14 @@ def main():
 
     define_path_variables()
 
+    block_extremal_points()
+
     # Single point solve
     solve_single_point()
 
     # Mandatory constraints
     encode_path_constraints()
+
     if use_heuristic == 1:
         encode_cardinality_constraints_KNF_heuristic() #mq_cap and different y-intercepts than no_heuristic; slope ranges are different too; only thing fixed was floating point truncation
     elif use_heuristic == 2:
