@@ -38,23 +38,23 @@ def read_vars(dimacs_file):
 
 
 def plot_solution(points, collinear_list, n, k, dimacs_file):
-    fig, ax = plt.subplots(figsize=(50, 50))
+    fig, ax = plt.subplots(figsize=(8, 8))
     ax.tick_params(axis="x", rotation=90)
 
     x_vals = np.linspace(-0.5, n - 0.5, 200)
-    ax.plot(x_vals, n - x_vals, color="gray", linestyle="--", linewidth=1)
+    #ax.plot(x_vals, n - x_vals, color="gray", linestyle="--", linewidth=1)
     ax.plot(x_vals, x_vals + 1, color="gray", linestyle="--", linewidth=1)
 
     used_max_x = -1
     used_max_y = -1
 
     for (x, y) in points:
-        ax.add_patch(plt.Rectangle((x - 0.5, y - 0.5), 1, 1, facecolor="black", edgecolor="none"))
+        ax.add_patch(plt.Rectangle((x - 0.5, y - 0.5), 1, 1, facecolor="blue", edgecolor="none"))
         if x > used_max_x: used_max_x = x
         if y > used_max_y: used_max_y = y
 
-    #for bx, by in [(14, 15), (15, 14)]:
-    #    ax.add_patch(plt.Rectangle((bx - 0.5, by - 0.5), 1, 1, facecolor="blue", edgecolor="none"))
+    #for bx, by in [(14, 15), (15, 14)]: # for adding specific points to the grid
+    #    ax.add_patch(plt.Rectangle((bx - 0.5, by - 0.5), 1, 1, facecolor="black", edgecolor="none"))
     #    if bx > used_max_x: used_max_x = bx
     #    if by > used_max_y: used_max_y = by
 
@@ -65,31 +65,31 @@ def plot_solution(points, collinear_list, n, k, dimacs_file):
     for lst in collinear_list:
         (x1, y1), (x2, y2) = lst[0], lst[1]
         if (x2 - x1) and (y2 - y1) != 0:
-            ax.axline(lst[0], slope=(y2 - y1) / (x2 - x1), linestyle="--", linewidth=3, color="red")
+            ax.axline(lst[0], slope=(y2 - y1) / (x2 - x1), linestyle="--", linewidth=1.25, color="red")
         elif (y2 - y1) == 0:
-            ax.axhline(y1, linestyle="--", linewidth=3, color="red")
+            ax.axhline(y1, linestyle="--", linewidth=1.25, color="red")
         elif (x2 - x1) == 0:
-            ax.axvline(x1, linestyle="--", linewidth=3, color="red")
+            ax.axvline(x1, linestyle="--", linewidth=1.25, color="red")
 
     col_pts = {pt for line in collinear_list for pt in line}
     for (cx, cy) in col_pts:
-        ax.plot(cx, cy, marker='o', markersize=12, color='red', zorder=5)
+        ax.plot(cx, cy, marker='o', markersize=6, color='red', zorder=5)
 
-    font_size = 18
+    font_size = 16
     xmax = (used_max_x if used_max_x >= 0 else n - 1)
     ymax = (used_max_y if used_max_y >= 0 else n - 1)
-
-    import matplotlib as mpl
-    mpl.rcParams['xtick.labelsize'] = font_size
-    mpl.rcParams['ytick.labelsize'] = font_size
 
     ax.set_xlim(-0.5, xmax + 1.5)
     ax.set_ylim(-0.5, ymax + 1.5)
     ax.set_xticks(range(xmax + 2))
     ax.set_yticks(range(ymax + 2))
 
-    # now apply fontsize once
     ax.tick_params(axis="both", which="major", labelsize=font_size)
+    for lbl in ax.get_xticklabels():
+        lbl.set_rotation(90)
+        lbl.set_fontsize(font_size)
+    for lbl in ax.get_yticklabels():
+        lbl.set_fontsize(font_size)
 
     outdir = os.path.dirname(dimacs_file)
     stem = os.path.splitext(os.path.basename(dimacs_file))[0]

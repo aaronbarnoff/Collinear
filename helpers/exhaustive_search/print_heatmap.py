@@ -41,7 +41,7 @@ def plot_heatmap(heatmap: np.ndarray, k: int, n: int, m: int, max_x: int, max_y:
 
     im = ax.imshow(masked, origin="lower", cmap=cmap, interpolation="none", vmin=1)
 
-    label_fontsize = max(4, int(200 / max(1, n)))
+    label_fontsize = 22 #max(4, int(200 / max(1, n))) #4 for k6n98; 10 for k5n30; 22 for k4n10
 
     for x in range(heatmap.shape[1]):
         for y in range(heatmap.shape[0]):
@@ -52,10 +52,12 @@ def plot_heatmap(heatmap: np.ndarray, k: int, n: int, m: int, max_x: int, max_y:
 
     ax.set_xlim(-0.5, max_x + 1.5)
     ax.set_ylim(-0.5, max_y + 1.5)
+    for lbl in ax.get_xticklabels():
+        lbl.set_rotation(90)
 
     ax.set_xticks(range(0, max_x + 2))
     ax.set_yticks(range(0, max_y + 2))
-    ax.tick_params(axis="both", which="major", labelsize=label_fontsize)
+    ax.tick_params(axis="both", which="major", labelsize=24)#label_fontsize)#7 for k6n98; 14 or k5n30; 24 for k4n10
 
     for x in range(max_x + 2):
         ax.axvline(x - 0.5, color="lightgrey", linestyle="--", linewidth=0.125)
@@ -76,7 +78,7 @@ def main():
     args = parse_args()
     k, n, m = args.k, args.n, args.m
 
-    base = Path("../output/ex") / f"k{k}_n{n}_m{m}"
+    base = Path("../../output/ex") / f"k{k}_n{n}_m{m}" #ran from helpers/exhaustive_search
     if not base.exists():
         print(f"Base folder not found: {base}")
         return
