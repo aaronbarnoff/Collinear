@@ -3,7 +3,7 @@ import subprocess
 import time
 import argparse
 
-RUN_SCRIPT = "./run_bounds.sh"
+RUN_SCRIPT = "./run_bounds_tasks.sh"
 
 COMMON_ARGS = [
     "-k", "7",

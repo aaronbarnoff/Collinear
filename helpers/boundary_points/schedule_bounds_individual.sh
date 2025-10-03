@@ -89,7 +89,7 @@ for line in "${jobs_SAT_KNF[@]}"; do
   for r in $(seq 1 1); do
     jobname="k${k}_n${n}_x${x}_y${y}_f${f}_b${b}_r${r}"
     echo "Submitting job $jobname"
-    sbatch --job-name="$jobname" --mem-per-cpu=4G --time=72:00:00 run_jobs.sh \
+    sbatch --job-name="$jobname" --mem-per-cpu=4G --time=72:00:00 run_bounds_individual.sh \
       -k "$k" -n "$n" -x "$x" -y "$y" \
       -s "$s" -c "$c" -v "$v" -a "$a" -l "$l" -b "$b" -f "$f" \
       -t 0 -r "$r" -j "10" #using line filter heuristic
@@ -102,7 +102,7 @@ for line in "${jobs_UNSAT_CNF[@]}"; do
   for r in $(seq 1 1); do
     jobname="k${k}_n${n}_x${x}_y${y}_f${f}_b${b}_r${r}"
     echo "Submitting job $jobname"
-    sbatch --job-name="$jobname" --mem-per-cpu=12G --time=72:00:00 run_jobs.sh \
+    sbatch --job-name="$jobname" --mem-per-cpu=12G --time=72:00:00 run_bounds_individual.sh \
       -k "$k" -n "$n" -x "$x" -y "$y" \
       -s "$s" -c "$c" -v "$v" -a "$a" -l "$l" -b "$b" -f "$f" \
       -t 0 -r "$r" -j "10" #using line filter heuristic
