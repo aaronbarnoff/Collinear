@@ -2,6 +2,7 @@
 import csv
 import statistics
 from collections import defaultdict
+# (untested with new changes)
 
 # Group tests and calculate median time from the random seeds; assumes 15 trials
 # Treats unfinished tests as having a solve time of INF.

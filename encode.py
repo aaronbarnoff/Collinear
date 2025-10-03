@@ -26,7 +26,6 @@ def parse_arguments():
     parser.add_argument("-r", default=0, help="SAT solver seed")
     parser.add_argument("-o", default=0, help="Use lexicographic symmetry breaking constraints")
     parser.add_argument("-p", default=0, help="results folder name")
-    parser.add_argument("-u", default=0, help="(Unused, will remove soon) Line-Filter Heuristic. 0=no heuristic, 1=heuristic")
     parser.add_argument("-j", default=0, help="Line-Filter Heuristic; only block lines with length at least k+j points")
     #parser.add_argument("-zl", default=0, help="First/last <num> points for lex constraints")
     
@@ -50,7 +49,6 @@ solver_seed=int(args["r"])
 use_lex=int(args["o"])
 lex_len=n//2 # hard coded for now
 results_folder_name=str(args["p"])
-use_heuristic=int(args["u"])
 filter_threshold=int(args["j"])
 
 
@@ -183,8 +181,15 @@ Other:
   + Reachability checks:      (x <= (k-2)*y+(k-1)) and (y <= (k-2)*x+(k-1))    ensure that the points on these lines can actually be reached from the origin
 """
 dbg_card = False
+extra_debug = False
 def encode_cardinality_constraints_KNF():   # At most k constraint: (excluding vertical and horizontal lines)
     global num_clauses, num_card_clauses, filter_threshold
+
+    if extra_debug:
+        from collections import defaultdict #(Temporary)
+        length_hist = defaultdict(int)
+        total_added = 0
+
     # filter threshold: 0=no filter, block lines with k+0 or more points
     # lengths where a correct SAT/UNSAT was found (single-seed test)
     # k6: 8 works for n97 and n98; n50 =0
@@ -222,7 +227,6 @@ def encode_cardinality_constraints_KNF():   # At most k constraint: (excluding v
                     
                     if (b_p == 0 and b_q != 1) or (math.gcd(b_p, b_q) > 1) or (m_q % b_q != 0):
                         continue
-                    #out_log_file.write(f"m_p:{m_p} m_q:{m_q} b_p:{b_p} b_q:{b_q}\n")
                     tmp_str = []
                     debug_str = []
                     x = 0
@@ -289,10 +293,22 @@ def encode_cardinality_constraints_KNF():   # At most k constraint: (excluding v
                         num_clauses += 1
                         dimacs_buffer.append(clause)
                         num_card_clauses += 1
-                        if dbg_card: out_log_file.write(" ".join(debug_str) + "\n")
-            #print(f"m_p{m_p} m_q{m_q} b_p{b_p} b_q{b_q}")
+                        
+                        if dbg_card: 
+                            out_log_file.write(" ".join(debug_str) + "\n")
+
+                        if extra_debug:
+                            length_hist[reachable_cnt] += 1
+                            total_added += 1
             m_q += 1
 
+    if extra_debug:    
+        if length_hist:
+            print("Cardinality lines added by length:")
+            for L in sorted(length_hist):
+                #print(f"  length {L}: {length_hist[L]}")
+               print(f"{length_hist[L]}")
+            print(f"Total cardinality lines added: {total_added}")
 
 
 
@@ -611,14 +627,15 @@ def main():
 
     define_path_variables()
 
-    block_extremal_points()
-
-    # Single point solve
-    solve_single_point()
-
     # Mandatory constraints
     encode_path_constraints()
     encode_cardinality_constraints_KNF() # Includes line-filter heuristic, if enabled
+
+    # block unreachable extremal points
+    block_extremal_points()
+
+    # If solving for a specific final point
+    solve_single_point()
 
     # Optional constraints
     reflection_symmetry_break()
