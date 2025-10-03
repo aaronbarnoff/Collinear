@@ -29,11 +29,11 @@ cnf_encoding=(args["e"])
 solver_timeout=int(args["t"])
 solver_seed=int(args["r"])
 results_folder_name=str(args["p"])
-use_exhaustive_search=int(args["z"])
+solve_type=int(args["z"])
 
 cwd_path = os.getcwd()
 
-if use_KNF and use_exhaustive_search:
+if use_KNF and solve_type==1:
     print("KNF can't be used with exhaustive search (cadical-exhaust)")
     exit(-1)
 
@@ -145,7 +145,7 @@ def solve_exhaustive():
         for x in range(n):
             y = b-x
             if y >= 0 and x+y < n:
-                v[x][y] = maxVar
+                v[x][y] = maxVar # Remove this at some point, tmp_cnt already does this
                 maxVar += 1
     maxVar -= 1
     command = [CDCLEX_path, cnf_dimacs_filepath, "-t", str(solver_timeout), f"--seed={solver_seed}", f"--order", f"{maxVar}"]
@@ -319,12 +319,12 @@ def knf2cnf():
     time.sleep(1) 
 
 
-
 def main():
-    if not use_exhaustive_search:
+    if solve_type == 0:
         solve_regular()
-    else:
+    elif solve_type == 1:
         solve_exhaustive()
+
     out_log_file.close()
 
     print("Finished:", time.time() - start_time, "seconds")

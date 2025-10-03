@@ -5,6 +5,7 @@ import time
 import os
 from datetime import datetime
 import argparse
+import subprocess
 
 lex_debug = 0
 
@@ -27,7 +28,10 @@ def parse_arguments():
     parser.add_argument("-o", default=0, help="Use lexicographic symmetry breaking constraints")
     parser.add_argument("-p", default=0, help="results folder name")
     parser.add_argument("-j", default=0, help="Line-Filter Heuristic; only block lines with length at least k+j points")
-    #parser.add_argument("-zl", default=0, help="First/last <num> points for lex constraints")
+    parser.add_argument("-z", default=0, help="1=Generate cube files for .icnf")
+    parser.add_argument("--zr", default=0, help="march free variable removal cutoff")
+    parser.add_argument("--zl", default=0, help="march cube limit")
+    parser.add_argument("--zc", default=0, help="Cadical conflict value")
     
     return vars(parser.parse_args())
 
@@ -50,7 +54,10 @@ use_lex=int(args["o"])
 lex_len=n//2 # hard coded for now
 results_folder_name=str(args["p"])
 filter_threshold=int(args["j"])
-
+march_generate_cubes=int(args["z"])
+march_free_var=int(args["zr"])
+march_cube_limit=int(args["zl"])
+march_cadical_conflict_value=int(args["zc"])
 
 if px > 0 and py > 0:
     if px + py >= n:
@@ -82,11 +89,21 @@ result_folder_path = os.path.join(output_folder_path, results_folder_name)
 if not os.path.exists(result_folder_path):
     os.makedirs(result_folder_path, exist_ok=True)
 
+CDCL_path = f'{cwd_path}/solvers/cadical/build/cadical'
+march_path= f'{cwd_path}/solvers/CnC/march_cu/march_cu'
+knf2cnf_path = f'{cwd_path}/solvers/Cardinality-CDCL/Tools/knf2cnf'
+
+icnf_filename = f'cubes.icnf'
+icnf_filepath = f'{result_folder_path}/{icnf_filename}'
+
 knf_dimacs_filename = f'dimacsFile.knf'
 knf_dimacs_filepath = f'{result_folder_path}/{knf_dimacs_filename}'
 
 cnf_dimacs_filename = f'dimacsFile.cnf'
 cnf_dimacs_filepath = f'{result_folder_path}/{cnf_dimacs_filename}'
+
+cnf_dimacs_simplified_filename = f'dimacsFile_simple.cnf'
+cnf_dimacs_simplified_filepath = f'{result_folder_path}/{cnf_dimacs_simplified_filename}'
 
 out_log_filename = f'logOutput.log'
 out_log_filepath = f'{result_folder_path}/{out_log_filename}'
@@ -616,6 +633,45 @@ def solve_single_point():
 
 
 
+
+
+"""
+Generate knf,cnf,icnf cubes (march/CnC)
+"""
+def generate_icnf():
+
+    print(f"Simplifying dimacsFile.cnf with Cadical")
+    out_log_file.write(f"Simplifying dimacsFile.cnf with Cadical\n")
+
+    command = [CDCL_path, cnf_dimacs_filepath,"-o", cnf_dimacs_simplified_filepath, "-c", f"{march_cadical_conflict_value}"]
+    proc = subprocess.Popen(command, stdout=out_log_file, stderr=subprocess.STDOUT)
+    proc.wait()
+
+    print(f"Generating cubes with params: m:{num_vars}, r:{march_free_var}, l:{march_cube_limit}")
+    out_log_file.write(f"Generating cubes with params: m:{num_vars}, r:{march_free_var}, l:{march_cube_limit}\n")
+
+    command = [march_path, cnf_dimacs_simplified_filepath,"-o", icnf_filepath, "-m", str(num_vars), "-r", str(march_free_var), "-l", str(march_cube_limit)]
+
+    proc = subprocess.Popen(command, stdout=out_log_file, stderr=subprocess.STDOUT)
+    proc.wait()
+
+
+def knf2cnf():
+    print("Converting to CNF file")
+
+    cnf_output_file = open(cnf_dimacs_filepath, 'w+')
+
+    command = f'\'{knf2cnf_path}\' \'{knf_dimacs_filepath}\''
+    result = subprocess.Popen(command, shell=True, stdout=cnf_output_file, stderr=subprocess.PIPE, text=True)
+    result.wait()
+
+    cnf_output_file.close()
+    time.sleep(1) 
+
+
+
+
+
 def main():
     start_time = time.time()
 
@@ -646,7 +702,7 @@ def main():
     create_lexicographic_encoding(lex_len)
 
     out_log_file.write(f"numVars: {var_cnt}, numClauses: {num_clauses}, numCardClauses: {num_card_clauses}\n")
-    out_log_file.close()
+
 
     # Write dimacs file
     f = open(f'{result_folder_path}/{knf_dimacs_filename}', "w+")
@@ -656,7 +712,15 @@ def main():
     f.flush()
     f.close()
 
-    print("DimacsFile created: ", time.time() - start_time, "seconds")
+    print("dimacsFile created: ", time.time() - start_time, "seconds")
+
+    if march_generate_cubes:
+        time.sleep(1) 
+        knf2cnf()
+        generate_icnf()
+        print("cubes.icnf created: ", time.time() - start_time, "seconds")
+    
+    out_log_file.close()
 
 
 if __name__ == "__main__":
