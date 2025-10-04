@@ -19,6 +19,9 @@ XY = {
     (7, 220): (0, 0),
     (7, 240): (0, 0),
     (7, 261): (0, 0),
+    (7, 270): (0, 0),
+    (7, 280): (0, 0),
+    (7, 290): (0, 0),
     (7, 122): (33, 88),
     (7, 151): (46, 104),
     (7, 180): (56, 123),
@@ -29,6 +32,7 @@ MODE_NONE = ["None"]
 MODE_STRUCTURAL = ["structural"]
 MODE_BOUNDARY = ["U", "UB"]
 MODE_NONE_BOUNDARY = ["None", "U", "UB"]
+MODE_NONE_UB = ["None", "UB"]
 MODE_ALL = ["None","structural", "U", "UB", "US", "UBS"]
 
 # solver templates
@@ -107,7 +111,31 @@ TEMPLATES = {
         SEEDS=15, WALLTIME="24:00:00",
         RUNNER="run4GB.sh",
     ),
-    
+
+    #k7 n270 
+    "k7_n270_KNF": dict( 
+        K=7, N=270, X=XY[(7,270)][0], Y=XY[(7,270)][1],
+        SOLVER=[("KNF", 1)], VHCONSTRAINT=VH_BINARY, MODES=MODE_NONE_UB,
+        SEEDS=15, WALLTIME="48:00:00",
+        RUNNER="run4GB.sh",
+    ),
+
+    #k7 n280 KNF
+    "k7_n280_KNF": dict( 
+        K=7, N=280, X=XY[(7,280)][0], Y=XY[(7,280)][1],
+        SOLVER=[("KNF", 1)], VHCONSTRAINT=VH_BINARY, MODES=MODE_NONE_UB,
+        SEEDS=15, WALLTIME="48:00:00",
+        RUNNER="run4GB.sh",
+    ),
+
+    #k7 n290 KNF
+    "k7_n290_KNF": dict( 
+        K=7, N=290, X=XY[(7,290)][0], Y=XY[(7,290)][1],
+        SOLVER=[("KNF", 1)], VHCONSTRAINT=VH_BINARY, MODES=MODE_NONE_UB,
+        SEEDS=15, WALLTIME="48:00:00",
+        RUNNER="run4GB.sh",
+    ),
+
     #k7 n122
     "k7_n122_all": dict( 
         K=7, N=122, X=XY[(7,122)][0], Y=XY[(7,122)][1],

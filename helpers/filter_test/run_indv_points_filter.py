@@ -20,6 +20,9 @@ XY = {
     (7, 220): (0, 0),
     (7, 240): (0, 0),
     (7, 261): (0, 0),
+    (7, 270): (0, 0),
+    (7, 280): (0, 0),
+    (7, 290): (0, 0),    
     (7, 122): (33, 88),
     (7, 151): (46, 104),
     (7, 180): (56, 123),
@@ -30,6 +33,7 @@ MODE_NONE = ["None"]
 MODE_STRUCTURAL = ["structural"]
 MODE_BOUNDARY = ["U", "UB"]
 MODE_NONE_BOUNDARY = ["None", "U", "UB"]
+MODE_NONE_UB = ["None", "UB"]
 MODE_ALL = ["None","structural", "U", "UB", "US", "UBS"]
 
 # solver templates
@@ -84,14 +88,14 @@ TEMPLATES = {
         SOLVER=[("CNF", 0)], VHCONSTRAINT=VH_BINARY, MODES=MODE_NONE_BOUNDARY,
         SEEDS=15, WALLTIME="04:00:00",
         RUNNER="run_retry_8GB.sh",
-        FILTER="12",
+        FILTER="10",
     ),
     "k7_n220_KNF": dict(
         K=7, N=220, X=XY[(7,220)][0], Y=XY[(7,220)][1],
         SOLVER=[("KNF", 1)], VHCONSTRAINT=VH_BINARY, MODES=MODE_NONE_BOUNDARY,
         SEEDS=15, WALLTIME="04:00:00",
         RUNNER="run_retry_4GB.sh",
-        FILTER="12",
+        FILTER="10",
     ),    
 
     #k7 n240
@@ -100,14 +104,14 @@ TEMPLATES = {
         SOLVER=[("CNF", 0)], VHCONSTRAINT=VH_BINARY, MODES=MODE_NONE_BOUNDARY,
         SEEDS=15, WALLTIME="16:00:00",
         RUNNER="run_retry_8GB.sh",
-        FILTER="12",
+        FILTER="10",
     ),    
     "k7_n240_KNF": dict( 
         K=7, N=240, X=XY[(7,240)][0], Y=XY[(7,240)][1],
         SOLVER=[("KNF", 1)], VHCONSTRAINT=VH_BINARY, MODES=MODE_NONE_BOUNDARY,
         SEEDS=15, WALLTIME="16:00:00",
         RUNNER="run_retry_4GB.sh",
-        FILTER="12",
+        FILTER="10",
     ),
 
     #k7 n261
@@ -116,23 +120,50 @@ TEMPLATES = {
         SOLVER=[("CNF", 0)], VHCONSTRAINT=VH_BINARY, MODES=MODE_NONE_BOUNDARY,
         SEEDS=15, WALLTIME="36:00:00", # one always times out at 24h
         RUNNER="run_retry_12GB.sh",
-        FILTER="12",
+        FILTER="10",
     ),
     "k7_n261_KNF": dict( 
         K=7, N=261, X=XY[(7,261)][0], Y=XY[(7,261)][1],
         SOLVER=[("KNF", 1)], VHCONSTRAINT=VH_BINARY, MODES=MODE_NONE_BOUNDARY,
         SEEDS=15, WALLTIME="24:00:00",
         RUNNER="run_retry_4GB.sh",
-        FILTER="12",
+        FILTER="10",
     ),
     
+    #k7 n270 
+    "k7_n270_KNF": dict( 
+        K=7, N=270, X=XY[(7,270)][0], Y=XY[(7,270)][1],
+        SOLVER=[("KNF", 1)], VHCONSTRAINT=VH_BINARY, MODES=MODE_NONE_UB,
+        SEEDS=15, WALLTIME="36:00:00",
+        RUNNER="run_retry_4GB.sh",
+        FILTER="0",
+    ),
+
+    #k7 n280 KNF
+    "k7_n280_KNF": dict( 
+        K=7, N=280, X=XY[(7,280)][0], Y=XY[(7,280)][1],
+        SOLVER=[("KNF", 1)], VHCONSTRAINT=VH_BINARY, MODES=MODE_NONE_UB,
+        SEEDS=15, WALLTIME="36:00:00",
+        RUNNER="run_retry_4GB.sh",
+        FILTER="0",
+    ),
+
+    #k7 n290 KNF
+    "k7_n290_KNF": dict( 
+        K=7, N=290, X=XY[(7,290)][0], Y=XY[(7,290)][1],
+        SOLVER=[("KNF", 1)], VHCONSTRAINT=VH_BINARY, MODES=MODE_NONE_UB,
+        SEEDS=15, WALLTIME="36:00:00",
+        RUNNER="run_retry_4GB.sh",
+        FILTER="0",
+    ),
+
     #k7 n122
     "k7_n122_all": dict( 
         K=7, N=122, X=XY[(7,122)][0], Y=XY[(7,122)][1],
         SOLVER=SOLVER_BOTH, VHCONSTRAINT=VH_BINARY, MODES=MODE_NONE_BOUNDARY,
         SEEDS=15, WALLTIME="04:00:00",
         RUNNER="run_retry_4GB.sh",
-        FILTER="12",
+        FILTER="10",
     ),
 
     #k7 n151
@@ -141,14 +172,14 @@ TEMPLATES = {
         SOLVER=[("CNF", 0)], VHCONSTRAINT=VH_BINARY, MODES=MODE_NONE_BOUNDARY,
         SEEDS=15, WALLTIME="24:00:00",
         RUNNER="run_retry_4GB.sh",
-        FILTER="12",
+        FILTER="10",
     ),
     "k7_n151_KNF": dict( 
         K=7, N=151, X=XY[(7,151)][0], Y=XY[(7,151)][1],
         SOLVER=[("KNF", 1)], VHCONSTRAINT=VH_BINARY, MODES=MODE_NONE_BOUNDARY,
         SEEDS=15, WALLTIME="24:00:00",
         RUNNER="run_retry_4GB.sh",
-        FILTER="12",
+        FILTER="10",
     ),
 
     #k7 n180
@@ -157,14 +188,14 @@ TEMPLATES = {
         SOLVER=[("CNF", 0)], VHCONSTRAINT=VH_BINARY, MODES=MODE_NONE_BOUNDARY,
         SEEDS=15, WALLTIME="36:00:00",
         RUNNER="run_retry_4GB.sh",
-        FILTER="12",
+        FILTER="10",
     ),
     "k7_n180_KNF": dict(  
         K=7, N=180, X=XY[(7,180)][0], Y=XY[(7,180)][1],
         SOLVER=[("KNF", 1)], VHCONSTRAINT=VH_BINARY, MODES=MODE_NONE_BOUNDARY,
         SEEDS=15, WALLTIME="36:00:00",
         RUNNER="run_retry_4GB.sh",
-        FILTER="12",
+        FILTER="10",
     ),     
 }    # k7: 20 works for n180 and n261; n50 <=2; n100 <= 7; n120 <= 15;  n150 <= 14; n200 <= 19; n250 <= 21; n261 ~= 20
 
@@ -202,7 +233,7 @@ def submit_job(*, walltime, runner, K,N,X,Y, S, C_VAL, V_VAL, A_VAL, L_VAL, B_VA
         runner,
         "-k", str(K), "-n", str(N), "-x", str(X), "-y", str(Y), "-s", str(S),
         "-c", str(C_VAL), "-v", str(V_VAL), "-a", str(A_VAL), "-l", str(L_VAL), "-b", str(B_VAL),
-        "-f", str(F_VAL), "-r", str(seed), "-t", str(0), "-j", str(filter_thresh), "-u", str("4")
+        "-f", str(F_VAL), "-r", str(seed), "-t", str(0), "-j", str(filter_thresh)
     ]
     job_name = build_job_name(K,N, 'KNF' if F_VAL==1 else 'CNF', C_VAL, f"v{V_VAL}_a{A_VAL}_l{L_VAL}_b{B_VAL}", seed)
     cmd[2] = f"--job-name={job_name}"
