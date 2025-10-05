@@ -29,16 +29,15 @@ Options:
   -r   SAT solver seed (default 0)
   -e   (optional) CNF cardinality encoding type: seqcounter, totalizer, sortnetwrk, cardnetwrk, mtotalizer, kmtotalizer; (default: knf2cnf (seqcounter))
   -z   0=regular solve (cadical), 1=exhaustive search (cadical-exhaust) (default 0)
-  -u   cardinality constraints heuristics. 0=no heuristic, 1=old heuristic, 4=line-filter (default 0)
   -j   line heuristic threshold value (default 0)
   -h   help
 EOF
 }
 
-options=$(getopt "hk:n:l:s:v:a:c:x:y:b:f:t:r:e:z:u:j:" "$@")
+options=$(getopt "hk:n:l:s:v:a:c:x:y:b:f:t:r:e:z:j:" "$@")
 eval set -- "$options"
 
-k= n= l= s= v= a= c= x= y= b= f= t= r= e= z= u= j=
+k= n= l= s= v= a= c= x= y= b= f= t= r= e= z= j=
 
 while true; do
   case "$1" in
@@ -58,7 +57,6 @@ while true; do
     -r) r="$2"; shift 2 ;;
     -e) e="$2"; shift 2 ;;
     -z) z="$2"; shift 2 ;;
-    -u) u="$2"; shift 2 ;;
     -j) j="$2"; shift 2 ;;
     --) shift; break ;;
     *)  echo "Bad option"; usage; exit 2 ;;
@@ -66,7 +64,7 @@ while true; do
 done
 
 run_id="$(date +%F_%H-%M-%S)"
-: "${x:=0}" "${y:=0}" "${s:=1}" "${c:=0}" "${v:=1}" "${a:=0}" "${l:=0}" "${b:=2}" "${f:=1}" "${t:=0}" "${r:=0}" "${z:=0}" "${u:=0}" "${j:=0}"
+: "${x:=0}" "${y:=0}" "${s:=1}" "${c:=0}" "${v:=1}" "${a:=0}" "${l:=0}" "${b:=2}" "${f:=1}" "${t:=0}" "${r:=0}" "${z:=0}" "${j:=0}"
 
 # required for pysat and encoding types
 if [[ -n "${e:-}" ]]; then

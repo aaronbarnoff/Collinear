@@ -26,6 +26,9 @@ XY = {
     (7, 122): (33, 88),
     (7, 151): (46, 104),
     (7, 180): (56, 123),
+    (7, 250): (85, 164), # Hard SAT CNFvsKNF test
+    (7, 254): (165, 88), # Hard SAT CNFvsKNF test
+    (7, 262): (170, 91), # Hard SAT CNFvsKNF test
 }
 
 # mode templates
@@ -34,6 +37,7 @@ MODE_STRUCTURAL = ["structural"]
 MODE_BOUNDARY = ["U", "UB"]
 MODE_NONE_BOUNDARY = ["None", "U", "UB"]
 MODE_NONE_UB = ["None", "UB"]
+MODE_UB = ["UB"]
 MODE_ALL = ["None","structural", "U", "UB", "US", "UBS"]
 
 # solver templates
@@ -50,10 +54,10 @@ VH_CARDINALITY = [("ON", 1)]
 TEMPLATES = {
     "k6_n50_test": dict(
         K=6, N=50, X=XY[(6,50)][0], Y=XY[(6,50)][1],
-        SOLVER= SOLVER_BOTH, VHCONSTRAINT=VH_BINARY, MODES=MODE_NONE_BOUNDARY,
-        SEEDS=2, WALLTIME="00:10:00",
+        SOLVER= [("KNF", 1)], VHCONSTRAINT=VH_BINARY, MODES=MODE_NONE,
+        SEEDS=1, WALLTIME="00:15:00",
         RUNNER="run_retry_4GB.sh",
-        FILTER="0",
+        FILTER="3",
     ),
 
     "k6_n96_test": dict(
@@ -136,7 +140,7 @@ TEMPLATES = {
         SOLVER=[("KNF", 1)], VHCONSTRAINT=VH_BINARY, MODES=MODE_NONE_UB,
         SEEDS=15, WALLTIME="36:00:00",
         RUNNER="run_retry_4GB.sh",
-        FILTER="0",
+        FILTER="10",
     ),
 
     #k7 n280 KNF
@@ -145,7 +149,7 @@ TEMPLATES = {
         SOLVER=[("KNF", 1)], VHCONSTRAINT=VH_BINARY, MODES=MODE_NONE_UB,
         SEEDS=15, WALLTIME="36:00:00",
         RUNNER="run_retry_4GB.sh",
-        FILTER="0",
+        FILTER="10",
     ),
 
     #k7 n290 KNF
@@ -154,7 +158,7 @@ TEMPLATES = {
         SOLVER=[("KNF", 1)], VHCONSTRAINT=VH_BINARY, MODES=MODE_NONE_UB,
         SEEDS=15, WALLTIME="36:00:00",
         RUNNER="run_retry_4GB.sh",
-        FILTER="0",
+        FILTER="10",
     ),
 
     #k7 n122
@@ -197,6 +201,56 @@ TEMPLATES = {
         RUNNER="run_retry_4GB.sh",
         FILTER="10",
     ),     
+
+    # hard SAT tests
+    # k7 n250
+    "k7_n250_SAT_KNF": dict(  
+    K=7, N=250, X=XY[(7,250)][0], Y=XY[(7,250)][1],
+    SOLVER=[("KNF", 1)], VHCONSTRAINT=VH_BINARY, MODES=MODE_UB,
+    SEEDS=15, WALLTIME="36:00:00",
+    RUNNER="run_retry_4GB.sh",
+    FILTER="10",
+    ),   
+    "k7_n250_SAT_CNF": dict(  
+    K=7, N=250, X=XY[(7,250)][0], Y=XY[(7,250)][1],
+    SOLVER=[("CNF", 0)], VHCONSTRAINT=VH_BINARY, MODES=MODE_UB,
+    SEEDS=15, WALLTIME="36:00:00",
+    RUNNER="run_retry_12GB.sh",
+    FILTER="10",
+    ),   
+
+    # k7 n254
+    "k7_n254_SAT_KNF": dict(  
+    K=7, N=254, X=XY[(7,254)][0], Y=XY[(7,254)][1],
+    SOLVER=[("KNF", 1)], VHCONSTRAINT=VH_BINARY, MODES=MODE_UB,
+    SEEDS=15, WALLTIME="36:00:00",
+    RUNNER="run_retry_4GB.sh",
+    FILTER="10",
+    ),   
+    "k7_n254_SAT_CNF": dict(  
+    K=7, N=254, X=XY[(7,254)][0], Y=XY[(7,254)][1],
+    SOLVER=[("CNF", 0)], VHCONSTRAINT=VH_BINARY, MODES=MODE_UB,
+    SEEDS=15, WALLTIME="36:00:00",
+    RUNNER="run_retry_12GB.sh",
+    FILTER="10",
+    ),   
+
+    # k7 n262
+    "k7_n262_SAT_KNF": dict(  
+    K=7, N=262, X=XY[(7,262)][0], Y=XY[(7,262)][1],
+    SOLVER=[("KNF", 1)], VHCONSTRAINT=VH_BINARY, MODES=MODE_UB,
+    SEEDS=15, WALLTIME="48:00:00",
+    RUNNER="run_retry_4GB.sh",
+    FILTER="10",
+    ),   
+    "k7_n262_SAT_CNF": dict(  
+    K=7, N=262, X=XY[(7,262)][0], Y=XY[(7,262)][1],
+    SOLVER=[("CNF", 0)], VHCONSTRAINT=VH_BINARY, MODES=MODE_UB,
+    SEEDS=15, WALLTIME="48:00:00",
+    RUNNER="run_retry_12GB.sh",
+    FILTER="10",
+    ),  
+
 }    # k7: 20 works for n180 and n261; n50 <=2; n100 <= 7; n120 <= 15;  n150 <= 14; n200 <= 19; n250 <= 21; n261 ~= 20
 
 S = 1  # symmetry break always on
@@ -229,6 +283,7 @@ def submit_job(*, walltime, runner, K,N,X,Y, S, C_VAL, V_VAL, A_VAL, L_VAL, B_VA
     cmd = [
         "sbatch",
         f"--time={walltime}",
+        f"--exclude=fc30464",
         f"--job-name={build_job_name(K,N, 'KNF' if F_VAL==1 else 'CNF', C_VAL, 'NA', seed)}",
         runner,
         "-k", str(K), "-n", str(N), "-x", str(X), "-y", str(Y), "-s", str(S),
