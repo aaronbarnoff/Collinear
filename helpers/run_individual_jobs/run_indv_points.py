@@ -174,7 +174,7 @@ TEMPLATES = {
         K=7, N=250, X=XY[(7, 250)][0], Y=XY[(7, 250)][1],
         SOLVER=SOLVER_KNF, VHCONSTRAINT=VH_BINARY, MODES=MODE_UB,
         SEEDS=15, WALLTIME="36:00:00",
-        RUNNER="run_retry_4GB.sh",
+        RUNNER="run_retry_16GB.sh",
         FILTER=HEUR_K7_BOTH,
         KNFMODE=KNF_HYBRID,
     ),
@@ -191,7 +191,7 @@ TEMPLATES = {
         K=7, N=254, X=XY[(7, 254)][0], Y=XY[(7, 254)][1],
         SOLVER=SOLVER_KNF, VHCONSTRAINT=VH_BINARY, MODES=MODE_UB,
         SEEDS=15, WALLTIME="36:00:00",
-        RUNNER="run_retry_4GB.sh",
+        RUNNER="run_retry_16GB.sh",
         FILTER=HEUR_K7_BOTH,
         KNFMODE=KNF_HYBRID,
     ),
@@ -208,7 +208,7 @@ TEMPLATES = {
         K=7, N=262, X=XY[(7, 262)][0], Y=XY[(7, 262)][1],
         SOLVER=SOLVER_KNF, VHCONSTRAINT=VH_BINARY, MODES=MODE_UB,
         SEEDS=15, WALLTIME="48:00:00",
-        RUNNER="run_retry_4GB.sh",
+        RUNNER="run_retry_16GB.sh",
         FILTER=HEUR_K7_BOTH,
         KNFMODE=KNF_HYBRID,
     ),
@@ -343,7 +343,6 @@ def main():
     filter_list = cfg["FILTER"]
     knfmode = cfg["KNFMODE"]
 
-    # sanity: make FILTER a list
     if isinstance(filter_list, str):
         filter_list = [filter_list]
 
