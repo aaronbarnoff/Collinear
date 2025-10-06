@@ -17,6 +17,7 @@ def parse_arguments():
     parser.add_argument("-r", default=0, help="SAT solver seed")
     parser.add_argument("-p", default=0, help="results folder name")
     parser.add_argument("-z", default=0, help="0=regular solve, 1=exhaustive (cadical-exhaust)")
+    parser.add_argument("-w", default=0, help="0= solve in CCDCL mode, 1= solve in Hybrid mode")
     return vars(parser.parse_args())
 
 args = parse_arguments()
@@ -30,6 +31,7 @@ solver_timeout=int(args["t"])
 solver_seed=int(args["r"])
 results_folder_name=str(args["p"])
 solve_type=int(args["z"])
+use_hybrid=int(args["w"])
 
 cwd_path = os.getcwd()
 
@@ -45,6 +47,12 @@ result_folder_path = os.path.join(output_folder_path, results_folder_name)
 knf_dimacs_filename = f'dimacsFile.knf'
 knf_dimacs_filepath = f'{result_folder_path}/{knf_dimacs_filename}'
 
+icnf_filename = f'cubes.icnf'
+icnf_filepath = f'{result_folder_path}/{icnf_filename}'
+
+full_knf_filename = f'full.knf'
+full_knf_filepath = f'{result_folder_path}/{full_knf_filename}' 
+
 cnf_dimacs_filename = f'dimacsFile.cnf'
 cnf_dimacs_filepath = f'{result_folder_path}/{cnf_dimacs_filename}'
 
@@ -55,8 +63,6 @@ out_log_filename = f'logOutput.log'
 out_log_filepath = f'{result_folder_path}/{out_log_filename}'
 out_log_file = open(f'{out_log_filepath}', 'a', buffering=1)
 
-pysat_encode_path= f'{cwd_path}/solvers/Cardinality-CDCL/Tools/pysat_encode.py'
-knf2cnf_path = f'{cwd_path}/solvers/Cardinality-CDCL/Tools/knf2cnf'
 CCDCL_path = f'{cwd_path}/solvers/Cardinality-CDCL/cardinality-cadical/build/cadical'
 CDCL_path = f'{cwd_path}/solvers/cadical/build/cadical'
 CDCLEX_path = f'{cwd_path}/solvers/cadical-exhaust/build/cadical-exhaust'
@@ -84,17 +90,15 @@ def solve_regular():
     global sat_time_wc
     mode = "KNF" if use_KNF == 1 else "CNF"
 
-    if mode == "CNF":
-        if cnf_encoding is not None:
-            print(f"CNF Encode: {cnf_encoding}")
-            out_log_file.write(f"CNF Encode: {cnf_encoding}\n")
-        else:
-            print("CNF Encode: knf2cnf (sequential counter, linear AMO)")
-            out_log_file.write("CNF Encode: knf2cnf (sequential counter, linear AMO)\n")
-        knf2cnf()
-
     if mode == "KNF":
-        command = [CCDCL_path, knf_dimacs_filepath, "-t", str(solver_timeout), f"--seed={solver_seed}", "--ccdclMode=0"]
+        if use_hybrid:
+            print(f"Solving in Hybrid Mode")
+            out_log_file.write(f"Solving in Hybrid Mode\n")
+            command = [CCDCL_path, full_knf_filepath, "-t", str(solver_timeout), f"--seed={solver_seed}", "--ccdclMode=1"]
+        else:
+            print(f"Solving in Pure CCDCL Mode")
+            out_log_file.write(f"Solving in Pure CCDCL Mode\n")
+            command = [CCDCL_path, knf_dimacs_filepath, "-t", str(solver_timeout), f"--seed={solver_seed}", "--ccdclMode=0"]
     else:
         command = [CDCL_path, cnf_dimacs_filepath, "-t", str(solver_timeout), f"--seed={solver_seed}"]
 
@@ -132,20 +136,12 @@ Solve Exhaustively
 def solve_exhaustive():
     global sat_time_wc
 
-    #if cnf_encoding is not None:
-    #    print(f"CNF Encode: {cnf_encoding}")
-    #    out_log_file.write(f"CNF Encode: {cnf_encoding}\n")
-    #else:
-    #    print("CNF Encode: knf2cnf (sequential counter, linear AMO)")
-    #    out_log_file.write("CNF Encode: knf2cnf (sequential counter, linear AMO)\n")
-    knf2cnf()
-
     maxVar = 1
     for b in range(n):          # Pass cadical-exhaust max var to block
         for x in range(n):
             y = b-x
             if y >= 0 and x+y < n:
-                v[x][y] = maxVar # Remove this at some point, tmp_cnt already does this
+                v[x][y] = maxVar # Remove maxVar at some point, tmp_cnt already does this
                 maxVar += 1
     maxVar -= 1
     command = [CDCLEX_path, cnf_dimacs_filepath, "-t", str(solver_timeout), f"--seed={solver_seed}", f"--order", f"{maxVar}"]
@@ -293,30 +289,6 @@ def verify_solution(point_list):
             print("")
             out_log_file.write(f"\n")
 
-
-
-
-"""
-Convert KNF to CNF
-"""
-def knf2cnf():
-    print("Converting to CNF file:", time.time() - start_time, "seconds")
-
-    cnf_output_file = open(cnf_dimacs_filepath, 'w+')
-
-    if cnf_encoding is None:
-        command = f'\'{knf2cnf_path}\' \'{knf_dimacs_filepath}\''
-        result = subprocess.Popen(command, shell=True, stdout=cnf_output_file, stderr=subprocess.PIPE, text=True)
-        result.wait()
-    else:
-        command = ["python3", pysat_encode_path, "-k", knf_dimacs_filepath, "-c", cnf_dimacs_filepath, "-e", cnf_encoding]
-        #print(command)
-        result = subprocess.Popen(command, stdout=out_log_file, stderr=subprocess.STDOUT)
-        result.wait()
-
-
-    cnf_output_file.close()
-    time.sleep(1) 
 
 
 def main():

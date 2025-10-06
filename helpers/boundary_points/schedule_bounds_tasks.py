@@ -14,19 +14,95 @@ COMMON_ARGS = [
     "-c", "0",
     "-b", "2",
     "-t", "0",   # SAT solver timeout (wall-clock)
-    "-j", "10",  # line-length filter heuristic set to (k+10)  
 ]
 
-SEEDS = SEEDS = [1] #range(1, 16) 
-
 TEMPLATES = {
-    "points_SAT_180":               {"f": 1, "i": 3, "mem": "4G",   "time": "04:00:00"},
-    "points_UNSAT_180":             {"f": 0, "i": 4, "mem": "12G",  "time": "04:00:00"},
-    "points_SAT_past_180":          {"f": 1, "i": 5, "mem": "4G",   "time": "00:00:00"}, # too slow; use "fast" and solve difficult points individually
-    "points_UNSAT_past_180":        {"f": 0, "i": 6, "mem": "12G",  "time": "00:00:00"}, # too slow, use "fast" and solve difficult points individually
-    "points_fast_SAT_past_180":     {"f": 1, "i": 7, "mem": "4G",   "time": "24:00:00"},
-    "points_fast_UNSAT_past_180":   {"f": 0, "i": 8, "mem": "12G",  "time": "24:00:00"},
+    # 1) points_all_180
+    "points_all_180_CNF":     {"name": "points_all_180",     "f": 0, "i": 1, "mem": "4G",  "time": "04:00:00", "hybrid": "0", "seeds": "15"},
+    "points_all_180_KNF":     {"name": "points_all_180",     "f": 1, "i": 1, "mem": "4G",  "time": "04:00:00", "hybrid": "0", "seeds": "15"},
+    "points_all_180_HYBRID":  {"name": "points_all_180",     "f": 1, "i": 1, "mem": "4G",  "time": "04:00:00", "hybrid": "1", "seeds": "15"},
+
+    # 2) points_all_past_180 (too slow)
+    #"points_all_past_180_CNF":    {"name": "points_all_past_180", "f": 0, "i": 2, "mem": "12G", "time": "24:00:00", "hybrid": "0", "seeds": "1"},
+    #"points_all_past_180_KNF":    {"name": "points_all_past_180", "f": 1, "i": 2, "mem": "4G",  "time": "24:00:00", "hybrid": "0", "seeds": "1"},
+    #"points_all_past_180_HYBRID": {"name": "points_all_past_180", "f": 1, "i": 2, "mem": "12G",  "time": "24:00:00", "hybrid": "1", "seeds": "1"},
+
+    # 3) points_SAT_180
+    "points_SAT_180_CNF":     {"name": "points_SAT_180",     "f": 0, "i": 3, "mem": "4G",  "time": "04:00:00", "hybrid": "0", "seeds": "15"},
+    "points_SAT_180_KNF":     {"name": "points_SAT_180",     "f": 1, "i": 3, "mem": "4G",  "time": "04:00:00", "hybrid": "0", "seeds": "15"},
+    "points_SAT_180_HYBRID":  {"name": "points_SAT_180",     "f": 1, "i": 3, "mem": "4G",  "time": "04:00:00", "hybrid": "1", "seeds": "15"},
+
+    # 4) points_UNSAT_180
+    "points_UNSAT_180_CNF":   {"name": "points_UNSAT_180",   "f": 0, "i": 4, "mem": "4G",  "time": "04:00:00", "hybrid": "0", "seeds": "15"},
+    "points_UNSAT_180_KNF":   {"name": "points_UNSAT_180",   "f": 1, "i": 4, "mem": "4G",  "time": "04:00:00", "hybrid": "0", "seeds": "15"},
+    "points_UNSAT_180_HYBRID":{"name": "points_UNSAT_180",   "f": 1, "i": 4, "mem": "4G",  "time": "04:00:00", "hybrid": "1", "seeds": "15"},
+
+    # 5) points_SAT_past_180  (too slow)
+    #"points_SAT_past_180_CNF":    {"name": "points_SAT_past_180", "f": 0, "i": 5, "mem": "12G", "time": "24:00:00", "hybrid": "0", "seeds": "1"},
+    #"points_SAT_past_180_KNF":    {"name": "points_SAT_past_180", "f": 1, "i": 5, "mem": "4G",  "time": "24:00:00", "hybrid": "0", "seeds": "1"},
+    #"points_SAT_past_180_HYBRID": {"name": "points_SAT_past_180", "f": 1, "i": 5, "mem": "12G",  "time": "24:00:00", "hybrid": "1", "seeds": "1"},
+
+    # 6) points_UNSAT_past_180  (too slow)
+    #"points_UNSAT_past_180_CNF":    {"name": "points_UNSAT_past_180", "f": 0, "i": 6, "mem": "12G", "time": "24:00:00", "hybrid": "0", "seeds": "1"},
+    #"points_UNSAT_past_180_KNF":    {"name": "points_UNSAT_past_180", "f": 1, "i": 6, "mem": "4G",  "time": "24:00:00", "hybrid": "0", "seeds": "1"},
+    #"points_UNSAT_past_180_HYBRID": {"name": "points_UNSAT_past_180", "f": 1, "i": 6, "mem": "12G",  "time": "24:00:00", "hybrid": "1", "seeds": "1"},
+
+    # 7) points_fast_SAT_past_180
+    "points_fast_SAT_past_180_CNF":     {"name": "points_fast_SAT_past_180", "f": 0, "i": 7, "mem": "12G", "time": "24:00:00", "hybrid": "0", "seeds": "1"},
+    "points_fast_SAT_past_180_KNF":     {"name": "points_fast_SAT_past_180", "f": 1, "i": 7, "mem": "4G",  "time": "24:00:00", "hybrid": "0", "seeds": "1"},
+    "points_fast_SAT_past_180_HYBRID":  {"name": "points_fast_SAT_past_180", "f": 1, "i": 7, "mem": "12G",  "time": "24:00:00", "hybrid": "1", "seeds": "1"},
+
+    # 8) points_fast_UNSAT_past_180
+    "points_fast_UNSAT_past_180_CNF":    {"name": "points_fast_UNSAT_past_180", "f": 0, "i": 8, "mem": "12G", "time": "24:00:00", "hybrid": "0", "seeds": "1"},
+    "points_fast_UNSAT_past_180_KNF":    {"name": "points_fast_UNSAT_past_180", "f": 1, "i": 8, "mem": "4G",  "time": "24:00:00", "hybrid": "0", "seeds": "1"},
+    "points_fast_UNSAT_past_180_HYBRID": {"name": "points_fast_UNSAT_past_180", "f": 1, "i": 8, "mem": "12G",  "time": "24:00:00", "hybrid": "1", "seeds": "1"},
 }
+
+def submit(template_name, f_flag, i_val, mem_val, time_val, seed, w_val, j_val):
+    jobname = f"{template_name}_r{seed}_j{j_val}"
+    cmd = [
+        "sbatch",
+        f"--time={time_val}",
+        f"--mem-per-cpu={mem_val}",
+        f"--job-name={jobname}",
+        RUN_SCRIPT,
+    ] + COMMON_ARGS + [
+        "-f", str(f_flag),
+        "-i", str(i_val),
+        "-r", str(seed),
+        "-w", str(w_val),
+        "-j", str(j_val),
+    ]
+    print(" ".join(cmd))
+    out = subprocess.check_output(cmd, text=True).strip()
+    print("->", out)
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("template", choices=list(TEMPLATES.keys()))
+    ap.add_argument("-j", type=int, default=10,
+                    help="Line-filter heuristic; block lines with length at least k+j")
+    args = ap.parse_args()
+
+    name = args.template
+    cfg = TEMPLATES[name]
+    folder_name = cfg["name"]
+    f_flag = cfg["f"]
+    i_val = cfg["i"]
+    mem_val = cfg["mem"]
+    time_val = cfg["time"]
+    w_val = cfg["hybrid"]
+    j_val = args.j
+    seeds = int(cfg["seeds"])
+
+    print(f"Submitting for folder: {folder_name}")
+
+    for seed in range(1, seeds + 1):
+        submit(folder_name, f_flag, i_val, mem_val, time_val, seed, w_val, j_val)
+        time.sleep(1)
+
+if __name__ == "__main__":
+    main()
 
 # These difficult points past 180 should be solved individually:
 ## UPPER SAT:
@@ -40,34 +116,3 @@ TEMPLATES = {
 
 ## LOWER UNSAT:
 # "(172,91)" "(156,79)" "(165,86)" "(169,89)" "(174,92)" "(155,78)" "(166,87)" "(162,84)" "(160,83)" "(154,77)" "(154,77)" "(155,78)" "(156,79)" "(160,83)" "(162,84)" "(165,86)"
-
-def submit(template_name, f_flag, i_val, mem_val, time_val, seed):
-    jobname = f"{template_name}_{seed}"
-    cmd = [
-        "sbatch",
-        f"--time={time_val}",
-        f"--mem-per-cpu={mem_val}",
-        f"--job-name={jobname}",
-        RUN_SCRIPT,
-    ] + COMMON_ARGS + ["-f", str(f_flag), "-i", str(i_val), "-r", str(seed)]
-    print(" ".join(cmd))
-    out = subprocess.check_output(cmd, text=True).strip()
-    print("->", out)
-
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("template", choices=list(TEMPLATES.keys()))
-    args = ap.parse_args()
-
-    name = args.template
-    f_flag = TEMPLATES[name]["f"]
-    i_val = TEMPLATES[name]["i"]
-    mem_val = TEMPLATES[name]["mem"]
-    time_val = TEMPLATES[name]["time"]
-
-    for seed in SEEDS:
-        submit(name, f_flag, i_val, mem_val, time_val, seed)
-        time.sleep(1)
-
-if __name__ == "__main__":
-    main()

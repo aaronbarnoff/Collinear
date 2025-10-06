@@ -26,14 +26,15 @@ Options:
   -e   (Optional) CNF cardinality encoding type: seqcounter, totalizer, sortnetwrk, cardnetwrk, mtotalizer, kmtotalizer
   -i   bounds to run: 1=points_all_180, 2=points_all_past_180, 3=points_SAT_180, 4=points_UNSAT_180, 5=points_SAT_past_180, 6=points_UNSAT_past_180, 7=points_fast_SAT_past_180, 8=points_fast_UNSAT_past_180
   -j   line-filter heuristic threshold value (default 0)
+  -w   (KNF) 0=use pure CCDCL, 1=use hybrid mode (default 0)
   -h   help
 EOF
 }
 
-options=$(getopt "hk:l:s:v:a:c:b:f:t:r:e:i:j:" "$@")
+options=$(getopt "hk:l:s:v:a:c:b:f:t:r:e:i:j:w:" "$@")
 eval set -- "$options"
 
-k= l= s= v= a= c= b= f= t= r= e= i= j=
+k= l= s= v= a= c= b= f= t= r= e= i= j= w=
 
 while true; do
   case "$1" in
@@ -51,6 +52,7 @@ while true; do
     -e) e="$2"; shift 2 ;;
     -i) i="$2"; shift 2 ;;    
     -j) j="$2"; shift 2 ;;
+    -w) w="$2"; shift 2 ;;
     --) shift; break ;;
     *)  echo "Bad option"; usage; exit 2 ;;
   esac
@@ -132,14 +134,15 @@ for point in "${points_to_run[@]}"; do
   n=$((x + y + 1))
 
   run_id="$(date +%F_%H-%M-%S)"
-  : "${x:=0}" "${y:=0}" "${s:=1}" "${c:=0}" "${v:=1}" "${a:=0}" "${l:=0}" "${b:=0}" "${f:=0}" "${t:=0}" "${r:=0}" "${j:=0}"
+  : "${x:=0}" "${y:=0}" "${s:=1}" "${c:=0}" "${v:=1}" "${a:=0}" "${l:=0}" "${b:=2}" "${f:=0}" "${t:=0}" "${r:=0}" "${z:=0}" "${j:=0}" "${w:=0}"
 
-  res_name="${folder_name}/res_k${k}_n${n}_x${x}_y${y}_s${s}_c${c}_v${v}_a${a}_l${l}_b${b}_f${f}_r${r}_e${e:-none}_${run_id}"
-
+  #res_name="${folder_name}/res_k${k}_n${n}_x${x}_y${y}_s${s}_c${c}_v${v}_a${a}_l${l}_b${b}_f${f}_r${r}_e${e:-none}_${run_id}"
+  res_name="${folder_name}/res_k${k}_n${n}_x${x}_y${y}_b${b}_f${f}_r${r}_j${j}_w${w}_z${z}_${run_id}"
+  
   mkdir -p "output/$res_name"
 
-  python3 -u encode.py -k "$k" -n "$n" -l "$l" -a "$a" -v "$v" -c "$c" -s "$s" -x "$x" -y "$y" -b "$b" -t "$t" -f "$f" -r "$r" -p "$res_name" ${e:+-e "$e"} -j "$j"
-  python3 -u solve.py  -k "$k" -n "$n" -x "$x" -y "$y" -t "$t" -f "$f" -r "$r" -p "$res_name" ${e:+-e "$e"}
+  python3 -u encode.py -k "$k" -n "$n" -l "$l" -a "$a" -v "$v" -c "$c" -s "$s" -x "$x" -y "$y" -b "$b" -t "$t" -f "$f" -r "$r" -p "$res_name" ${e:+-e "$e"} -j "$j" -w "$w"
+  python3 -u solve.py  -k "$k" -n "$n" -x "$x" -y "$y" -t "$t" -f "$f" -r "$r" -p "$res_name" ${e:+-e "$e"} -w "$w"
 
   rm -f "output/$res_name/dimacsFile.knf" "output/$res_name/dimacsFile.cnf"
 done

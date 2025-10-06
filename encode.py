@@ -32,6 +32,7 @@ def parse_arguments():
     parser.add_argument("--zr", default=0, help="march free variable removal cutoff")
     parser.add_argument("--zl", default=0, help="march cube limit")
     parser.add_argument("--zc", default=0, help="Cadical conflict value")
+    parser.add_argument("-w", default=0, help="Solve using CCDCL Hybrid Mode")
     
     return vars(parser.parse_args())
 
@@ -58,6 +59,9 @@ march_generate_cubes=int(args["z"])
 march_free_var=int(args["zr"])
 march_cube_limit=int(args["zl"])
 march_cadical_conflict_value=int(args["zc"])
+use_hybrid=int(args["w"])
+
+options_str = f"k:{k}, n:{n}, x:{px}, y:{py}, sym_break:{sym_break}, vh_card:{vh_card}, vh_line:{vh_line}, antidiag:{antidiag}, cutoff:{cutoff}, boundary:{boundary_type}, solver:{use_KNF}, hybrid_mode: {use_hybrid}, encoding: {cnf_encoding}, seed:{solver_seed}, timeout:{solver_timeout}, lex:{use_lex}, filter_threshold:{filter_threshold} "
 
 if px > 0 and py > 0:
     if px + py >= n:
@@ -89,15 +93,23 @@ result_folder_path = os.path.join(output_folder_path, results_folder_name)
 if not os.path.exists(result_folder_path):
     os.makedirs(result_folder_path, exist_ok=True)
 
+pysat_encode_path= f'{cwd_path}/solvers/Cardinality-CDCL/Tools/pysat_encode.py'
 CDCL_path = f'{cwd_path}/solvers/cadical/build/cadical'
 march_path= f'{cwd_path}/solvers/CnC/march_cu/march_cu'
 knf2cnf_path = f'{cwd_path}/solvers/Cardinality-CDCL/Tools/knf2cnf'
+konly_path = f'{cwd_path}/solvers/Cardinality-CDCL/Tools/konly' # For hybrid mode
 
 icnf_filename = f'cubes.icnf'
 icnf_filepath = f'{result_folder_path}/{icnf_filename}'
 
 knf_dimacs_filename = f'dimacsFile.knf'
 knf_dimacs_filepath = f'{result_folder_path}/{knf_dimacs_filename}'
+
+cnf_encode_filename = f'encode.cnf'
+cnf_encode_filepath = f'{result_folder_path}/{cnf_encode_filename}' 
+
+full_knf_filename = f'full.knf'
+full_knf_filepath = f'{result_folder_path}/{full_knf_filename}' 
 
 cnf_dimacs_filename = f'dimacsFile.cnf'
 cnf_dimacs_filepath = f'{result_folder_path}/{cnf_dimacs_filename}'
@@ -468,8 +480,8 @@ Structural Constraints
 def encode_VH_binary_constraints(cutoff):
     if not vh_line:
         return
-    print(f"V/H Binary constraints: {cutoff}")
-    out_log_file.write(f"V/H Binary constraints: {cutoff}\n")
+    print(f"V/H Binary constraints: {cutoff+1} point cutoff")
+    out_log_file.write(f"V/H Binary constraints: {cutoff+1} point cutoff\n")
 
     for x in range(n): 
         for y in range(n):
@@ -493,8 +505,8 @@ def encode_VH_binary_constraints(cutoff):
 def encode_antidiagonal_constraints(cutoff):
     if not antidiag:
         return
-    print(f"Antidiagonal constraints: {cutoff}")
-    out_log_file.write(f"Antidiagonal constraints: {cutoff}\n")
+    print(f"Antidiagonal constraints: {cutoff+1} point cutoff")
+    out_log_file.write(f"Antidiagonal constraints: {cutoff+1} point cutoff\n")
     
     # constraint: if (x,y) is true then all upper/lower negative diagonal are false
     for x in range(n): 
@@ -636,7 +648,7 @@ def solve_single_point():
 
 
 """
-Generate knf,cnf,icnf cubes (march/CnC)
+Generate icnf cubes (march/CnC)
 """
 def generate_icnf():
 
@@ -654,18 +666,81 @@ def generate_icnf():
 
     proc = subprocess.Popen(command, stdout=out_log_file, stderr=subprocess.STDOUT)
     proc.wait()
+    time.sleep(1) 
 
 
+"""
+Convert KNF to CNF
+"""
 def knf2cnf():
     print("Converting to CNF file")
+    mode = "KNF" if use_KNF == 1 else "CNF"
+
+    if mode == "CNF":
+        if cnf_encoding is not None:
+            print(f"CNF Encode: {cnf_encoding}")
+            out_log_file.write(f"CNF Encode: {cnf_encoding}\n")
+        else:
+            print("CNF Encode: knf2cnf (sequential counter, linear AMO)")
+            out_log_file.write("CNF Encode: knf2cnf (sequential counter, linear AMO)\n")
+        knf2cnf()
 
     cnf_output_file = open(cnf_dimacs_filepath, 'w+')
 
-    command = f'\'{knf2cnf_path}\' \'{knf_dimacs_filepath}\''
-    result = subprocess.Popen(command, shell=True, stdout=cnf_output_file, stderr=subprocess.PIPE, text=True)
-    result.wait()
+    if cnf_encoding is None:
+        command = f'\'{knf2cnf_path}\' \'{knf_dimacs_filepath}\''
+        result = subprocess.Popen(command, shell=True, stdout=cnf_output_file, stderr=subprocess.PIPE, text=True)
+        result.wait()
+    else:
+        command = ["python3", pysat_encode_path, "-k", knf_dimacs_filepath, "-c", cnf_dimacs_filepath, "-e", cnf_encoding]
+        #print(command)
+        result = subprocess.Popen(command, stdout=out_log_file, stderr=subprocess.STDOUT)
+        result.wait()
 
     cnf_output_file.close()
+    time.sleep(1) 
+
+
+
+"""
+Generate hybrid dimacs file (HYBRID mode)
+"""
+def generate_hybrid_dimacs():
+    print("Generating Hybrid Dimacs file")
+    with open(cnf_encode_filepath) as f:
+        cnf = f.readlines()
+    with open(knf_dimacs_filepath) as f:
+        knf = f.readlines()
+
+    for l in cnf:
+        if l.startswith("p cnf"):
+            _, _, v1, c1 = l.split()[:4]
+            break
+    for l in knf:
+        if l.startswith("p knf"):
+            _, _, v2, c2 = l.split()[:4]
+            break
+
+    v = int(v1)
+    cls = int(c1) + int(c2)
+    body = [l for l in knf if not l.startswith("p ")] + [l for l in cnf if not l.startswith("p ")]
+
+    with open(full_knf_filepath, "w") as out:
+        out.write(f"p knf {v} {cls}\n")
+        out.writelines(body)
+
+    time.sleep(1) 
+
+def konly(): # for HYBRID
+    print("Creating k-encoded cnf file (konly)")
+
+    cnf_encode_file = open(cnf_encode_filepath, 'w+')
+
+    command = f'\'{konly_path}\' \'{knf_dimacs_filepath}\''
+    result = subprocess.Popen(command, shell=True, stdout=cnf_encode_file, stderr=subprocess.PIPE, text=True)
+    result.wait()
+
+    cnf_encode_file.close()
     time.sleep(1) 
 
 
@@ -678,8 +753,8 @@ def main():
     print(result_folder_path)
     out_log_file.write(f"{result_folder_path}\n")
 
-    print(f"k:{k}, n:{n}, x:{px}, y:{py}, sym_break:{sym_break}, vh_card:{vh_card}, vh_line:{vh_line}, antidiag:{antidiag}, cutoff:{cutoff}, boundary:{boundary_type}, solver:{use_KNF}, encoding: {cnf_encoding}, seed:{solver_seed}, timeout:{solver_timeout}, lex:{use_lex} ")
-    out_log_file.write(f"k:{k}, n:{n}, x:{px}, y:{py}, sym_break:{sym_break}, vh_card:{vh_card}, vh_line:{vh_line}, antidiag:{antidiag}, cutoff:{cutoff}, boundary:{boundary_type}, solver:{use_KNF}, encoding: {cnf_encoding}, seed:{solver_seed}, timeout:{solver_timeout}, lex:{use_lex}\n")
+    print(f"k:{k}, n:{n}, x:{px}, y:{py}, sym_break:{sym_break}, vh_card:{vh_card}, vh_line:{vh_line}, antidiag:{antidiag}, cutoff:{cutoff}, boundary:{boundary_type}, solver:{use_KNF}, hybrid_mode: {use_hybrid}, encoding: {cnf_encoding}, seed:{solver_seed}, timeout:{solver_timeout}, lex:{use_lex}, (k+c):{filter_threshold} ")
+    out_log_file.write(f"k:{k}, n:{n}, x:{px}, y:{py}, sym_break:{sym_break}, vh_card:{vh_card}, vh_line:{vh_line}, antidiag:{antidiag}, cutoff:{cutoff}, boundary:{boundary_type}, solver:{use_KNF}, hybrid_mode: {use_hybrid}, encoding: {cnf_encoding}, seed:{solver_seed}, timeout:{solver_timeout}, lex:{use_lex},  (k+c):{filter_threshold}\n")
 
     define_path_variables()
 
@@ -703,23 +778,29 @@ def main():
 
     out_log_file.write(f"numVars: {var_cnt}, numClauses: {num_clauses}, numCardClauses: {num_card_clauses}\n")
 
-
-    # Write dimacs file
+    # Write KNF dimacs file
     f = open(f'{result_folder_path}/{knf_dimacs_filename}', "w+")
     f.write(f"p knf {num_vars} {num_clauses}\n")
     for lines in dimacs_buffer:
         f.write(lines + "\n")
     f.flush()
     f.close()
-
+    time.sleep(1) 
     print("dimacsFile created: ", time.time() - start_time, "seconds")
 
-    if march_generate_cubes:
-        time.sleep(1) 
+    # Optionally modify dimacs file further
+    if not use_KNF or march_generate_cubes:
         knf2cnf()
+
+    if march_generate_cubes:
         generate_icnf()
         print("cubes.icnf created: ", time.time() - start_time, "seconds")
     
+    if use_hybrid:
+        konly()
+        generate_hybrid_dimacs()
+        print("full.knf created: ", time.time() - start_time, "seconds")
+
     out_log_file.close()
 
 

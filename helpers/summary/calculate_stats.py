@@ -7,9 +7,9 @@ from collections import defaultdict
 # Group tests and calculate median time from the random seeds; assumes 15 trials
 # Treats unfinished tests as having a solve time of INF.
 # Gives groups with less than 8 completed tests inf median time
-
-INPUT = "summary.csv"
-OUTPUT = "tables.csv"
+j_val=0
+INPUT = f"summary_j{j_val}.csv"
+OUTPUT = f"tables_j{j_val}.csv"
 
 keys = [
     "k","n","x","y",
@@ -23,7 +23,7 @@ keys = [
 
 # (This assumes the tests were all scheduled around the same time)
 TRIALS = 15                         # Assume all tests have 15 trials; any missing trials (unfinished) are given INF time
-POST_MEDIAN = (TRIALS + 1) // 2     # Ignore unfinished trials after the median is known
+MEDIAN = ((TRIALS + 1) // 2)     # Ignore unfinished trials after the median is known
 
 def main():
     tests = defaultdict(list)
@@ -45,26 +45,24 @@ def main():
             trial_count = len(times)
             row["count"] = trial_count
 
-        if trial_count >= POST_MEDIAN:
-            row["avg"] = round(statistics.mean(times), 2)
-            row["min"] = round(min(times), 2)
-            row["max"] = round(max(times), 2)
-        else:
-            row["avg"] = float("inf")
-            row["min"] = float("inf")
-            row["max"] = float("inf")
-
-        if trial_count < POST_MEDIAN:
-            row["median"] = float("inf")
-            print("Incomplete group:",
-                  row["k"], row["n"], row["x"], row["y"], row["symBreak"],
-                  row["VHCard"], row["VHBinary"], row["antidiag"], row["lineLen"],
-                  row["boundary"], row["KNF"], row["timeout"], row["encoding"])
-        else:
-            s = sorted(times)
-            row["median"] = round(s[POST_MEDIAN - 1], 2)
-
-        out_tests.append(row)
+            if trial_count >= MEDIAN:
+                s = sorted(times)
+                row["avg"] = round(statistics.mean(times), 2)
+                row["min"] = round(min(times), 2)
+                row["max"] = round(max(times), 2)
+                row["median"] = round(s[MEDIAN-1], 2)
+            else:
+                row["avg"] = float("inf")
+                row["min"] = float("inf")
+                row["max"] = float("inf")
+                row["median"] = float("inf")
+                print(
+                    "Incomplete group:",
+                    row["k"], row["n"], row["x"], row["y"], row["symBreak"],
+                    row["VHCard"], row["VHBinary"], row["antidiag"], row["lineLen"],
+                    row["boundary"], row["KNF"], row["timeout"], row["encoding"]
+                )
+            out_tests.append(row)
 
     out_tests.sort(key=sort_cols)
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# Not updated for using heuristic filter or hybrid mode
 
 JOBS=12 # Max number of jobs to create at a time.
 m=1
