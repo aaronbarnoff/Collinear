@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --account=def-cbright
+#SBATCH --account=rrg-cbright
 #SBATCH --cpus-per-task=1
 
 #mem-per-task is moved out of script; generating for n=320 and above can require > 20GB 

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-#SBATCH --account=def-cbright
+#SBATCH --account=rrg-cbright
 #SBATCH --job-name=CUBE_ARRAY
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=4G
 
 # This takes as argument -f the "res_k..." folder which contains the <num>_dimacsFile.knf files.
 # It is submitted as a job array of 0 to (<max_cube_number>-1) jobs
-# e.g. For 114 cubes: "sbatch --array=0-113 --time=120:00:00 run_cube.sh -f results_k7_n305_id2025-05-23_17-27-15"
+# e.g. For 114 cubes: "sbatch --array=0-113 --time=72:00:00 run_cubes.sh -f results_k7_n305_id2025-05-23_17-27-15"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in

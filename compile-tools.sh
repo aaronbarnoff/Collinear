@@ -19,6 +19,7 @@ cd ..
 git clone https://github.com/curtisbright/cadical-exhaust.git
 cd cadical-exhaust
 ./configure && make
+cd ..
 
 # Cube-and-Conquer
 git clone https://github.com/curtisbright/CnC.git
