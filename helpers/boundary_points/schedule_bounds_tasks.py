@@ -18,9 +18,9 @@ COMMON_ARGS = [
 
 TEMPLATES = {
     # 1) points_all_180
-    "points_all_180_CNF":     {"name": "points_all_180",     "f": 0, "i": 1, "mem": "4G",  "time": "04:00:00", "hybrid": "0", "seeds": "15"},
-    "points_all_180_KNF":     {"name": "points_all_180",     "f": 1, "i": 1, "mem": "4G",  "time": "04:00:00", "hybrid": "0", "seeds": "15"},
-    "points_all_180_HYBRID":  {"name": "points_all_180",     "f": 1, "i": 1, "mem": "4G",  "time": "04:00:00", "hybrid": "1", "seeds": "15"},
+    "points_all_180_CNF":     {"name": "points_all_180",     "f": 0, "i": 1, "mem": "4G",  "time": "24:00:00", "hybrid": "0", "seeds": "15"},
+    "points_all_180_KNF":     {"name": "points_all_180",     "f": 1, "i": 1, "mem": "4G",  "time": "24:00:00", "hybrid": "0", "seeds": "15"},
+    "points_all_180_HYBRID":  {"name": "points_all_180",     "f": 1, "i": 1, "mem": "4G",  "time": "24:00:00", "hybrid": "1", "seeds": "15"},
 
     # 2) points_all_past_180 (too slow)
     #"points_all_past_180_CNF":    {"name": "points_all_past_180", "f": 0, "i": 2, "mem": "12G", "time": "24:00:00", "hybrid": "0", "seeds": "1"},
@@ -80,7 +80,7 @@ def submit(template_name, f_flag, i_val, mem_val, time_val, seed, w_val, j_val):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("template", choices=list(TEMPLATES.keys()))
-    ap.add_argument("-j", type=int, default=10,
+    ap.add_argument("-j", type=int, default=0,
                     help="Line-filter heuristic; block lines with length at least k+j")
     args = ap.parse_args()
 

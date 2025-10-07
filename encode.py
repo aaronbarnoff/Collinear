@@ -683,7 +683,6 @@ def knf2cnf():
         else:
             print("CNF Encode: knf2cnf (sequential counter, linear AMO)")
             out_log_file.write("CNF Encode: knf2cnf (sequential counter, linear AMO)\n")
-        knf2cnf()
 
     cnf_output_file = open(cnf_dimacs_filepath, 'w+')
 

@@ -2,14 +2,9 @@
 import csv
 import statistics
 from collections import defaultdict
-# (untested with new changes)
 
-# Group tests and calculate median time from the random seeds; assumes 15 trials
-# Treats unfinished tests as having a solve time of INF.
-# Gives groups with less than 8 completed tests inf median time
-j_val=0
-INPUT = f"summary_j{j_val}.csv"
-OUTPUT = f"tables_j{j_val}.csv"
+INPUT = "summary.csv"
+OUTPUT = "tables.csv"
 
 keys = [
     "k","n","x","y",
@@ -19,11 +14,14 @@ keys = [
     "KNF",
     "timeout",
     "encoding",
+    "hybrid",
+    "k_plus_c",
+    "status",
 ]
 
-# (This assumes the tests were all scheduled around the same time)
-TRIALS = 15                         # Assume all tests have 15 trials; any missing trials (unfinished) are given INF time
-MEDIAN = ((TRIALS + 1) // 2)     # Ignore unfinished trials after the median is known
+TRIALS = 1
+POST_MEDIAN = 1 if TRIALS == 1 else (TRIALS + 1) // 2
+SIMPLE = (TRIALS == 1)
 
 def main():
     tests = defaultdict(list)
@@ -39,41 +37,41 @@ def main():
             key = tuple(row.get(col, "").strip() for col in keys)
             tests[key].append(t)
 
-        out_tests = []
-        for key, times in tests.items():
-            row = dict(zip(keys, key))
-            trial_count = len(times)
-            row["count"] = trial_count
+    out_tests = []
+    for key, times in tests.items():
+        row = dict(zip(keys, key))
+        trial_count = len(times)
+        row["count"] = trial_count
 
-            if trial_count >= MEDIAN:
+        if SIMPLE:
+            if trial_count > 0:
+                row["avg"] = round(statistics.mean(times), 2)
+                row["min"] = round(min(times), 2)
+                row["max"] = round(max(times), 2)
+                row["median"] = round(statistics.median(times), 2)
+            else:
+                row["avg"] = row["min"] = row["max"] = row["median"] = float("inf")
+        else:
+            if trial_count >= POST_MEDIAN:
                 s = sorted(times)
                 row["avg"] = round(statistics.mean(times), 2)
                 row["min"] = round(min(times), 2)
                 row["max"] = round(max(times), 2)
-                row["median"] = round(s[MEDIAN-1], 2)
+                row["median"] = round(s[POST_MEDIAN - 1], 2)
             else:
-                row["avg"] = float("inf")
-                row["min"] = float("inf")
-                row["max"] = float("inf")
-                row["median"] = float("inf")
-                print(
-                    "Incomplete group:",
-                    row["k"], row["n"], row["x"], row["y"], row["symBreak"],
-                    row["VHCard"], row["VHBinary"], row["antidiag"], row["lineLen"],
-                    row["boundary"], row["KNF"], row["timeout"], row["encoding"]
-                )
-            out_tests.append(row)
+                row["avg"] = row["min"] = row["max"] = row["median"] = float("inf")
+
+        out_tests.append(row)
 
     out_tests.sort(key=sort_cols)
 
-    sum_medians = sum(
+    sum_medians = round(sum(
         r["median"] for r in out_tests
-        if isinstance(r["median"], float) and r["median"] != float("inf") # Ignore INF times for the total time calculation
-    )
-    sum_medians = round(sum_medians, 2)
+        if isinstance(r["median"], float) and r["median"] != float("inf")
+    ), 2)
 
     print(f"Writing grouped table: {OUTPUT}")
-    print(f"Sum of medians across {len(out_tests)} completed groups: {sum_medians}")
+    print(f"Sum of medians across {len([r for r in out_tests if isinstance(r['median'], float) and r['median'] != float('inf')])} completed groups: {sum_medians}")
 
     headers = keys + ["count","avg","min","max","median"]
     with open(OUTPUT, "w", newline="", encoding="utf-8") as fh:
@@ -82,14 +80,35 @@ def main():
         w.writerows(out_tests)
 
 def sort_cols(r):
+    def to_int(v, d=0):
+        s = ("" if v is None else str(v).strip())
+        if s == "":
+            return d
+        try:
+            return int(float(s))
+        except:
+            return d
+
+    def to_float(v, d=0.0):
+        s = ("" if v is None else str(v).strip())
+        if s == "":
+            return d
+        try:
+            return float(s)
+        except:
+            return d
+
     return (
-        int(r["k"]), int(r["n"]),
-        int(r["x"]), int(r["y"]), int(r["symBreak"]),
-        int(r["VHCard"]), int(r["VHBinary"]),
-        int(r["antidiag"]), int(r["lineLen"]),
-        float(r["boundary"]), int(r["KNF"]),
-        int(float(r["timeout"])) if r["timeout"] != "" else 0,
-        r["encoding"] or ""
+        to_int(r.get("k")), to_int(r.get("n")),
+        to_int(r.get("x")), to_int(r.get("y")), to_int(r.get("symBreak")),
+        to_int(r.get("VHCard")), to_int(r.get("VHBinary")),
+        to_int(r.get("antidiag")), to_int(r.get("lineLen")),
+        to_float(r.get("boundary")), to_int(r.get("KNF")),
+        to_int(r.get("timeout")),
+        r.get("encoding") or "",
+        to_int(r.get("hybrid")),
+        to_int(r.get("k_plus_c")),
+        r.get("status") or ""
     )
 
 if __name__ == "__main__":
