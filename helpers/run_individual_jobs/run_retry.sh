@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 #SBATCH --account=def-cbright
 #SBATCH --cpus-per-task=1
-#SBATCH --mem-per-cpu=4G
 set -euo pipefail
 
 # CNF requires 8-12GB+ past k=7, n=220
