@@ -6,7 +6,7 @@ from collections import defaultdict
 SLURM_DIR = str(Path.cwd().parents[1])
 OUTPUT_SUMMARY = "summary.csv"
 OUTPUT_TABLES  = "tables.csv"
-SLURM_PATTERNS = ("slurm.out", "slurm-*.out")
+SLURM_PATTERNS = ("slurm-*.out",)
 
 KEYS = ["k","n","x","y","symBreak","VHCard","VHBinary","antidiag","lineLen","boundary","KNF","timeout","encoding","k_plus_c","status"]
 GROUP_KEYS = ["k","n","x","y","symBreak","VHCard","VHBinary","antidiag","lineLen","boundary","KNF","timeout","encoding","k_plus_c"]
