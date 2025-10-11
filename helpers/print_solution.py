@@ -52,6 +52,18 @@ def plot_solution(points, collinear_list, n, k, dimacs_file):
         ax.add_patch(plt.Rectangle((x - 0.5, y - 0.5), 1, 1, facecolor="blue", edgecolor="none"))
         if x > used_max_x: used_max_x = x
         if y > used_max_y: used_max_y = y
+    #dist=25
+    #for x in range(n):
+    #    for y in range(n):
+    #        if x+y < n:
+    #            if y > x+dist*2+1 or x > y+dist*2-1:
+    #                ax.add_patch(plt.Rectangle((x - 0.5, y - 0.5), 1, 1, facecolor="red", edgecolor="none"))
+    #
+    #for (x, y) in points:
+    #    if y <= x+50 or x <= y+50:
+    #        ax.add_patch(plt.Rectangle((x - 0.5, y - 0.5), 1, 1, facecolor="blue", edgecolor="none"))
+    #        if x > used_max_x: used_max_x = x
+    #        if y > used_max_y: used_max_y = y
 
     #for bx, by in [(14, 15), (15, 14)]: # for adding specific points to the grid
     #    ax.add_patch(plt.Rectangle((bx - 0.5, by - 0.5), 1, 1, facecolor="black", edgecolor="none"))

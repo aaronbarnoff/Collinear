@@ -662,7 +662,8 @@ def generate_icnf():
     print(f"Generating cubes with params: m:{num_vars}, r:{march_free_var}, l:{march_cube_limit}")
     out_log_file.write(f"Generating cubes with params: m:{num_vars}, r:{march_free_var}, l:{march_cube_limit}\n")
 
-    command = [march_path, cnf_dimacs_simplified_filepath,"-o", icnf_filepath, "-m", str(num_vars), "-r", str(march_free_var), "-l", str(march_cube_limit)]
+    #command = [march_path, cnf_dimacs_simplified_filepath,"-o", icnf_filepath, "-m", str(num_vars), "-r", str(march_free_var), "-l", str(march_cube_limit)]
+    command = [march_path, cnf_dimacs_simplified_filepath,"-o", icnf_filepath, "-m", str(num_vars), "-r", str(march_free_var), "-l", str(march_cube_limit), "--min_y", "56", "--max_y", "86", "--min_x", "55", "--max_x", "85"]#"--min_y", "67", "--max_y", "73", "--min_x", "62", "--max_x", "76"] #"63", "--max_y", "77", "--min_x", "62", "--max_x", "76"]# "--min_y", "55", "--max_y", "85", "--min_x", "55", "--max_x", "85"] #129 cubes max, but all left of midline
 
     proc = subprocess.Popen(command, stdout=out_log_file, stderr=subprocess.STDOUT)
     proc.wait()
@@ -742,7 +743,15 @@ def konly(): # for HYBRID
     cnf_encode_file.close()
     time.sleep(1) 
 
+def block_midline_range(dist):
+    print(f"Blocking points > {dist} points of midline")
+    out_log_file.write(f"Blocking points > {dist} points of midline\n")
 
+    for x in range(n):
+        for y in range(n):
+            if x+y < n:
+                if y > x+dist*2+1 or x > y+dist*2-1:
+                    add_clause(-v[x][y])
 
 
 
@@ -774,6 +783,8 @@ def main():
     encode_antidiagonal_constraints(cutoff)
     encode_boundary_constraints()
     create_lexicographic_encoding(lex_len)
+    distance=25
+    block_midline_range(distance)
 
     out_log_file.write(f"numVars: {var_cnt}, numClauses: {num_clauses}, numCardClauses: {num_card_clauses}\n")
 

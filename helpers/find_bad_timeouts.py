@@ -45,6 +45,7 @@ def main():
 
     records = []  # (job, path, cpu)
     for f in sorted(Path(".").glob("slurm-*.out")):
+        #print(f"{f}")
         m = JOB_RE.match(f.name)
         if not m: 
             continue
