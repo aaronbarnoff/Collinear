@@ -120,6 +120,10 @@ def extract_solution(v, n, k, sat_log_file_path):
         if line.startswith('v '):
             numbers = list(map(int, line[2:].strip().split()))
             model.extend([num for num in numbers if num > 0])
+        elif line.startswith('c New solution:'):
+            numbers = list(map(int, line[16:].strip().split()))
+            print(numbers)
+            model.extend([num for num in numbers if num > 0])
 
     points_list = []
     for x in range(n):

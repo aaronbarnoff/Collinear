@@ -117,7 +117,8 @@ def main():
     print(f"Filled {filled} cells")
 
     max_solutions = int(heatmap.max())
-    print(f"Max solutions in any cell: {max_solutions}")
+    sum_solutions = int(heatmap.sum())
+    print(f"Max solutions in any cell: {max_solutions}. Total solutions: {sum_solutions}")
 
     plot_heatmap(heatmap, k, n, m, max_x, max_y)
 

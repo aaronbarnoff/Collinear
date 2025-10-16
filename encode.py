@@ -539,15 +539,18 @@ def reflection_symmetry_break():
     if n > 1:
         add_clause(v[0][1])
 
+lex_debug = False
 def create_lexicographic_encoding(num_points):
     if not use_lex:
+        return
+    if n <= 3:
         return
     print(f"Symmetry break Lexicographic")
     out_log_file.write(f"Symmetry break Lexicographic\n")
 
-    NP = min(num_points, n//2)   # only need floor(n/2) to avoid midpoint overlap
+    NP = n #min(num_points, n//2)  
 
-    for i in range(n):
+    for i in range(1,n):
         right_step[i] = new_var()
 
     cells_per_step = [[] for _ in range(n)]
@@ -571,8 +574,8 @@ def create_lexicographic_encoding(num_points):
                 add_clause( right_step[i],  -v[x][y],   v[x][y-1])
 
     # Rotation
-    fwd_idx = list(range(0, NP))
-    rev_idx = [n - 1 - i for i in fwd_idx]
+    fwd_idx = list(range(1, NP))
+    rev_idx = [n - i for i in fwd_idx]
     seq_A = [right_step[i] for i in fwd_idx]
     seq_B = [right_step[j] for j in rev_idx]
 
@@ -585,7 +588,7 @@ def create_lexicographic_encoding(num_points):
    # Rotation+Reflection
     rot_seq = []
     for i in fwd_idx:
-        rev = (n - 1) - i
+        rev = n - i
         rot_seq.append(-right_step[rev])
     if lex_debug: print(f"LEX rot compare seqA={seq_A}  vs rot_seq={rot_seq}")
     rot_lex_vars = encode_lexicographic_constraints(seq_A, rot_seq)
@@ -608,7 +611,6 @@ def encode_lexicographic_constraints(seqA, seqB): # from knuth eq 169
     if lex_debug: print(f"lex[0] clause: {seqB[0]}, {lex_vars[0]}")         # (B0 ∨ lex0)
     add_clause(seqB[0],  lex_vars[0])
     if lex_debug: print(f"lex[0] clause: {lex_vars[0]}")                    # (lex0)
-    add_clause(lex_vars[0])
 
     # Recurrence for positions 1..L-2:
     for i in range(1, L-1):
@@ -768,7 +770,7 @@ def main():
 
     # Mandatory constraints
     encode_path_constraints()
-    encode_cardinality_constraints_KNF() # Includes line-filter heuristic, if enabled
+    encode_cardinality_constraints_KNF()
 
     # block unreachable extremal points
     block_extremal_points()
@@ -783,8 +785,7 @@ def main():
     encode_antidiagonal_constraints(cutoff)
     encode_boundary_constraints()
     create_lexicographic_encoding(lex_len)
-    distance=25
-    block_midline_range(distance)
+
 
     out_log_file.write(f"numVars: {var_cnt}, numClauses: {num_clauses}, numCardClauses: {num_card_clauses}\n")
 
@@ -801,6 +802,12 @@ def main():
     # Optionally modify dimacs file further
     if not use_KNF or march_generate_cubes:
         knf2cnf()
+
+    CnC_test = False 
+    if CnC_test == True: # Specifically for generating cubes, and the knf file that the cubes will be added to.
+        if k == 7: 
+            distance=25
+            block_midline_range(distance) # Block points far from midline; heuristic from looking at known paths past n=300
 
     if march_generate_cubes:
         generate_icnf()

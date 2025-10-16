@@ -85,10 +85,9 @@ then
 else
   mkdir -p "$PWD/output/ex"  # exhaustive search
   res_name="ex/res_k${k}_n${n}_x${x}_y${y}_s${s}_c${c}_v${v}_a${a}_l${l}_b${b}_f${f}_r${r}_e${e:-none}_j${j}_w${w}_${run_id}"
-  #res_name="ex/res_k${k}_n${n}_x${x}_y${y}_s${s}_c${c}_v${v}_a${a}_l${l}_b${b}_f${f}_r${r}_e${e:-none}_j${j}_w${w}_${run_id}"
 fi
 
-python3 -u encode.py -k "$k" -n "$n" -l "$l" -a "$a" -v "$v" -c "$c" -s "$s" -x "$x" -y "$y" -b "$b" -t "$t" -f "$f" -r "$r" -p "$res_name" ${e:+-e "$e"} -j "$j" -w "$w"
+python3 -u encode.py -k "$k" -n "$n" -l "$l" -a "$a" -v "$v" -c "$c" -s "$s" -x "$x" -y "$y" -b "$b" -t "$t" -f "$f" -r "$r" -p "$res_name" ${e:+-e "$e"} -j "$j" -w "$w" #-o "1"
 python3 -u solve.py  -k "$k" -n "$n" -x "$x" -y "$y" -t "$t" -f "$f" -r "$r" -p "$res_name" ${e:+-e "$e"} -z "$z" -w "$w" 
 
 #python3 -u print_solution.py -k "$k" -n "$n" -f "$PWD/output/$res_name/satOutput.log"
