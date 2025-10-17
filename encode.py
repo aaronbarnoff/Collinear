@@ -641,8 +641,8 @@ def encode_lexicographic_constraints(seqA, seqB): # from knuth eq 169
 def solve_single_point():
     if (px == 0 and py == 0):
         return
-    print(f"Single point solve: ({px},{py})")
-    out_log_file.write(f"Single point solve: ({px},{py})\n")
+    print(f"Single point solve: ({px},{py}), v:{v[px][py]}")
+    out_log_file.write(f"Single point solve: ({px},{py}), v:{v[px][py]}\n")
     add_clause(v[px][py])
 
 

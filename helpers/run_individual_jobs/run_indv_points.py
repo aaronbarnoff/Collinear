@@ -396,7 +396,7 @@ def submit_job(*, walltime, runner, k_val, n_val, x_val, y_val, s_val,
     cmd = [
         "sbatch",
         f"--time={walltime}",
-        f"--exclude=fc30464",
+        #f"--exclude=fc30464", # node issues fixed
         f"--mem-per-cpu={memreq}G",
         f"--job-name={jobname}",
         runner,

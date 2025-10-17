@@ -8,6 +8,19 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from pathlib import Path
 
+total_time = 0
+
+def get_cpu_time(log_path: Path):
+    global total_time
+    try:
+        with open(log_path, "r", encoding="utf-8", errors="ignore") as f:
+            for line in f:
+                if line.startswith("c total process time since initialization:"):
+                    total_time += float(line.strip().split()[-2])
+                    return
+    except Exception:
+        pass
+
 def parse_args():
     ap = argparse.ArgumentParser()
     ap.add_argument("-k", type=int, required=True)
@@ -41,7 +54,15 @@ def plot_heatmap(heatmap: np.ndarray, k: int, n: int, m: int, max_x: int, max_y:
 
     im = ax.imshow(masked, origin="lower", cmap=cmap, interpolation="none", vmin=1)
 
-    label_fontsize = 22 #max(4, int(200 / max(1, n))) #4 for k6n98; 10 for k5n30; 22 for k4n10
+    if k == 4:
+        tick_fontsize = 24
+        label_fontsize = 22 #max(4, int(200 / max(1, n))) #4 for k6n98; 10 for k5n30; 22 for k4n10
+    elif k == 5: 
+        tick_fontsize = 14
+        label_fontsize = 10
+    else: # k=6
+        tick_fontsize = 7
+        label_fontsize = 4 
 
     for x in range(heatmap.shape[1]):
         for y in range(heatmap.shape[0]):
@@ -57,8 +78,11 @@ def plot_heatmap(heatmap: np.ndarray, k: int, n: int, m: int, max_x: int, max_y:
 
     ax.set_xticks(range(0, max_x + 2))
     ax.set_yticks(range(0, max_y + 2))
-    ax.tick_params(axis="both", which="major", labelsize=24)#label_fontsize)#7 for k6n98; 14 or k5n30; 24 for k4n10
+    ax.tick_params(axis="both", which="major", labelsize=tick_fontsize)#label_fontsize)#7 for k6n98; 14 or k5n30; 24 for k4n10
 
+    ax.axline((0,1), slope=1, color="grey", linestyle="--", linewidth=0.25) # midline
+    ax.axline((0, n-2), slope=-1, color="grey", linestyle="--", linewidth=0.25) # final points
+    
     for x in range(max_x + 2):
         ax.axvline(x - 0.5, color="lightgrey", linestyle="--", linewidth=0.125)
     for y in range(max_y + 2):
@@ -104,6 +128,7 @@ def main():
             continue
 
         num_solutions = extract_num_solutions(log_path)
+        get_cpu_time(log_path)
         heatmap[y, x] = num_solutions
         if num_solutions > 0:
             if x > max_x: max_x = x
@@ -119,6 +144,7 @@ def main():
     max_solutions = int(heatmap.max())
     sum_solutions = int(heatmap.sum())
     print(f"Max solutions in any cell: {max_solutions}. Total solutions: {sum_solutions}")
+    print(f"Total CPU time: {total_time} seconds")
 
     plot_heatmap(heatmap, k, n, m, max_x, max_y)
 
