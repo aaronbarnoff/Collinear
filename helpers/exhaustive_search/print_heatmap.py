@@ -80,8 +80,8 @@ def plot_heatmap(heatmap: np.ndarray, k: int, n: int, m: int, max_x: int, max_y:
     ax.set_yticks(range(0, max_y + 2))
     ax.tick_params(axis="both", which="major", labelsize=tick_fontsize)#label_fontsize)#7 for k6n98; 14 or k5n30; 24 for k4n10
 
-    ax.axline((0,1), slope=1, color="grey", linestyle="--", linewidth=0.25) # midline
-    ax.axline((0, n-2), slope=-1, color="grey", linestyle="--", linewidth=0.25) # final points
+    ax.axline((0,0), slope=1, color="grey", linestyle="--", linewidth=0.25) # midline (y=x) now instead of (y=x+1)
+    ax.axline((0, n-2), slope=-1, color="red", linestyle="--", linewidth=0.25) # final points
     
     for x in range(max_x + 2):
         ax.axvline(x - 0.5, color="lightgrey", linestyle="--", linewidth=0.125)
