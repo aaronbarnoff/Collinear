@@ -760,6 +760,62 @@ def block_midline_range(dist):
 
 
 
+def encode_steps(): # from lex constraints
+    global right_step
+
+    for i in range(1, n):
+        if right_step[i] == 0:
+            right_step[i] = new_var()
+
+    cells_per_step = [[] for _ in range(n)]
+    for x in range(n):
+        for y in range(n):
+            step = x + y
+            if step < n:
+                cells_per_step[step].append((x, y))
+
+    for i in range(1, n):
+        r = right_step[i]
+        for (x, y) in cells_per_step[i]:
+            if x > 0:
+                # (~v[x-1][y] or ~v[x][y] or  r)
+                add_clause(-v[x-1][y], -v[x][y],  r)
+                # (~r or ~v[x][y] or v[x-1][y])
+                add_clause(-r,         -v[x][y],  v[x-1][y])
+            if y > 0:
+                # (~v[x][y-1] or ~v[x][y] or ~r)
+                add_clause(-v[x][y-1], -v[x][y], -r)
+                # ( r or ~v[x][y] or v[x][y-1])
+                add_clause( r,         -v[x][y],  v[x][y-1])
+
+def enforce_path():
+    bit_path = "100100000111101111101110010001100100000100000100000100000100000100111101110010000010000010000010000010000010111101111101101111101110110001000001110010000010000010000010000010000010011111000"
+    bit_steps = [c for c in bit_path.strip() if c in ('0','1')]
+    bit_path_len = len(bit_steps)
+    num_steps = n - 1
+    if bit_path_len == 0:
+        return
+    if bit_path_len > num_steps:
+        print("invalid bit path")
+        exit(-1)
+    
+    encode_steps()
+
+    path_range = num_steps - bit_path_len + 1
+    start_vars = []
+    for start_step in range(1, path_range + 1):
+        start_var = new_var()  
+        start_vars.append(start_var)
+
+    for j in range(bit_path_len):
+        step_var = right_step[start_step + j]
+        if bit_steps[j] == '1':
+            add_clause(-start_var, step_var)
+        else:
+            add_clause(-start_var, -step_var)
+
+    add_clause(*start_vars)
+
 def main():
     start_time = time.time()
 
@@ -788,6 +844,8 @@ def main():
     encode_antidiagonal_constraints(cutoff)
     encode_boundary_constraints()
     create_lexicographic_encoding(lex_len)
+
+    enforce_path() # for forcing the sequence of steps seen with n=323 and n=325 solutions
 
     CnC_test = False
     if CnC_test == True: # Specifically for generating cubes, and the knf file that the cubes will be added to.
