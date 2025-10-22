@@ -40,6 +40,8 @@ def read_vars(dimacs_file):
 def plot_solution(points, collinear_list, n, k, dimacs_file):
     fig, ax = plt.subplots(figsize=(8, 8))
     ax.tick_params(axis="x", rotation=90)
+    ax.set_aspect('equal', adjustable='datalim')
+    ax.autoscale_view()
 
     x_vals = np.linspace(-0.5, n - 0.5, 200)
     #ax.plot(x_vals, n - x_vals, color="gray", linestyle="--", linewidth=1)
@@ -106,7 +108,7 @@ def plot_solution(points, collinear_list, n, k, dimacs_file):
     outdir = os.path.dirname(dimacs_file)
     stem = os.path.splitext(os.path.basename(dimacs_file))[0]
     pdf_path = os.path.join(outdir, f"solution_plot_{stem}.pdf")
-    fig.savefig(pdf_path, bbox_inches="tight")
+    fig.savefig(pdf_path)
     plt.close(fig)
     print(f"Saved {pdf_path}")
 

@@ -31,14 +31,16 @@ Options:
   -z   0=regular solve (cadical), 1=exhaustive search (cadical-exhaust) (default 0)
   -j   line heuristic threshold value (default 0)
   -w   (KNF) 0=use pure CCDCL, 1=use hybrid mode (default 0)
+  -q   flip direction (step sequence)
+  -g   trim amount (step sequence)
   -h   help
 EOF
 }
 
-options=$(getopt "hk:n:l:s:v:a:c:x:y:b:f:t:r:e:z:j:w:" "$@")
+options=$(getopt "hk:n:l:s:v:a:c:x:y:b:f:t:r:e:z:j:w:q:g:" "$@")
 eval set -- "$options"
 
-k= n= l= s= v= a= c= x= y= b= f= t= r= e= z= j= w=
+k= n= l= s= v= a= c= x= y= b= f= t= r= e= z= j= w= q= g=
 
 while true; do
   case "$1" in
@@ -60,6 +62,8 @@ while true; do
     -z) z="$2"; shift 2 ;;
     -j) j="$2"; shift 2 ;;
     -w) w="$2"; shift 2 ;;    
+    -q) q="$2"; shift 2 ;;    
+    -g) g="$2"; shift 2 ;;            
     --) shift; break ;;
     *)  echo "Bad option"; usage; exit 2 ;;
   esac
@@ -76,7 +80,7 @@ if [[ -n "${e:-}" ]]; then
 fi
 
 run_id="$(date +%F_%H-%M-%S)"
-: "${x:=0}" "${y:=0}" "${s:=1}" "${c:=0}" "${v:=1}" "${a:=0}" "${l:=0}" "${b:=2}" "${f:=1}" "${t:=0}" "${r:=0}" "${z:=0}" "${j:=0}" "${w:=0}"
+: "${x:=0}" "${y:=0}" "${s:=1}" "${c:=0}" "${v:=1}" "${a:=0}" "${l:=0}" "${b:=2}" "${f:=1}" "${t:=0}" "${r:=0}" "${z:=0}" "${j:=0}" "${w:=0}" "${q:=0}" "${g:=0}"
 
 if ((z==0)) # non-exhaustive search
 then
@@ -87,10 +91,10 @@ else
   res_name="ex/res_k${k}_n${n}_x${x}_y${y}_s${s}_c${c}_v${v}_a${a}_l${l}_b${b}_f${f}_r${r}_e${e:-none}_j${j}_w${w}_${run_id}"
 fi
 
-python3 -u encode.py -k "$k" -n "$n" -l "$l" -a "$a" -v "$v" -c "$c" -s "$s" -x "$x" -y "$y" -b "$b" -t "$t" -f "$f" -r "$r" -p "$res_name" ${e:+-e "$e"} -j "$j" -w "$w" #-o "1"
+python3 -u encode.py -k "$k" -n "$n" -l "$l" -a "$a" -v "$v" -c "$c" -s "$s" -x "$x" -y "$y" -b "$b" -t "$t" -f "$f" -r "$r" -p "$res_name" ${e:+-e "$e"} -j "$j" -w "$w" --trim "$g" --flip "$q" #-o "1" 
 python3 -u solve.py  -k "$k" -n "$n" -x "$x" -y "$y" -t "$t" -f "$f" -r "$r" -p "$res_name" ${e:+-e "$e"} -z "$z" -w "$w" 
 
-#python3 -u print_solution.py -k "$k" -n "$n" -f "$PWD/output/$res_name/satOutput.log"
+python3 -u helpers/print_solution.py -k "$k" -n "$n" -f "$PWD/output/$res_name/satOutput.log"
 
 echo "Done."
 
