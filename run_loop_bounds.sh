@@ -74,11 +74,11 @@ else
 fi
 
 if (( b == 0 )); then
-  bounds="Upper"
+  bounds="upper"
 elif (( b == 1 )); then
-  bounds="Lower"
+  bounds="lower"
 else
-  bounds="Midline"
+  bounds="midline"
 fi
 
 if (( r == 0)); then
