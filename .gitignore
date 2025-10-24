@@ -13,3 +13,4 @@ src/__pycache__/
 *.pdf
 *.csv
 *.icnf
+*.txt

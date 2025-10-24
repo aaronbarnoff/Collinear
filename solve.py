@@ -4,6 +4,7 @@ import time
 import os
 import subprocess
 import argparse
+import sys
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="")
@@ -118,16 +119,16 @@ def solve_regular():
         out_log_file.write(f"SAT {sat_time_wc}s (wall)\n")
         extract_solution()
         verify_solution(point_list)
-        return True
+        return proc.returncode
     elif proc.returncode == 20:
         print(f"UNSAT {sat_time_wc}s")
         out_log_file.write(f"UNSAT {sat_time_wc}s (wall)\n")
         get_cpu_time()
-        return False
+        return proc.returncode
     else:
         print(f"Solver error: exit code {proc.returncode}")
         out_log_file.write(f"Solver error: exit code {proc.returncode}\n")
-        return False
+        return proc.returncode
 
 
 """
@@ -293,13 +294,14 @@ def verify_solution(point_list):
 
 def main():
     if solve_type == 0:
-        solve_regular()
+        res = solve_regular()
     elif solve_type == 1:
         solve_exhaustive()
 
     out_log_file.close()
 
     print("Finished:", time.time() - start_time, "seconds")
+    return res
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
