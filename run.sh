@@ -84,7 +84,7 @@ run_id="$(date +%F_%H-%M-%S)"
 
 if ((z==0)) # non-exhaustive search
 then
-  res_name="res_k${k}_n${n}_x${x}_y${y}_b${b}_f${f}_r${r}_j${j}_w${w}_z${z}_${run_id}"
+  res_name="res_k${k}_n${n}_x${x}_y${y}_b${b}_f${f}_r${r}_j${j}_w${w}_z${z}_g${g}_q${q}_${run_id}"
   #res_name="res_k${k}_n${n}_x${x}_y${y}_s${s}_c${c}_v${v}_a${a}_l${l}_b${b}_f${f}_r${r}_e${e:-none}_j${j}_w${w}_${run_id}"
 else
   mkdir -p "$PWD/output/ex"  # exhaustive search
@@ -94,7 +94,7 @@ fi
 python3 -u encode.py -k "$k" -n "$n" -l "$l" -a "$a" -v "$v" -c "$c" -s "$s" -x "$x" -y "$y" -b "$b" -t "$t" -f "$f" -r "$r" -p "$res_name" ${e:+-e "$e"} -j "$j" -w "$w" --trim "$g" --flip "$q" #-o "1" 
 python3 -u solve.py  -k "$k" -n "$n" -x "$x" -y "$y" -t "$t" -f "$f" -r "$r" -p "$res_name" ${e:+-e "$e"} -z "$z" -w "$w" 
 
-python3 -u helpers/print_solution.py -k "$k" -n "$n" -f "$PWD/output/$res_name/satOutput.log"
+#python3 -u helpers/print_solution.py -k "$k" -n "$n" -f "$PWD/output/$res_name/satOutput.log"
 
 echo "Done."
 

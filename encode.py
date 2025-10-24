@@ -805,8 +805,8 @@ def encode_step_sequence():
     else:
         trimmed_step_sequence = step_sequence
 
-    print(f"encoding step sequence: trim:{trim_steps}, orientation:{"regular" if flip_steps == 1 else "flipped"}")
-    out_log_file.write(f"encoding step sequence: trim:{trim_steps}, orientation:{"regular" if flip_steps == 1 else "flipped"}")
+    print(f"encoding step sequence: trim:{trim_steps}, orientation:{'regular' if flip_steps == 1 else 'flipped'}")
+    out_log_file.write(f"encoding step sequence: trim:{trim_steps}, orientation:{'regular' if flip_steps == 1 else 'flipped'}\n")
 
     print(trimmed_step_sequence)
     steps = [c for c in trimmed_step_sequence.strip() if c in ('0','1')]

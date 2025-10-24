@@ -89,7 +89,7 @@ def plot_solution(points, collinear_list, n, k, dimacs_file):
     for (cx, cy) in col_pts:
         ax.plot(cx, cy, marker='o', markersize=6, color='red', zorder=5)
 
-    font_size = 16
+    font_size = 5
     xmax = (used_max_x if used_max_x >= 0 else n - 1)
     ymax = (used_max_y if used_max_y >= 0 else n - 1)
 
