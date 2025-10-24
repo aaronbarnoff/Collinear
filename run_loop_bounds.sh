@@ -17,7 +17,7 @@ set -uo pipefail
 # n=269(175,93): ./run_loop_bounds.sh -x 175 -y 93 -b 1 -r 1
 
 # Midline points to start at (loop on SAT, exit on UNSAT): 
-# n=272(135,136): ./run_loop_bounds.sh -x 135 -y 136 -b 2 -r 1
+# n=270(134,135): ./run_loop_bounds.sh -x 134 -y 135 -b 2 -r 1
 
 
 usage() {
