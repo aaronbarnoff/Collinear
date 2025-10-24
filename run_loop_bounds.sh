@@ -2,21 +2,21 @@
 set -uo pipefail
 
 ###### Points to run ######
-# Upper bound points to verify:
+# Upper bound points to verify (single-point solve):
 # n=261(89,171): UNSAT - ./run_loop_bounds.sh -x 89 -y 171 -b 0
 
-# Lower bound points to verify:
+# Lower bound points to verify (single-point solve):
 # n=259(169,89): UNSAT - ./run_loop_bounds.sh -x 169 -y 89 -b 1
 # n=264(172,91): UNSAT - ./run_loop_bounds.sh -x 172 -y 91 -b 1
 # n=267(174,92): UNSAT - ./run_loop_bounds.sh -x 174 -y 92 -b 1
 
-# Next unsolved upper bound point to start at: 
+# Next unsolved upper bound point to start at (loop): 
 # n=263(90,172) - ./run_loop_bounds.sh -x 90 -y 172 -b 0 -r 1
 
-# Next unsolved lower bound point to start at:
+# Next unsolved lower bound point to start at (loop): 
 # n=269(175,93) - ./run_loop_bounds.sh -x 175 -y 93 -b 1 -r 1
 
-# Midline points to start at:
+# Midline points to start at (loop): 
 # n=272: (135,136) - ./run_loop_bounds.sh -x 135 -y 136 -b 2 -r 1
 
 
