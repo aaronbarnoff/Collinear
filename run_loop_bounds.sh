@@ -25,7 +25,7 @@ cat << EOF
 Usage: $0 [options]
 
 Example: ./run_loop_bounds.sh -x 0 -y 0 -b 0
-Hardcoded: (-s) symBreak=1, (-v) V/HBinaryClauses=1, (-j) line-filter (k+j) heuristic j=0 off, (-r) seed=0, (-b) unit+binary clauses=1, (-c) V/HCard.=0, (-a) antidiagonal=0
+Hardcoded: (-s) symBreak=1, (-v) V/HBinaryClauses=1, (-j) line-filter (k+j) heuristic j=0 off, (-r) seed=0, (-b) unit+binary clauses=2, (-c) V/HCard.=0, (-a) antidiagonal=0
 Options:
   -x   point x (default 0)
   -y   point y (default 0)
