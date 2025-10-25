@@ -797,7 +797,7 @@ def encode_steps(): # from lex constraints
 def encode_step_sequence():
     if not flip_steps:
         return
-    # Original:     "100100000111101111101110010001100100000100000100000100000100000100111101110010000010000010000010000010000010111101111101101111101110110001000001110010000010000010000010000010000010011111000"
+    # Original (up=1, right=0):     "100100000111101111101110010001100100000100000100000100000100000100111101110010000010000010000010000010000010111101111101101111101110110001000001110010000010000010000010000010000010011111000"
     step_sequence = "100100000111101111101110010001100100000100000100000100000100000100111101110010000010000010000010000010000010111101111101101111101110110001000001110010000010000010000010000010000010011111000"
 
     if trim_steps:
@@ -805,9 +805,12 @@ def encode_step_sequence():
     else:
         trimmed_step_sequence = step_sequence
 
-    trimmed_step_sequence = trimmed_step_sequence[::-1] 
-    print(f"encoding REVERSE step sequence: trim:{trim_steps}, orientation:{'regular' if flip_steps == 1 else 'flipped'}")
-    out_log_file.write(f"encoding REVERSE step sequence: trim:{trim_steps}, orientation:{'regular' if flip_steps == 1 else 'flipped'}\n")
+    #trimmed_step_sequence = trimmed_step_sequence[::-1] 
+    #print(f"encoding REVERSE step sequence: trim:{trim_steps}, orientation:{'regular' if flip_steps == 1 else 'flipped'}")
+    #out_log_file.write(f"encoding REVERSE step sequence: trim:{trim_steps}, orientation:{'regular' if flip_steps == 1 else 'flipped'}\n")
+
+    print(f"encoding FWD step sequence: trim:{trim_steps}, orientation:{'regular' if flip_steps == 1 else 'flipped'}")
+    out_log_file.write(f"encoding FWD step sequence: trim:{trim_steps}, orientation:{'regular' if flip_steps == 1 else 'flipped'}\n")
 
     print(trimmed_step_sequence)
     steps = [c for c in trimmed_step_sequence.strip() if c in ('0','1')]
@@ -831,7 +834,7 @@ def encode_step_sequence():
         for j in range(num_steps):
             step_var = right_step[start_step + j] 
             if steps[j] == step_orientation:         
-                add_clause(-path_start_var, step_var) # right
+                add_clause(-path_start_var, step_var) # right (up=0, right=1; opposite of binary path format)
             else:
                 add_clause(-path_start_var, -step_var) # up
 
