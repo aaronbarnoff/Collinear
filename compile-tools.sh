@@ -5,13 +5,17 @@ cd solvers
 
 # Cadical
 git clone https://github.com/arminbiere/cadical.git
-cd cadical
+cd cadical #added fixed assignment output to stderr, set to fixed_assignments.txt in solve.py
+sed -i '6i\
+int elit = externalize (lit); \n  assert (elit); \n fprintf (stderr, "z %d\\n",elit); ' src/flags.cpp
 ./configure && make
 cd ..
 
 # Cardinality Cadical
 git clone https://github.com/jreeves3/Cardinality-CDCL.git
-cd Cardinality-CDCL
+cd Cardinality-CDCL #added fixed assignment output to stderr, set to fixed_assignments.txt in solve.py
+sed -i '6i\
+int elit = externalize (lit); \n  assert (elit); \n fprintf (stderr, "z %d\\n",elit); ' src/flags.cpp
 sh build.sh
 cd ..
 

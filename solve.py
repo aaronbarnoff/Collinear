@@ -64,6 +64,10 @@ out_log_filename = f'logOutput.log'
 out_log_filepath = f'{result_folder_path}/{out_log_filename}'
 out_log_file = open(f'{out_log_filepath}', 'a', buffering=1)
 
+FA_filename = f'fixed_assignments.txt'
+FA_filepath = f'{result_folder_path}/{FA_filename}'
+FA_file = open(f'{FA_filepath}', 'a', buffering=1)
+
 CCDCL_path = f'{cwd_path}/solvers/Cardinality-CDCL/cardinality-cadical/build/cadical'
 CDCL_path = f'{cwd_path}/solvers/cadical/build/cadical'
 CDCLEX_path = f'{cwd_path}/solvers/cadical-exhaust/build/cadical-exhaust'
@@ -108,7 +112,7 @@ def solve_regular():
     sat_start = time.time()
 
     with open(sat_log_filepath, "w") as sat_log_file:
-        proc = subprocess.Popen(command, stdout=sat_log_file, stderr=subprocess.STDOUT)
+        proc = subprocess.Popen(command, stdout=sat_log_file, stderr=FA_file)#stderr=subprocess.STDOUT)
         proc.wait()
 
     sat_time_wc = time.time() - sat_start
@@ -293,6 +297,7 @@ def verify_solution(point_list):
 
 
 def main():
+    res = 0
     if solve_type == 0:
         res = solve_regular()
     elif solve_type == 1:

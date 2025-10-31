@@ -48,14 +48,14 @@ TEMPLATES = {
     #"points_UNSAT_past_180_HYBRID": {"name": "points_UNSAT_past_180", "f": 1, "i": 6, "mem": "12G",  "time": "24:00:00", "hybrid": "1", "seeds": "1"},
 
     # 7) points_fast_SAT_past_180
-    "points_fast_SAT_past_180_CNF":     {"name": "points_fast_SAT_past_180", "f": 0, "i": 7, "mem": "12G", "time": "24:00:00", "hybrid": "0", "seeds": "1"},
-    "points_fast_SAT_past_180_KNF":     {"name": "points_fast_SAT_past_180", "f": 1, "i": 7, "mem": "4G",  "time": "24:00:00", "hybrid": "0", "seeds": "1"},
-    "points_fast_SAT_past_180_HYBRID":  {"name": "points_fast_SAT_past_180", "f": 1, "i": 7, "mem": "12G",  "time": "24:00:00", "hybrid": "1", "seeds": "1"},
+    "points_fast_SAT_past_180_CNF":     {"name": "points_fast_SAT_past_180", "f": 0, "i": 7, "mem": "12G", "time": "72:00:00", "hybrid": "0", "seeds": "1"},
+    "points_fast_SAT_past_180_KNF":     {"name": "points_fast_SAT_past_180", "f": 1, "i": 7, "mem": "4G",  "time": "72:00:00", "hybrid": "0", "seeds": "1"},
+    "points_fast_SAT_past_180_HYBRID":  {"name": "points_fast_SAT_past_180", "f": 1, "i": 7, "mem": "12G",  "time": "72:00:00", "hybrid": "1", "seeds": "1"},
 
     # 8) points_fast_UNSAT_past_180
-    "points_fast_UNSAT_past_180_CNF":    {"name": "points_fast_UNSAT_past_180", "f": 0, "i": 8, "mem": "12G", "time": "24:00:00", "hybrid": "0", "seeds": "1"},
-    "points_fast_UNSAT_past_180_KNF":    {"name": "points_fast_UNSAT_past_180", "f": 1, "i": 8, "mem": "4G",  "time": "24:00:00", "hybrid": "0", "seeds": "1"},
-    "points_fast_UNSAT_past_180_HYBRID": {"name": "points_fast_UNSAT_past_180", "f": 1, "i": 8, "mem": "12G",  "time": "24:00:00", "hybrid": "1", "seeds": "1"},
+    "points_fast_UNSAT_past_180_CNF":    {"name": "points_fast_UNSAT_past_180", "f": 0, "i": 8, "mem": "12G", "time": "72:00:00", "hybrid": "0", "seeds": "1"},
+    "points_fast_UNSAT_past_180_KNF":    {"name": "points_fast_UNSAT_past_180", "f": 1, "i": 8, "mem": "4G",  "time": "72:00:00", "hybrid": "0", "seeds": "1"},
+    "points_fast_UNSAT_past_180_HYBRID": {"name": "points_fast_UNSAT_past_180", "f": 1, "i": 8, "mem": "12G",  "time": "72:00:00", "hybrid": "1", "seeds": "1"},
 }
 
 def submit(template_name, f_flag, i_val, mem_val, time_val, seed, w_val, j_val):
