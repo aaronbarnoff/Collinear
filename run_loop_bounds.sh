@@ -32,11 +32,12 @@ Options:
   -f   0=CNF (cadical), 1=KNF (cardinality cadical) (default 0)
   -b   0=Upper bounds, 1=Lower bounds, 2=Midline (default 0)
   -r   0= no loop, 1= solve next point
+  -m   read in FAs from 'fixed_assignments.txt' in main folder as unit clauses
   -h   help
 EOF
 }
 
-if ! options=$(getopt -o hx:y:f:b:r: -- "$@"); then
+if ! options=$(getopt -o hx:y:f:b:r:m: -- "$@"); then
   usage
   exit 2
 fi
@@ -47,6 +48,7 @@ y=0
 f=0
 b=0
 r=0
+m=0
 
 while true; do
   case "$1" in
@@ -56,6 +58,7 @@ while true; do
     -f) f="$2"; shift 2 ;;
     -b) b="$2"; shift 2 ;;
     -r) r="$2"; shift 2 ;;    
+    -m) m="$2"; shift 2 ;;  
     --) shift; break ;;
     *)  echo "Bad option"; usage; exit 2 ;;
   esac
@@ -66,6 +69,7 @@ case "$y" in -|*[^0-9]*|"") echo "y must be a non-negative integer"; exit 2 ;; e
 case "$f" in 0|1) ;; *) echo "f (CNF/KNF) must be 0 or 1"; exit 2 ;; esac
 case "$b" in 0|1|2) ;; *) echo "b (upper/lower/midline) must be 0, 1, or 2"; exit 2 ;; esac
 case "$r" in 0|1) ;; *) echo "r (no loop/loop) must be 0 or 1"; exit 2 ;; esac
+case "$m" in 0|1) ;; *) echo "m must be 0 or 1"; exit 2 ;; esac
 
 if (( f == 0 )); then
   solve_type="CNF"
@@ -106,7 +110,7 @@ while :; do
     res_name="${bounds}_x${x}_y${y}_${solve_type}_${run_id}"
     echo "Solving for ${bounds} bounds, point n=${n}:(${x},${y})"
 
-    python3 -u encode.py -k 7 -n "$n" -x "$x" -y "$y" -l 0 -a 0 -v 1 -c 0 -s 1 -b 2 -t 0 -f "$f" -r 0 -p "$res_name" -j 0 -w 0 --trim 0 --flip 0
+    python3 -u encode.py -k 7 -n "$n" -x "$x" -y "$y" -l 0 -a 0 -v 1 -c 0 -s 1 -b 2 -t 0 -f "$f" -r 0 -p "$res_name" -j 0 -w 0 --trim 0 --flip 0 --FA "$m"
 
     python3 -u solve.py  -k 7 -n "$n" -x "$x" -y "$y" -t 0 -f "$f" -r 0 -p "$res_name" -z 0 -w 0
     res=$?

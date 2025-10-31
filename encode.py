@@ -35,6 +35,7 @@ def parse_arguments():
     parser.add_argument("-w", default=0, help="Solve using CCDCL Hybrid Mode")
     parser.add_argument("--flip", default=0, help="flip the step sequence (0=steps off, 1=normal, 2=flipped)")
     parser.add_argument("--trim", default=0, help="trim the step sequence at both ends")
+    parser.add_argument("--FA", default=0, help="look for 'fixed_assignments.txt' in main directory and read in FAs")
     
     return vars(parser.parse_args())
 
@@ -65,6 +66,8 @@ use_hybrid=int(args["w"])
 
 flip_steps=int(args["flip"])
 trim_steps=int(args["trim"])
+
+read_FA=int(args["FA"])
 
 options_str = f"k:{k}, n:{n}, x:{px}, y:{py}, sym_break:{sym_break}, vh_card:{vh_card}, vh_line:{vh_line}, antidiag:{antidiag}, cutoff:{cutoff}, boundary:{boundary_type}, solver:{use_KNF}, hybrid_mode: {use_hybrid}, encoding: {cnf_encoding}, seed:{solver_seed}, timeout:{solver_timeout}, lex:{use_lex}, filter_threshold:{filter_threshold} "
 
@@ -794,6 +797,32 @@ def encode_steps(): # from lex constraints
                 add_clause( r,         -v[x][y],  v[x][y-1])
 
 
+def read_FAs():
+    if not read_FA:
+        return
+    print(f"reading in FAs from fixed_assignments.txt in main folder")
+    out_log_file.write(f"reading in FAs from fixed_assignments.txt in main folder\n")
+    values = []
+
+    with open("fixed_assignments.txt", "r") as f:
+        for line in f:
+            line = line.strip()
+            if not line or not line.startswith("z"):
+                continue
+            parts = line.split()
+            if len(parts) == 2:
+                try:
+                    val = int(parts[1])
+                    values.append(val)
+                except ValueError:
+                    pass
+    
+    #print(f"added FAs: ",end="")
+    for v in values:
+    #    print(f"{v}",end=", ")
+        add_clause(v)
+    #print("\n")
+
 def encode_step_sequence():
     if not flip_steps:
         return
@@ -870,6 +899,8 @@ def main():
     create_lexicographic_encoding(lex_len)
 
     encode_step_sequence() # for forcing the sequence of steps seen with n=323 and n=325 solutions
+
+    read_FAs() # read fixed assignments
 
     out_log_file.write(f"numVars: {var_cnt}, numClauses: {num_clauses}, numCardClauses: {num_card_clauses}\n")
     # Write KNF dimacs file
