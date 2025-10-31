@@ -72,7 +72,7 @@ if (( f == 0 )); then
 else
   solve_type="KNF"
 fi
-
+ 
 if (( b == 0 )); then
   bounds="upper"
 elif (( b == 1 )); then
@@ -88,7 +88,7 @@ loop="looping"
 fi 
 
 run_id="$(date +%F_%H-%M-%S)"
-log_file="log_${run_id}.txt"
+log_file="log_${run_id}.txt" 
 exec > >(tee -a "$log_file") 2>&1
 
 echo "Logging to $log_file"

@@ -41,7 +41,7 @@ options=$(getopt "hk:n:l:s:v:a:c:x:y:b:f:t:r:e:z:j:w:q:g:" "$@")
 eval set -- "$options"
 
 k= n= l= s= v= a= c= x= y= b= f= t= r= e= z= j= w= q= g=
-
+  
 while true; do
   case "$1" in
     -h) usage; exit 0 ;;

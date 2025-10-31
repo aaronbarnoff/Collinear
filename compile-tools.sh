@@ -10,7 +10,7 @@ sed -i '6i\
 int elit = externalize (lit); \n  assert (elit); \n fprintf (stderr, "z %d\\n",elit); ' src/flags.cpp
 ./configure && make
 cd ..
-
+ 
 # Cardinality Cadical
 git clone https://github.com/jreeves3/Cardinality-CDCL.git
 cd Cardinality-CDCL #added fixed assignment output to stderr, set to fixed_assignments.txt in solve.py
@@ -24,7 +24,7 @@ git clone https://github.com/curtisbright/cadical-exhaust.git
 cd cadical-exhaust
 ./configure && make
 cd ..
-
+ 
 # Cube-and-Conquer
 git clone https://github.com/curtisbright/CnC.git
 cd CnC
