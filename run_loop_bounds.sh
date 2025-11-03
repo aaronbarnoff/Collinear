@@ -110,7 +110,7 @@ while :; do
     res_name="${bounds}_x${x}_y${y}_${solve_type}_${run_id}"
     echo "Solving for ${bounds} bounds, point n=${n}:(${x},${y})"
 
-    python3 -u encode.py -k 7 -n "$n" -x "$x" -y "$y" -l 0 -a 0 -v 1 -c 0 -s 1 -b 2 -t 0 -f "$f" -r 0 -p "$res_name" -j 0 -w 0 --trim 0 --flip 0 --FA "$m"
+    python3 -u encode.py -k 7 -n "$n" -x "$x" -y "$y" -l 0 -a 0 -v 1 -c 0 -s 1 -b 2 -t 0 -f "$f" -r 0 -p "$res_name" -j 10 -w 0 --trim 0 --flip 0 --FA "$m"
 
     python3 -u solve.py  -k 7 -n "$n" -x "$x" -y "$y" -t 0 -f "$f" -r 0 -p "$res_name" -z 0 -w 0
     res=$?
