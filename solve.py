@@ -70,8 +70,8 @@ out_log_filename = f'logOutput.log'
 out_log_filepath = f'{result_folder_path}/{out_log_filename}'
 out_log_file = open(f'{out_log_filepath}', 'a', buffering=1)
 
-FA_filename = f'fixed_assignments_n{n}_x{px}_y{py}_f{use_KNF}_j{filter_threshold}.txt'
-FA_filepath = f'{fixed_assignments_folder_path}/{FA_filename}'
+FA_filename = f'fixed_assignments.txt'
+FA_filepath = f'{result_folder_path}/{FA_filename}'
 FA_file = open(f'{FA_filepath}', 'a', buffering=1)
 
 CCDCL_path = f'{cwd_path}/solvers/Cardinality-CDCL/cardinality-cadical/build/cadical'

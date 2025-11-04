@@ -775,6 +775,7 @@ def block_midline_range(dist):
 
 
 
+
 def encode_steps(): # from lex constraints
     global right_step
 
@@ -803,38 +804,6 @@ def encode_steps(): # from lex constraints
                 # ( r or ~v[x][y] or v[x][y-1])
                 add_clause( r,         -v[x][y],  v[x][y-1])
 
-
-def read_FAs():
-    if not read_FA:
-        print(f"NOT inputting fixed assignments")
-        out_log_file.write(f"NOT inputting fixed assignments\n")
-        return
-    
-    values = set()
-    with open(FA_filepath, "a+") as f:
-        f.seek(0)
-        for line in f:
-            line = line.strip()
-            if not line or not line.startswith("z"):
-                continue
-            parts = line.split()
-            if len(parts) == 2:
-                try:
-                    val = int(parts[1])
-                    values.add(val)
-                except ValueError:
-                    pass
-
-    FA_cnt = 0
-    #print(f"added FAs: ",end="")
-    for v in values:
-    #    print(f"{v}",end=", ")
-        FA_cnt += 1
-        add_clause(v)
-    #print("\n")
-
-    print(f"Added {FA_cnt} fixed assignments from {FA_filename}")
-    out_log_file.write(f"Added {FA_cnt} fixed assignments from {FA_filename}\n")
 
 def encode_step_sequence():
     if not flip_steps:
@@ -882,6 +851,102 @@ def encode_step_sequence():
 
     add_clause(*start_vars) # step sequence starts on at least one antidiagonal from y=0 to y=n-path_range-1
 
+
+
+
+def input_fixed_assignments():
+    if not read_FA:
+        print("NOT inputting fixed assignments")
+        out_log_file.write("NOT inputting fixed assignments\n")
+        return
+
+    file_cnt = 0
+    FA_set = set()
+
+    matching_dirs = []
+
+    instance_params = {
+    "n":        r"\bn\s*:\s*(-?\d+)\b",
+    "x":        r"\bx\s*:\s*(-?\d+)\b",
+    "y":        r"\by\s*:\s*(-?\d+)\b",
+    "solver":   r"\bsolver\s*:\s*(-?\d+)\b",
+    "k_plus_c": r"\(\s*k\s*\+\s*c\s*\)\s*:\s*(-?\d+)\b",
+    }
+
+    for root, dirs, files in os.walk(output_folder_path):
+        if "ex" in dirs:
+            dirs.remove("ex")
+
+        for directory in dirs:
+            dir_path = os.path.join(root, directory)
+            log_path = os.path.join(dir_path, "logOutput.log")
+            if not os.path.isfile(log_path):
+                continue
+
+            params = {k: None for k in instance_params}
+
+            try:
+                with open(log_path, "r", errors="ignore") as lf:
+                    for raw in lf:
+                        line = raw.strip()
+                        if not line:
+                            continue
+                        if line.lstrip().startswith("k:"):
+                            for key, pat in instance_params.items():
+                                m = re.search(pat, line, flags=re.IGNORECASE)
+                                if m:
+                                    try:
+                                        params[key] = int(m.group(1))
+                                    except ValueError:
+                                        params[key] = None
+                            break
+            except OSError:
+                continue
+
+            #print(f'n{params["n"]},xn{params["x"]},y{params["y"]},s{params["solver"]},j{params["k_plus_c"]},')
+
+            if (params["n"] == n and
+                params["x"] == px and
+                params["y"] == py and
+                params["solver"] == use_KNF and
+                params["k_plus_c"] == filter_threshold):
+
+                FA_path = os.path.join(dir_path, "fixed_assignments.txt")
+                try:
+                    with open(FA_path, "r", errors="ignore") as FA_file:
+                        file_cnt += 1
+                        matching_dirs.append(dir_path)
+                        for raw in FA_file:
+                            line = raw.strip()
+                            if not line or not line.startswith("z"):
+                                continue
+                            parts = line.split()
+                            if len(parts) == 2:
+                                try:
+                                    FA_set.add(int(parts[1]))
+                                except ValueError:
+                                    pass
+                except OSError:
+                    continue
+
+    FA_cnt = 0
+    for v in FA_set:
+        FA_cnt += 1
+        add_clause(v)
+
+    if FA_cnt > 0:
+        print(f"Added {FA_cnt} distinct fixed assignments from {file_cnt} matching log files in:")
+        out_log_file.write(f"Added {FA_cnt} distinct fixed assignments from {file_cnt} matching log files in:\n")
+        for matched_dir in matching_dirs:
+            print(f"     {matched_dir}")
+            out_log_file.write(f"     {matched_dir}\n")
+    else:
+        print(f"No matching fixed_assignment file logs were found")
+        out_log_file.write(f"No matching fixed_assignment file logs were foun\n")
+
+
+
+
 def main():
     start_time = time.time()
 
@@ -913,7 +978,7 @@ def main():
 
     encode_step_sequence() # for forcing the sequence of steps seen with n=323 and n=325 solutions
 
-    read_FAs() # read fixed assignments
+    input_fixed_assignments() # read fixed assignments from previous solves
 
     out_log_file.write(f"numVars: {var_cnt}, numClauses: {num_clauses}, numCardClauses: {num_card_clauses}\n")
     # Write KNF dimacs file
