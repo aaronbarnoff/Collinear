@@ -19,6 +19,7 @@ def parse_arguments():
     parser.add_argument("-p", default=0, help="results folder name")
     parser.add_argument("-z", default=0, help="0=regular solve, 1=exhaustive (cadical-exhaust)")
     parser.add_argument("-w", default=0, help="0= solve in CCDCL mode, 1= solve in Hybrid mode")
+    parser.add_argument("-j", default=0, help="Line-Filter Heuristic; only block lines with length at least k+j points")
     return vars(parser.parse_args())
 
 args = parse_arguments()
@@ -33,6 +34,7 @@ solver_seed=int(args["r"])
 results_folder_name=str(args["p"])
 solve_type=int(args["z"])
 use_hybrid=int(args["w"])
+filter_threshold=int(args["j"])
 
 cwd_path = os.getcwd()
 
@@ -43,6 +45,10 @@ if use_KNF and solve_type==1:
 output_folder_path = os.path.join(cwd_path, 'output')
 if not os.path.exists(output_folder_path):
     os.makedirs(output_folder_path, exist_ok=True)
+
+fixed_assignments_folder_path = os.path.join(cwd_path, 'fixed_assignments')
+if not os.path.exists(fixed_assignments_folder_path):
+    os.makedirs(fixed_assignments_folder_path, exist_ok=True)
 
 result_folder_path = os.path.join(output_folder_path, results_folder_name)
 knf_dimacs_filename = f'dimacsFile.knf'
@@ -64,8 +70,8 @@ out_log_filename = f'logOutput.log'
 out_log_filepath = f'{result_folder_path}/{out_log_filename}'
 out_log_file = open(f'{out_log_filepath}', 'a', buffering=1)
 
-FA_filename = f'fixed_assignments.txt'
-FA_filepath = f'{result_folder_path}/{FA_filename}'
+FA_filename = f'fixed_assignments_n{n}_x{px}_y{py}_f{use_KNF}_j{filter_threshold}.txt'
+FA_filepath = f'{fixed_assignments_folder_path}/{FA_filename}'
 FA_file = open(f'{FA_filepath}', 'a', buffering=1)
 
 CCDCL_path = f'{cwd_path}/solvers/Cardinality-CDCL/cardinality-cadical/build/cadical'

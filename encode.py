@@ -35,7 +35,7 @@ def parse_arguments():
     parser.add_argument("-w", default=0, help="Solve using CCDCL Hybrid Mode")
     parser.add_argument("--flip", default=0, help="flip the step sequence (0=steps off, 1=normal, 2=flipped)")
     parser.add_argument("--trim", default=0, help="trim the step sequence at both ends")
-    parser.add_argument("--FA", default=0, help="look for 'fixed_assignments.txt' in main directory and read in FAs")
+    parser.add_argument("--FA", default=1, help="look for 'fixed_assignments.txt' in main directory and read in FAs")
     
     return vars(parser.parse_args())
 
@@ -101,6 +101,10 @@ result_folder_path = os.path.join(output_folder_path, results_folder_name)
 if not os.path.exists(result_folder_path):
     os.makedirs(result_folder_path, exist_ok=True)
 
+fixed_assignments_folder_path = os.path.join(cwd_path, 'fixed_assignments')
+if not os.path.exists(fixed_assignments_folder_path):
+    os.makedirs(fixed_assignments_folder_path, exist_ok=True)
+
 pysat_encode_path= f'{cwd_path}/solvers/Cardinality-CDCL/Tools/pysat_encode.py'
 CDCL_path = f'{cwd_path}/solvers/cadical/build/cadical'
 march_path= f'{cwd_path}/solvers/CnC/march_cu/march_cu'
@@ -112,6 +116,9 @@ icnf_filepath = f'{result_folder_path}/{icnf_filename}'
 
 knf_dimacs_filename = f'dimacsFile.knf'
 knf_dimacs_filepath = f'{result_folder_path}/{knf_dimacs_filename}'
+
+FA_filename = f'fixed_assignments_n{n}_x{px}_y{py}_f{use_KNF}_j{filter_threshold}.txt'
+FA_filepath = f'{fixed_assignments_folder_path}/{FA_filename}'
 
 cnf_encode_filename = f'encode.cnf'
 cnf_encode_filepath = f'{result_folder_path}/{cnf_encode_filename}' 
@@ -799,12 +806,13 @@ def encode_steps(): # from lex constraints
 
 def read_FAs():
     if not read_FA:
+        print(f"NOT inputting fixed assignments")
+        out_log_file.write(f"NOT inputting fixed assignments\n")
         return
-    print(f"reading in FAs from fixed_assignments.txt in main folder")
-    out_log_file.write(f"reading in FAs from fixed_assignments.txt in main folder\n")
-    values = []
-
-    with open("fixed_assignments.txt", "r") as f:
+    
+    values = set()
+    with open(FA_filepath, "a+") as f:
+        f.seek(0)
         for line in f:
             line = line.strip()
             if not line or not line.startswith("z"):
@@ -813,15 +821,20 @@ def read_FAs():
             if len(parts) == 2:
                 try:
                     val = int(parts[1])
-                    values.append(val)
+                    values.add(val)
                 except ValueError:
                     pass
-    
+
+    FA_cnt = 0
     #print(f"added FAs: ",end="")
     for v in values:
     #    print(f"{v}",end=", ")
+        FA_cnt += 1
         add_clause(v)
     #print("\n")
+
+    print(f"Added {FA_cnt} fixed assignments from {FA_filename}")
+    out_log_file.write(f"Added {FA_cnt} fixed assignments from {FA_filename}\n")
 
 def encode_step_sequence():
     if not flip_steps:
