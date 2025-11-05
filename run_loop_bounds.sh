@@ -6,7 +6,7 @@ set -uo pipefail
 # n=261(89,171) - (UNSAT): ./run_loop_bounds.sh -x 89 -y 171 -b 0
 
 # Lower bound points to verify (single-point solve):
-# n=259(169,89) - (UNSAT): ./run_loop_bounds.sh -x 169 -y 89 -b 1
+# n=259(169,89) - (UNSAT): ./run_loop_bounds.sh -x 169 -y 89 -b 1 (solved)
 # n=264(172,91) - (UNSAT): ./run_loop_bounds.sh -x 172 -y 91 -b 1
 # n=267(174,92) - (UNSAT): ./run_loop_bounds.sh -x 174 -y 92 -b 1
 

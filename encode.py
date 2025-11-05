@@ -474,17 +474,22 @@ def encode_boundary_constraints():
 
     for x in range(n):
         for y in range(n):
+            if x+y >= n:
+                continue 
             if x == 0 and y == 0:                     # Block all unreachable from (0,0)
                 for pts in (upper_pts, lower_pts):
                     for x_str, y_str in pts:
                         x2, y2 = int(x_str), int(y_str)
-                        if x + x2 < n and y + y2 < n and y + y2 < n - (x + x2) and x2 + y2 + 1 < n:
+                        if x2 + y2 + 1 < n:
                             add_clause(-v[x + x2][y + y2])
-            elif boundary_type >= 2:                # Block unreachable from (x,y) within some distance of it
-                for x_str, y_str in symmetric_pts:
-                    x2, y2 = int(x_str), int(y_str)
-                    if x2 + y2 + 1 < n and x + x2 < n and y + y2 < n and y + y2 < n - (x + x2):
-                        add_clause(-v[x][y], -v[x + x2][y + y2])
+            else:
+                if boundary_type == 2:                # Block unreachable from (x,y) within some distance of it
+                    for x_str, y_str in symmetric_pts:
+                        x2, y2 = int(x_str), int(y_str)
+                        if (y+y2) + (x+x2) + 1 < n:
+                            #if x+x2 == 156 and y+y2==79:
+                            #    print(f"({x},{y})->-({x+x2},{y+y2})")
+                            add_clause(-v[x][y], -v[x + x2][y + y2])
 
 
 
