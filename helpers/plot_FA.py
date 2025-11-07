@@ -10,10 +10,11 @@ import numpy as np
 from matplotlib.patches import Rectangle
 
 start_color = 0.125
+var_cnt = 1
 
 def parse_arguments():
     p = argparse.ArgumentParser()
-    p.add_argument("-f", required=True) 
+    p.add_argument("-f", required=True)
     return vars(p.parse_args())
 
 def get_n_value(folder_name):
@@ -24,15 +25,22 @@ def get_n_value(folder_name):
     my = re.search(r"y(\d+)", folder_name)
     return int(mx.group(1)) + int(my.group(1)) + 1
 
+def get_xy(folder_name):
+    mx = re.search(r"x(\d+)", folder_name)
+    my = re.search(r"y(\d+)", folder_name)
+    fx = int(mx.group(1)) if mx else None
+    fy = int(my.group(1)) if my else None
+    return fx, fy
+
 def build_var_map(n):
+    global var_cnt
     var_map = {}
-    cnt = 1
     for b in range(n):
         for x in range(n):
             y = b - x
             if 0 <= y < n and x + y < n:
-                var_map[cnt] = (x, y)
-                cnt += 1
+                var_map[var_cnt] = (x, y)
+                var_cnt += 1
     return var_map
 
 def draw_cell(ax, x, y, face, z=0, alpha=1.0):
@@ -46,7 +54,7 @@ def draw_cell_inner_outline(ax, x, y, edge='black', lw=0.8, inset=0.08, z=0):
                            facecolor='none', edgecolor=edge,
                            linewidth=lw, zorder=z))
 
-def plot_path(FA_file, n):
+def plot_path(FA_file, n, fx=None, fy=None):
     fig, ax = plt.subplots(figsize=(10, 10), dpi=300)
     ax.tick_params(axis='x', rotation=90)
 
@@ -66,8 +74,15 @@ def plot_path(FA_file, n):
     xy_to_var = {xy: v for v, xy in var_map.items()}
     boundary_vars = {xy_to_var[xy] for xy in ub + lb}
 
-    ymax_ub = max(y for (_, y) in ub) if ub else n - 1
-    xmax_lb = max(x for (x, _) in lb) if lb else n - 1
+    ymax_ub_list = [y for (_, y) in ub]
+    xmax_lb_list = [x for (x, _) in lb]
+    if fy is not None:
+        ymax_ub_list.append(fy)
+    if fx is not None:
+        xmax_lb_list.append(fx)
+    ymax_ub = max(ymax_ub_list) if ymax_ub_list else n - 1
+    xmax_lb = max(xmax_lb_list) if xmax_lb_list else n - 1
+
     x_extent = xmax_lb + 1
     y_extent = ymax_ub + 1
 
@@ -80,6 +95,12 @@ def plot_path(FA_file, n):
     if x_line_max > 0:
         x_vals_line = np.linspace(0, x_line_max, 200)
         ax.plot(x_vals_line, x_vals_line + 1, color='gray', linestyle='--', linewidth=0.25, zorder=100)
+
+    for x, y in ub:
+        draw_cell(ax, x, y, 'black', z=2)
+    for x, y in lb:
+        draw_cell(ax, x, y, 'red', z=2)
+
     seen_lits = set()
     global_seq = []
     last_boundary_idx = -1
@@ -89,6 +110,8 @@ def plot_path(FA_file, n):
             if not line.startswith('z'):
                 continue
             v = int(line.split()[1])
+            if abs(v) > var_cnt:
+                continue
             if v in seen_lits:
                 continue
             seen_lits.add(v)
@@ -129,14 +152,16 @@ def plot_path(FA_file, n):
     for (x, y) in ub:
         ax.add_patch(Rectangle((x, y), 1.0, 1.0, facecolor='red', edgecolor='none', zorder=15))
     for (x, y) in lb:
+        if (x == fx and y == fy):
+            continue
         ax.add_patch(Rectangle((x, y), 1.0, 1.0, facecolor='red', edgecolor='none', zorder=15))
-
+        
     ax.set_xlim(0, x_extent)
     ax.set_ylim(0, y_extent)
     xticks = list(range(0, x_extent + 1, 5))
     yticks = list(range(0, y_extent + 1, 5))
-    ax.set_xticks([v + 0.5 for v in xticks])
-    ax.set_yticks([v + 0.5 for v in yticks])
+    ax.set_xticks(xticks)
+    ax.set_yticks(yticks)
     ax.set_xticklabels([str(v) for v in xticks], fontsize=6)
     ax.set_yticklabels([str(v) for v in yticks], fontsize=6)
 
@@ -154,7 +179,8 @@ def main():
     folder = args["f"]
     FA_file = os.path.join(parent, "output", folder, "fixed_assignments.txt")
     n = get_n_value(folder)
-    plot_path(FA_file, n)
+    fx, fy = get_xy(folder)
+    plot_path(FA_file, n, fx, fy)
 
 if __name__ == '__main__':
     main()
