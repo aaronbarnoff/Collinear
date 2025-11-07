@@ -7,6 +7,7 @@ SLURM_DIR = str(Path.cwd().parents[1])
 OUTPUT_SUMMARY = "summary.csv"
 OUTPUT_TABLES  = "tables.csv"
 SLURM_PATTERNS = ("slurm-*.out",)
+failures_to_redo = []
 
 KEYS = ["k","n","x","y","symBreak","VHCard","VHBinary","antidiag","lineLen","boundary","KNF","timeout","encoding","k_plus_c","status"]
 GROUP_KEYS = ["k","n","x","y","symBreak","VHCard","VHBinary","antidiag","lineLen","boundary","KNF","timeout","encoding","k_plus_c"]
@@ -25,6 +26,7 @@ CARD_K10_B = "cardinality constraint: Linelength filter heuristic - only include
 HEADER_RE = re.compile(r"^/.*/res_k-?\d+_n-?\d+_x-?\d+_y-?\d+.*$", re.MULTILINE)
 CANCEL_LINE_RE = re.compile(r"slurmstepd:\s*error:\s*\*\*\*\s*JOB\s+\d+\s+ON\s+\S+\s+CANCELLED\s+AT\s+.*", re.IGNORECASE)
 TIME_LIMIT_TAG = re.compile(r"DUE TO TIME LIMIT", re.IGNORECASE)
+FAILURE_RE = re.compile(r"\bFailure\b", re.IGNORECASE)
 
 def _i(v,d=0):
     s=str(v or "").strip()
@@ -111,23 +113,28 @@ def scan():
             status="RUNNING"
             wall=None
 
-            mu=UNSAT_RE.search(block); 
-            msat=SAT_RE.search(block); 
-            mf=FINISH_RE.search(block)
-            if mu and (not msat or mu.start()<msat.start()): 
-                status="UNSAT" 
-                all=float(mu.group(1))
-            elif msat: 
-                status="SAT"; wall=float(msat.group(1))
-            elif mf: 
-                status="SAT"; wall=float(mf.group(1))
-
-            if time_limit: 
-                status="TIME_LIMIT" 
+            if FAILURE_RE.search(block):
+                status="FAILURE"
                 wall=None
+                failures_to_redo.append(f"{p.name}\t{(header or str(p)).strip()}")
+            else:
+                mu=UNSAT_RE.search(block)
+                msat=SAT_RE.search(block)
+                mf=FINISH_RE.search(block)
+                if mu and (not msat or mu.start()<msat.start()): 
+                    status="UNSAT" 
+                    wall=float(mu.group(1))
+                elif msat: 
+                    status="SAT"; wall=float(msat.group(1))
+                elif mf: 
+                    status="SAT"; wall=float(mf.group(1))
+
+                if time_limit: 
+                    status="TIME_LIMIT" 
+                    wall=None
 
             row = dict(params)
-            row.update({"encoding":encoding,"timeout":timeout,"k_plus_c":k_plus_c,"status":status,"time":(None if wall is None else round(wall,2)),"path":(header or str(p))})
+            row.update({"encoding":encoding,"timeout":timeout,"k_plus_c":k_plus_c,"status":status,"slurm":p.name,"time":(None if wall is None else round(wall,2)),"path":(header or str(p))})
             yield row
 
 def median_with_infs(total, times_sorted):
@@ -137,7 +144,7 @@ def median_with_infs(total, times_sorted):
 def main():
     rows=list(scan())
 
-    summary_headers=KEYS+["time","path"]
+    summary_headers=KEYS+["slurm","time","path"]
     summary_rows=[{k:r.get(k,"") for k in summary_headers} for r in rows]
     summary_rows.sort(key=sort_summary_key)
     with open(OUTPUT_SUMMARY,"w",newline="",encoding="utf-8") as fh:
@@ -178,6 +185,11 @@ def main():
     print(f"Writing grouped table: {OUTPUT_TABLES}")
     print(f"Sum of finite medians across {done} completed groups: {sum_meds}")
     print(f"Max count overall: {mx}")
+
+    if failures_to_redo:
+        print("failures to redo:")
+        for path in failures_to_redo:
+            print(path)
 
 if __name__=="__main__":
     main()
