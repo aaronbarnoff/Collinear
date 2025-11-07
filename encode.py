@@ -486,7 +486,7 @@ def encode_boundary_constraints():
                 if boundary_type == 2:                # Block unreachable from (x,y) within some distance of it
                     for x_str, y_str in symmetric_pts:
                         x2, y2 = int(x_str), int(y_str)
-                        if (y+y2) + (x+x2) + 1 < n:
+                        if (y+y2) + (x+x2) + 0 < n:
                             #if x+x2 == 156 and y+y2==79:
                             #    print(f"({x},{y})->-({x+x2},{y+y2})")
                             add_clause(-v[x][y], -v[x + x2][y + y2])

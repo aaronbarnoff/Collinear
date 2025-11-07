@@ -1,0 +1,160 @@
+#!/usr/bin/env python3
+import argparse
+import os
+import re
+import matplotlib
+matplotlib.use('Agg')
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.patches import Rectangle
+
+start_color = 0.125
+
+def parse_arguments():
+    p = argparse.ArgumentParser()
+    p.add_argument("-f", required=True) 
+    return vars(p.parse_args())
+
+def get_n_value(folder_name):
+    m = re.search(r"n(\d+)", folder_name)
+    if m:
+        return int(m.group(1))
+    mx = re.search(r"x(\d+)", folder_name)
+    my = re.search(r"y(\d+)", folder_name)
+    return int(mx.group(1)) + int(my.group(1)) + 1
+
+def build_var_map(n):
+    var_map = {}
+    cnt = 1
+    for b in range(n):
+        for x in range(n):
+            y = b - x
+            if 0 <= y < n and x + y < n:
+                var_map[cnt] = (x, y)
+                cnt += 1
+    return var_map
+
+def draw_cell(ax, x, y, face, z=0, alpha=1.0):
+    ax.add_patch(Rectangle((x, y), 1.0, 1.0,
+                           facecolor=face, edgecolor='none',
+                           zorder=z, alpha=alpha))
+
+def draw_cell_inner_outline(ax, x, y, edge='black', lw=0.8, inset=0.08, z=0):
+    ax.add_patch(Rectangle((x + inset, y + inset),
+                           1.0 - 2*inset, 1.0 - 2*inset,
+                           facecolor='none', edgecolor=edge,
+                           linewidth=lw, zorder=z))
+
+def plot_path(FA_file, n):
+    fig, ax = plt.subplots(figsize=(10, 10), dpi=300)
+    ax.tick_params(axis='x', rotation=90)
+
+    k7_upper_bounds = """
+    (0, 6), (1, 11), (2, 16), (3, 21), (4, 26), (5, 31), (6, 30), (7, 33), (8, 37), (9, 41), (10, 44), (11, 45), (12, 47), (13, 49), (14, 52), (15, 55), (16, 58), (17, 60), (18, 63), (19, 65), (20, 67), (21, 69), (22, 70), (23, 71), (24, 73), (25, 75), (26, 78), (27, 80), (28, 82), (29, 83), (30, 86), (31, 86), (32, 88), (33, 88), (34, 89), (35, 91), (36, 92), (37, 91), (38, 90), (39, 91), (40, 93), (41, 95), (42, 97), (43, 99), (44, 101), (45, 102), (46, 104), (47, 106), (48, 108), (49, 109), (50, 111), (51, 113), (52, 115), (53, 117), (54, 119), (55, 121), (56, 123), (57, 125), (58, 126), (59, 128), (60, 130), (61, 131), (62, 133), (63, 135), (64, 136), (65, 138), (66, 140), (67, 141), (68, 143), (69, 144), (70, 146), (71, 148), (72, 149), (73, 151), (74, 153), (75, 155), (76, 156), (77, 156), (78, 157), (79, 156), (80, 158), (81, 159), (82, 162), (83, 163), (84, 165), (85, 166), (86, 167), (87, 168), (88, 170), (89, 171)
+    """
+    k7_lower_bounds = """
+    (1, 0), (6, 1), (11, 2), (16, 3), (21, 4), (26, 5), (30, 6), (30, 7), (33, 8), (37, 9), (41, 10), (43, 11), (45, 12), (45, 13), (48, 14), (51, 15), (54, 16), (57, 17), (59, 18), (62, 19), (64, 20), (66, 21), (67, 22), (69, 23), (71, 24), (73, 25), (75, 26), (78, 27), (79, 28), (82, 29), (83, 30), (86, 31), (86, 32), (88, 33), (88, 34), (89, 35), (89, 38), (89, 39), (90, 36), (90, 37), (90, 40), (92, 41), (94, 42), (96, 43), (98, 44), (100, 45), (102, 46), (104, 47), (105, 48), (107, 49), (109, 50), (111, 51), (112, 52), (115, 53), (116, 54), (118, 55), (120, 56), (122, 57), (124, 58), (126, 59), (127, 60), (129, 61), (131, 62), (132, 63), (134, 64), (136, 65), (137, 66), (139, 67), (141, 68), (142, 69), (144, 70), (145, 71), (147, 72), (149, 73), (151, 74), (153, 75), (154, 76), (154, 77), (155, 78), (156, 79), (156, 80), (158, 81), (159, 82), (160, 83), (162, 84), (165, 85), (165, 86), (166, 87), (168, 88), (169, 89), (171, 90), (172, 91), (174, 92)
+    """
+
+    ub_all = [(int(a), int(b)) for a, b in re.findall(r'\((\d+),\s*(\d+)\)', k7_upper_bounds)]
+    lb_all = [(int(a), int(b)) for a, b in re.findall(r'\((\d+),\s*(\d+)\)', k7_lower_bounds)]
+    ub = [(x, y) for (x, y) in ub_all if x + y + 1 < n]
+    lb = [(x, y) for (x, y) in lb_all if x + y + 1 < n]
+
+    var_map = build_var_map(n)
+    xy_to_var = {xy: v for v, xy in var_map.items()}
+    boundary_vars = {xy_to_var[xy] for xy in ub + lb}
+
+    ymax_ub = max(y for (_, y) in ub) if ub else n - 1
+    xmax_lb = max(x for (x, _) in lb) if lb else n - 1
+    x_extent = xmax_lb + 1
+    y_extent = ymax_ub + 1
+
+    for xg in range(x_extent + 1):
+        ax.axvline(xg, color='lightgrey', linestyle='--', linewidth=0.125, zorder=100)
+    for yg in range(y_extent + 1):
+        ax.axhline(yg, color='lightgrey', linestyle='--', linewidth=0.125, zorder=100)
+
+    x_line_max = min(x_extent, y_extent - 1)
+    if x_line_max > 0:
+        x_vals_line = np.linspace(0, x_line_max, 200)
+        ax.plot(x_vals_line, x_vals_line + 1, color='gray', linestyle='--', linewidth=0.25, zorder=100)
+    seen_lits = set()
+    global_seq = []
+    last_boundary_idx = -1
+
+    with open(FA_file, 'r') as f:
+        for line in f:
+            if not line.startswith('z'):
+                continue
+            v = int(line.split()[1])
+            if v in seen_lits:
+                continue
+            seen_lits.add(v)
+            xy = var_map[abs(v)]
+            sgn = 'pos' if v > 0 else 'neg'
+            global_seq.append((sgn, xy, v))
+            if abs(v) in boundary_vars:
+                last_boundary_idx = len(global_seq) - 1
+
+    cmap = plt.cm.viridis
+    color_by_idx = {}
+
+    if last_boundary_idx >= 0:
+        for i in range(last_boundary_idx + 1):
+            color_by_idx[i] = cmap(0.0)
+        start_idx = last_boundary_idx + 1
+        tail_len = len(global_seq) - start_idx
+        if tail_len > 0:
+            for j in range(tail_len):
+                i = start_idx + j
+                t = start_color if tail_len == 1 else start_color + (1.0 - start_color) * (j / (tail_len - 1))
+                color_by_idx[i] = cmap(t)
+    else:
+        total = len(global_seq)
+        if total > 0:
+            for i in range(total):
+                t = 0.0 if total == 1 else i / (total - 1)
+                color_by_idx[i] = cmap(t)
+
+    for i, (sgn, xy, _) in enumerate(global_seq):
+        c = color_by_idx.get(i, cmap(0.0))
+        if sgn == 'neg':
+            draw_cell(ax, xy[0], xy[1], c, z=2)
+        else:
+            draw_cell(ax, xy[0], xy[1], c, z=3)
+            draw_cell_inner_outline(ax, xy[0], xy[1], edge='black', lw=0.8, inset=0.08, z=3.1)
+
+    for (x, y) in ub:
+        ax.add_patch(Rectangle((x, y), 1.0, 1.0, facecolor='red', edgecolor='none', zorder=15))
+    for (x, y) in lb:
+        ax.add_patch(Rectangle((x, y), 1.0, 1.0, facecolor='red', edgecolor='none', zorder=15))
+
+    ax.set_xlim(0, x_extent)
+    ax.set_ylim(0, y_extent)
+    xticks = list(range(0, x_extent + 1, 5))
+    yticks = list(range(0, y_extent + 1, 5))
+    ax.set_xticks([v + 0.5 for v in xticks])
+    ax.set_yticks([v + 0.5 for v in yticks])
+    ax.set_xticklabels([str(v) for v in xticks], fontsize=6)
+    ax.set_yticklabels([str(v) for v in yticks], fontsize=6)
+
+    outdir = os.path.dirname(FA_file)
+    stem = os.path.basename(os.path.dirname(FA_file))
+    pdf_path = os.path.join(outdir, f'FA_plot.pdf')
+    fig.savefig(pdf_path, bbox_inches='tight')
+    plt.close(fig)
+    print(f"Saved plot: {pdf_path}")
+
+def main():
+    args = parse_arguments()
+    cwd_path = os.getcwd()
+    parent = os.path.dirname(cwd_path)
+    folder = args["f"]
+    FA_file = os.path.join(parent, "output", folder, "fixed_assignments.txt")
+    n = get_n_value(folder)
+    plot_path(FA_file, n)
+
+if __name__ == '__main__':
+    main()
