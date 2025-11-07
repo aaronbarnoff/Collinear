@@ -116,7 +116,11 @@ def scan():
             if FAILURE_RE.search(block):
                 status="FAILURE"
                 wall=None
-                failures_to_redo.append(f"{p.name}\t{(header or str(p)).strip()}")
+                mt = SAT_RE.search(block)
+                if not mt:
+                    mt = FINISH_RE.search(block)
+                fail_time = mt.group(1) if mt else "?"
+                failures_to_redo.append(f"{p.name}\t{(header or str(p)).strip()}\t{fail_time}s")
             else:
                 mu=UNSAT_RE.search(block)
                 msat=SAT_RE.search(block)
