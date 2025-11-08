@@ -71,8 +71,11 @@ def plot_path(FA_file, n, fx=None, fy=None):
     lb = [(x, y) for (x, y) in lb_all if x + y + 1 < n]
 
     var_map = build_var_map(n)
-    xy_to_var = {xy: v for v, xy in var_map.items()}
-    boundary_vars = {xy_to_var[xy] for xy in ub + lb}
+
+    outdir = os.path.dirname(FA_file)
+    with open(os.path.join(outdir, "var_to_xy.txt"), "w") as m:
+        for v,(x,y) in var_map.items():
+            m.write(f"{v}=({x},{y})\n")
 
     ymax_ub_list = [y for (_, y) in ub]
     xmax_lb_list = [x for (x, _) in lb]
@@ -96,77 +99,67 @@ def plot_path(FA_file, n, fx=None, fy=None):
         x_vals_line = np.linspace(0, x_line_max, 200)
         ax.plot(x_vals_line, x_vals_line + 1, color='gray', linestyle='--', linewidth=0.25, zorder=100)
 
-    for x, y in ub:
-        draw_cell(ax, x, y, 'black', z=2)
-    for x, y in lb:
-        draw_cell(ax, x, y, 'red', z=2)
-
     seen_lits = set()
-    global_seq = []
-    last_boundary_idx = -1
+    FA_list = []
 
     with open(FA_file, 'r') as f:
         for line in f:
-            if not line.startswith('z'):
+            if not line.startswith('z'): # z <lit> <#conflicts>
                 continue
-            v = int(line.split()[1])
+            toks = line.split()
+            v = int(toks[1])
+            conflicts = int(toks[2]) if len(toks) > 2 else 0
             if abs(v) > var_cnt:
                 continue
             if v in seen_lits:
                 continue
             seen_lits.add(v)
-            xy = var_map[abs(v)]
-            sgn = 'pos' if v > 0 else 'neg'
-            global_seq.append((sgn, xy, v))
-            if abs(v) in boundary_vars:
-                last_boundary_idx = len(global_seq) - 1
+            xy = var_map.get(abs(v))
+            if not xy:
+                continue
+            sign = 'pos' if v > 0 else 'neg'
+            FA_list.append((sign, xy, v, conflicts))
 
     cmap = plt.cm.viridis
     color_by_idx = {}
 
-    if last_boundary_idx >= 0:
-        for i in range(last_boundary_idx + 1):
-            color_by_idx[i] = cmap(0.0)
-        start_idx = last_boundary_idx + 1
-        tail_len = len(global_seq) - start_idx
-        if tail_len > 0:
-            for j in range(tail_len):
-                i = start_idx + j
-                t = start_color if tail_len == 1 else start_color + (1.0 - start_color) * (j / (tail_len - 1))
-                color_by_idx[i] = cmap(t)
-    else:
-        total = len(global_seq)
-        if total > 0:
-            for i in range(total):
-                t = 0.0 if total == 1 else i / (total - 1)
-                color_by_idx[i] = cmap(t)
+    if FA_list:
+        conflicts = [c for (_, _, _, c) in FA_list]
+        cmin = min(conflicts)
+        cmax = max(conflicts)
+        for i, (_, _, _, c) in enumerate(FA_list):
+            if cmax == cmin:
+                t = 0.0
+            else:
+                t = (c - cmin) / (cmax - cmin)
+            color_by_idx[i] = cmap(t)
 
-    for i, (sgn, xy, _) in enumerate(global_seq):
+    for i, (sign, xy, _, _) in enumerate(FA_list):
         c = color_by_idx.get(i, cmap(0.0))
-        if sgn == 'neg':
+        if sign == 'neg':
             draw_cell(ax, xy[0], xy[1], c, z=2)
         else:
             draw_cell(ax, xy[0], xy[1], c, z=3)
             draw_cell_inner_outline(ax, xy[0], xy[1], edge='black', lw=0.8, inset=0.08, z=3.1)
 
-    for (x, y) in ub:
+    for (x, y) in ub: 
+        ax.add_patch(Rectangle((x, y), 1.0, 1.0, facecolor='red', edgecolor='none', zorder=15)) 
+    
+    for (x, y) in lb: 
+        if (x == fx and y == fy): continue 
         ax.add_patch(Rectangle((x, y), 1.0, 1.0, facecolor='red', edgecolor='none', zorder=15))
-    for (x, y) in lb:
-        if (x == fx and y == fy):
-            continue
-        ax.add_patch(Rectangle((x, y), 1.0, 1.0, facecolor='red', edgecolor='none', zorder=15))
-        
+
+
     ax.set_xlim(0, x_extent)
     ax.set_ylim(0, y_extent)
     xticks = list(range(0, x_extent + 1, 5))
     yticks = list(range(0, y_extent + 1, 5))
-    ax.set_xticks(xticks)
-    ax.set_yticks(yticks)
+    ax.set_xticks([v + 0.5 for v in xticks])
+    ax.set_yticks([v + 0.5 for v in yticks])
     ax.set_xticklabels([str(v) for v in xticks], fontsize=6)
     ax.set_yticklabels([str(v) for v in yticks], fontsize=6)
 
     outdir = os.path.dirname(FA_file)
-    stem = os.path.basename(os.path.dirname(FA_file))
     pdf_path = os.path.join(outdir, f'FA_plot.pdf')
     fig.savefig(pdf_path, bbox_inches='tight')
     plt.close(fig)

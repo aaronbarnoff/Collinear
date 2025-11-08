@@ -926,11 +926,10 @@ def input_fixed_assignments():
                             if not line or not line.startswith("z"):
                                 continue
                             parts = line.split()
-                            if len(parts) == 2:
-                                try:
-                                    FA_set.add(int(parts[1]))
-                                except ValueError:
-                                    pass
+                            try:
+                                FA_set.add(int(parts[1]))
+                            except ValueError:
+                                pass
                 except OSError:
                     continue
 
