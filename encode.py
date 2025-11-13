@@ -11,8 +11,8 @@ lex_debug = 0
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="e. for k=7, n=122, point (33, 88): python3 encode.py -k 7 -n 122 -x 33 -y 88 -s 1 -c 0 -v 1 -a 0 -l -0 -b 0 -f 0 -t 0 -r 0")
-    parser.add_argument("-k", default=5, help="number of collinear points to avoid")
-    parser.add_argument("-n", default=28, help="n points; n-1 steps")
+    parser.add_argument("-k", default=7, help="number of collinear points to avoid")
+    parser.add_argument("-n", default=0, help="n points; n-1 steps")
     parser.add_argument("-x", default=0, help="point x")
     parser.add_argument("-y", default=0, help="point y")
     parser.add_argument("-s", default=1, help="symmetry break [0=off, 1=on]")

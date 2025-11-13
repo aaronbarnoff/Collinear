@@ -112,6 +112,7 @@ def solve_regular():
             command = [CCDCL_path, knf_dimacs_filepath, "-t", str(solver_timeout), f"--seed={solver_seed}", "--ccdclMode=0"]
     else:
         command = [CDCL_path, cnf_dimacs_filepath, "-t", str(solver_timeout), f"--seed={solver_seed}"]
+        #command = [CDCL_path, "--no-binary", cnf_dimacs_filepath, "-t", str(solver_timeout), f"--seed={solver_seed}", "proof.drat"]
 
     print(f"Starting ({mode}) solver:", time.time() - start_time, "seconds")
 
