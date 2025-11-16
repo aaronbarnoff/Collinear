@@ -35,13 +35,14 @@ Options:
   -g   trim amount (step sequence)
   -m   read in FAs from file Collinear/fixed_assignments/fixed_assignments_n<n>_x<x>_y<y>_f<f>_j<j>.txt (default:1, on)
   -h   help
+  -p   p=1: create encoding only, don't solve
 EOF
 }
 
-options=$(getopt "hk:n:l:s:v:a:c:x:y:b:f:t:r:e:z:j:w:q:g:m:" "$@")
+options=$(getopt "hk:n:l:s:v:a:c:x:y:b:f:t:r:e:z:j:w:q:g:m:p:" "$@")
 eval set -- "$options"
 
-k= n= l= s= v= a= c= x= y= b= f= t= r= e= z= j= w= q= g= m=
+k= n= l= s= v= a= c= x= y= b= f= t= r= e= z= j= w= q= g= m= p=
   
 while true; do
   case "$1" in
@@ -66,6 +67,7 @@ while true; do
     -q) q="$2"; shift 2 ;;    
     -g) g="$2"; shift 2 ;;       
     -m) m="$2"; shift 2 ;;       
+    -p) p="$2"; shift 2 ;;       
     --) shift; break ;;
     *)  echo "Bad option"; usage; exit 2 ;;
   esac
@@ -82,7 +84,7 @@ if [[ -n "${e:-}" ]]; then
 fi
 
 run_id="$(date +%F_%H-%M-%S)"
-: "${k:=7}" "${x:=0}" "${y:=0}" "${s:=1}" "${c:=0}" "${v:=1}" "${a:=0}" "${l:=0}" "${b:=2}" "${f:=1}" "${t:=0}" "${r:=0}" "${z:=0}" "${j:=0}" "${w:=0}" "${q:=0}" "${g:=0}" "${m:=1}"
+: "${k:=7}" "${x:=0}" "${y:=0}" "${s:=1}" "${c:=0}" "${v:=1}" "${a:=0}" "${l:=0}" "${b:=2}" "${f:=1}" "${t:=0}" "${r:=0}" "${z:=0}" "${j:=0}" "${w:=0}" "${q:=0}" "${g:=0}" "${m:=1}" "${p:=0}"
 
 if ((z==0)) # non-exhaustive search
 then
@@ -94,8 +96,9 @@ else
 fi
 
 python3 -u encode.py -k "$k" -n "$n" -l "$l" -a "$a" -v "$v" -c "$c" -s "$s" -x "$x" -y "$y" -b "$b" -t "$t" -f "$f" -r "$r" -p "$res_name" ${e:+-e "$e"} -j "$j" -w "$w" --trim "$g" --flip "$q" --FA "$m" #-o "1" 
+if ((p == 0)); then
 python3 -u solve.py  -k "$k" -n "$n" -x "$x" -y "$y" -t "$t" -f "$f" -r "$r" -p "$res_name" ${e:+-e "$e"} -z "$z" -w "$w" -j "$j"
-
+fi
 #python3 -u helpers/print_solution.py -k "$k" -n "$n" -f "$PWD/output/$res_name/satOutput.log"
 
 echo "Done."
