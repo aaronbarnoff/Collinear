@@ -998,6 +998,7 @@ def main():
     # Optionally modify dimacs file further
     if not use_KNF or march_generate_cubes:
         knf2cnf()
+        print("cnf created: ", time.time() - start_time, "seconds")
 
     if march_generate_cubes:
         generate_icnf()
@@ -1009,6 +1010,8 @@ def main():
         print("full.knf created: ", time.time() - start_time, "seconds")
 
     out_log_file.close()
+
+    print("Encoding generated.")
 
 
 if __name__ == "__main__":

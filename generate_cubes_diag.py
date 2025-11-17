@@ -28,15 +28,18 @@ results_folder_path = os.path.join(cwd_path, f"output/{results_folder}")
 cubes_src_path   = os.path.join(results_folder_path, cubes_src_filename)
 cubes_dest_path = os.path.join(results_folder_path, cubes_dest_filename)
 
-template_file = "dimacsFile.cnf" if solver_type == 0 else "dimacsFile.knf"
-template_file_path = os.path.join(results_folder_path, template_file) 
-
-if (solver_type == 1):
+template_file = ""
+if solver_type == 1:
+    template_file = "dimacsFile.cnf"
     print("Cubing with CNF files")
-elif (solver_type == 2):
+elif solver_type == 2:
+    template_file = "dimacsFile.knf"
     print("Cubing with KNF files")
 else:
     print("-s must be 1 (CNF) or 2 (KNF)")
+    exit(-1)
+
+template_file_path = os.path.join(results_folder_path, template_file) 
 
 src_cubes = []
 dest_cubes = []
@@ -122,8 +125,8 @@ def create_cubes_file():
                     print(f"{lit} ", end="")
                     comment.append(f"({v_map[abs(int(lit))][0]}, {v_map[abs(int(lit))][1]}) ")
 
-                cube_dest_file.write(f"0 {"".join(comment)}\n")
-                print(f"0 {"".join(comment)}")
+                cube_dest_file.write(f'0 {"".join(comment)}\n')
+                print(f'0 {"".join(comment)}')
         else:
             cube_dest_file.write(f"a ")
             print("a ", end="")
