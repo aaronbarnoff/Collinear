@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import os
-
+import sys
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="e.g. python3 printSolution.py -k 6 -n 90 -f output/res_k6_n90_x0_y0_s1_c0_v1_a0_l0_b0.0_f0_r0_2025-09-18_17-43-04/satOutput_k.log")
@@ -77,6 +77,8 @@ def verify_solution(n, k, points_list):
             if count >= k:
                 collinear_list.append(tmp_points_list)
 
+    result = 0
+
     if collinear_list:
         print(f"Failure: {k} or more points found on the same line.")
         for line in collinear_list:
@@ -92,7 +94,12 @@ def verify_solution(n, k, points_list):
                 (x, y) = pt
                 print(f'({x},{y}) ', end="")
             print("")
-    return collinear_list
+        result = 1
+    else:
+        print("Verification successful.")
+        result = 0
+
+    return result
 
 
 def main():
@@ -106,7 +113,8 @@ def main():
     define_vars(n, v)
 
     points_list = extract_solution(v, n, k, dimacs_file)
-    collinear_list = verify_solution(n, k, points_list)
+    res = verify_solution(n, k, points_list)
+    return res
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

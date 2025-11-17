@@ -81,7 +81,7 @@ lower_pts = re.findall(pat, points_k7_lower_bounds)
 # Create a cubed dimacs file 
 def create_cubes_file():
 
-    if cubes_src_filename is not "":
+    if cubes_src_filename != "":
         cubes_src_file = open(cubes_src_path, "r")
         print(f"Opening clause file {cubes_src_path}")
         for line in cubes_src_file:
@@ -117,22 +117,22 @@ def create_cubes_file():
                 comment = []
 
                 cube_dest_file.write(f"a {v[x][y]} ")
-                print(f"a {v[x][y]} ", end="")
+                #print(f"a {v[x][y]} ", end="")
                 comment.append(f"# ({x},{y}) ")
 
                 for lit in src_cube.split():
                     cube_dest_file.write(f"{lit} ")
-                    print(f"{lit} ", end="")
+                    #print(f"{lit} ", end="")
                     comment.append(f"({v_map[abs(int(lit))][0]}, {v_map[abs(int(lit))][1]}) ")
 
                 cube_dest_file.write(f'0 {"".join(comment)}\n')
-                print(f'0 {"".join(comment)}')
+                #print(f'0 {"".join(comment)}')
         else:
             cube_dest_file.write(f"a ")
-            print("a ", end="")
+            #print("a ", end="")
             comment_str=f"# ({x},{y}) "
             cube_dest_file.write(f"{v[x][y]} 0 {comment_str}\n")
-            print(f"{v[x][y]} 0 {comment_str}")  
+            #print(f"{v[x][y]} 0 {comment_str}")  
 
 
 
@@ -145,7 +145,7 @@ def create_cubed_dimacs():
 
         for line in cube_file:
             if line.startswith('a '):
-                print(line.split('a ')[1].split('# ')[0].rsplit(' ',1)[0])
+                #print(line.split('a ')[1].split('# ')[0].rsplit(' ',1)[0])
                 cubes.append(line.split('a ')[1].split('# ')[0].rsplit(' ',1)[0])
     
     print(f"Number of cubes found: {len(cubes)}. Creating cubed dimacsFiles.")
@@ -163,7 +163,7 @@ def create_cubed_dimacs():
         lines = open(dest).read().splitlines()
         cnf_header   = lines[0].split()   # ["p","knf","<vars>","<clauses>"]
         original_clause_cnt = int(cnf_header[3])
-        new_clause_cnt = original_clause_cnt + len(cube.split())
+        new_clause_cnt = original_clause_cnt + len(cube.split()) - 1
         lines[0] = f"{cnf_header[0]} {cnf_header[1]} {cnf_header[2]} {new_clause_cnt}"
         open(dest, 'w').write('\n'.join(lines))
 
