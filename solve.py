@@ -201,11 +201,14 @@ def extract_solution():
                 if len(parts) >= 2:
                     cpu_time = parts[-2]
 
+    model = [lit for lit in model if lit > 0] 
+    model_set = set(model)
+
     point_list = []
     for x in range(n):
         for y in range(n):
             if y < n - x:
-                if v[x][y] in model:
+                if v[x][y] in model_set:
                     point_list.append((x, y))
 
     with open(sat_log_filepath, "a") as logFile:

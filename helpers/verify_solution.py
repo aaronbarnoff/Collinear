@@ -45,11 +45,14 @@ def extract_solution(v, n, k, sat_log_file_path):
             print(numbers)
             model.extend([num for num in numbers if num > 0])
 
+    model = [lit for lit in model if lit > 0] 
+    model_set = set(model)
+
     points_list = []
     for x in range(n):
         for y in range(n):
             if y < n - x:
-                if v[x][y] in model:
+                if v[x][y] in model_set:
                     points_list.append((x, y))
     return points_list
 
