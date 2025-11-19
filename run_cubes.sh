@@ -81,7 +81,7 @@ SOLVER_EXIT_CODE=$?
 
 case $SOLVER_EXIT_CODE in
     10)
-        echo "Result: SATISFIABLE - verifying solution"
+        echo "Result: SATISFIABLE"
         python3 -u helpers/verify_solution.py -k "$k" -n "$n" -f "$LOG_DIR/${SLURM_ARRAY_TASK_ID}_solver_log.txt"
         VERIFY_EXIT_CODE=$?
         if ((VERIFY_EXIT_CODE == 0)); then
