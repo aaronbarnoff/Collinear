@@ -94,7 +94,7 @@ def create_cubes_file():
     
     cube_dest_file = open(cubes_dest_path,"w+")
     for x in range(n):
-        y = (n//d)-x-1
+        y = (n//d)-x
         if y < 0:
             continue
         skip=False
