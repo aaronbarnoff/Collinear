@@ -46,11 +46,3 @@ run.sh workflow:
 4. solve.py then verifies the solution is correct (except for cadical-exhaust).
 5. can optionally use print_solution.py with the satOutput.log to verify individual solutions and plot them. 
 
-run_bounds.sh workflow:
-1. run_bounds.sh executes the same workflow as run.sh, except over all boundary points (currently configured for up to n=180), and without cadical-exhaust.
-
-run_exhaust.sh workflow:
-1. run_exhaust.sh uses cadical-exhaust to solve all points on the grid given by minN=m and maxN=n; can specify number of cores to use with -j.
-2. solutions are not verified due to the overhead.
-
-3. cadical-exhaust is configured to only block point variables when searching for new solutions.
