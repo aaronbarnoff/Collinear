@@ -13,66 +13,32 @@ The script expects the directories:
 
 run.sh usage:
   Usage: ./run.sh -k <k> -n <n> [options]
-  e.g. ./run.sh -k 7 -n 122 -x 33 -y 88 -s 1 -c 0 -v 1 -a 0 -l -0 -b 0 -f 0 -t 0 -r 0 -e seqcounter
+  e.g. ./run.sh -k 7 -n 122 -x 33 -y 88 -f 1
 
   Options:
     -k   k value
-    -n   n value
-    -x   point x
-    -y   point y
-    -s   (0,1) symmetry break (0=off, 1=on)
-    -v   Vertical/horizontal binary clauses (0=off, 1=on)
-    -a   antidiagonal constraints (0=off, 1=on)
-    -l   line length for antidiagonal and v/h binary constraints (0= one point, 5= six points)
-    -c   Vertical/horizontal Cardinality constraints (0=off, 1=on)
-    -b   boundary constraints (0=off, 1=unit, 2=unit+binary)
-    -f   0=CNF (cadical), 1=KNF (cardinality cadical)
-    -t   wall-clock timeout for SAT solver (s)
-    -r   SAT solver seed
-    -e   (Optional) CNF cardinality encoding type: seqcounter, totalizer, sortnetwrk, cardnetwrk, mtotalizer, kmtotalizer
-    -z   0=regular solve (cadical), 1=exhaustive search (cadical-exhaust)
+    -n   n value 
+    -x   point x (default 0)
+    -y   point y (default 0)
+    -s   (0,1) symmetry break (0=off, 1=on) (default 1)
+    -v   Vertical/horizontal binary clauses (0=off, 1=on) (default 1)
+    -a   antidiagonal constraints (0=off, 1=on) (default 0)
+    -l   line length for antidiagonal and v/h binary constraints (0= one point, 5= six points) (default 0)
+    -c   Vertical/horizontal Cardinality constraints (0=off, 1=on) (default 0)
+    -b   boundary constraints (0=off, 1=unit, 2=unit+binary) (default 2)
+    -f   0=CNF (cadical), 1=KNF (cardinality cadical) (default 1)
+    -t   wall-clock timeout for SAT solver (s) (default 0, no limit)
+    -r   SAT solver seed (default 0)
+    -e   (optional) CNF cardinality encoding type: seqcounter, totalizer, sortnetwrk, cardnetwrk, mtotalizer, kmtotalizer; (default: omitted, uses knf2cnf (seq counter))
+    -z   0=regular solve (cadical), 1=exhaustive search (cadical-exhaust) (default 0)
+    -j   line heuristic threshold value (default 0)
+    -w   (KNF) 0=use pure CCDCL, 1=use hybrid mode (default 0)
+    -q   flip direction (step sequence)
+    -g   trim amount (step sequence)
+    -m   read in FAs from file Collinear/fixed_assignments/fixed_assignments_n<n>_x<x>_y<y>_f<f>_j<j>.txt (default:1, on)
     -h   help
+    -p   p=1: create encoding only, don't solve
   
-encode.py usage:
-  usage: encode.py [-h] [-k K] [-n N] [-x X] [-y Y] [-s S] [-c C] [-v V] [-a A] [-l L] [-b B] [-f F] [-t T] [-e E]
-                  [-r R] [-o O] [-p P]
-  e. for k=7, n=122, point (33, 88): python3 encode.py -k 7 -n 122 -x 33 -y 88 -s 1 -c 0 -v 1 -a 0 -l -0 -b 0 -f 0 -t 0 -r 0
-
-  options:
-    -h, --help  show this help message and exit
-    -k K        number of collinear points to avoid
-    -n N        n points; n-1 steps
-    -x X        point x
-    -y Y        point y
-    -s S        symmetry break [0=off, 1=on]
-    -c C        v/h cardinality constraints [0=off, 1=on]
-    -v V        v/h line binary clauses [0=off, 1=on]
-    -a A        antidiagonal constraints [0=off, 1=on]
-    -l L        cutoff length for v/h line and antidiagonal. 0=1 point, 5=6 points
-    -b B        boundary constraints [0=off, 1=unit clauses, 2=unit+binary clauses]
-    -f F        0=CNF (cadical), 1=KNF (card. cadical)
-    -t T        sat solver wall-clock timeout (s)
-    -e E        CNF cardinality encoding type: seqcounter, totalizer, sortnetwrk, cardnetwrk, mtotalizer, kmtotalizer
-    -r R        SAT solver seed
-    -o O        Use lexicographic symmetry breaking constraints
-    -p P        results folder name (used by run.sh)
-
-solve.py usage:
-  usage: solve.py [-h] [-k K] [-n N] [-x X] [-y Y] [-f F] [-e E] [-t T] [-r R] [-p P] [-z Z]
-
-  options:
-    -h, --help  show this help message and exit
-    -k K        number of collinear points to avoid
-    -n N        n points; n-1 steps
-    -x X        point x
-    -y Y        point y
-    -f F        0=CNF (cadical), 1=KNF (card. cadical)
-    -e E        CNF cardinality encoding type: seqcounter, totalizer, sortnetwrk, cardnetwrk, mtotalizer, kmtotalizer
-    -t T        sat solver wall-clock timeout (s)
-    -r R        SAT solver seed
-    -p P        results folder name
-    -z Z        0=regular solve, 1=exhaustive (cadical-exhaust)
-
 run.sh workflow:
 1. run.sh executes encode.py and solve.py with the given arguments
 2. encode.py generates the KNF encoding, and converts it to CNF if required (using knf2cnf or pysat_encode.py)
@@ -86,4 +52,5 @@ run_bounds.sh workflow:
 run_exhaust.sh workflow:
 1. run_exhaust.sh uses cadical-exhaust to solve all points on the grid given by minN=m and maxN=n; can specify number of cores to use with -j.
 2. solutions are not verified due to the overhead.
+
 3. cadical-exhaust is configured to only block point variables when searching for new solutions.
