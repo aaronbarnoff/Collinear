@@ -71,7 +71,7 @@ fi
 last=$((cnt - 1))
 
 echo "Scheduling cubes with timeout: ${t} hours, 12G ram"
-echo sbatch --array=0-"$last" --mem-per-cpu=12G --time="${t}:00:00" \
+sbatch --array=0-"$last" --mem-per-cpu=12G --time="${t}:00:00" \
     run_cubes.sh -k 7 -n "$n" -s "$f" \
     -f "res_k7_n${n}_x${x}_y${y}_b2_f${f}_r0_j10_w0_z0_g0_q0_${run_id}"
 
