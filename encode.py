@@ -236,8 +236,6 @@ def encode_cardinality_constraints_KNF():   # At most k constraint: (excluding v
 
     # filter threshold: 0=no filter, block lines with k+0 or more points
     # lengths where a correct SAT/UNSAT was found (single-seed test)
-    # k6: 8 works for n97 and n98; n50 =0
-    # k7: 20 works for n180 and n261; n50 <=2; n100 <= 7; n120 <= 15;  n150 <= 14; n200 <= 19; n250 <= 21; n261 ~= 20
 
     if filter_threshold > 0:
         print(f"cardinality constraint: Line-length filter heuristic - only include length at least k+{filter_threshold}")
