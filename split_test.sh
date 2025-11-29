@@ -55,7 +55,7 @@ run_id="$(date +%F_%H-%M-%S)"
 dir="$PWD/output/res_k7_n${n}_x${x}_y${y}_b2_f${f}_r0_j10_w0_z0_g0_q0_${run_id}"
 
 echo "Generating dimacs file for n${n}_x${x}_y${y}_f${f}_${run_id}"
-./run.sh -k 7 -n $n -x $x -y $y -f $f -j 10 -p 1 -m 0 
+./run.sh -k 7 -n $n -x $x -y $y -f $f -j 10 -p 1 -m 0  
 sleep 1
 
 echo "Generating cubes."
