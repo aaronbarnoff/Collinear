@@ -33,11 +33,11 @@ run.sh usage:
     -z   0=regular solve (cadical), 1=exhaustive search (cadical-exhaust) (default 0)
     -j   line heuristic threshold value (default 0)
     -w   (KNF) 0=use pure CCDCL, 1=use hybrid mode (default 0)
-    -q   flip direction (step sequence)
-    -g   trim amount (step sequence)
+    -q   flip direction (subsequence orientation: 0=subsequence off (default), 1=regular orientation, 2=flipped about y=x)
+    -g   trim amount (remove x points from both ends (default 0))
     -m   read in FAs from file Collinear/fixed_assignments/fixed_assignments_n<n>_x<x>_y<y>_f<f>_j<j>.txt (default:1, on)
     -h   help
-    -p   p=1: create encoding only, don't solve
+    -p   p=1: create encoding only, don't solve (default 0)
   
 run.sh workflow:
 1. run.sh executes encode.py and solve.py with the given arguments
@@ -45,4 +45,5 @@ run.sh workflow:
 3. solve.py runs the desired SAT solver (cadical, cardinality-cadical, cadical-exhaust)
 4. solve.py then verifies the solution is correct (except for cadical-exhaust).
 5. can optionally use print_solution.py with the satOutput.log to verify individual solutions and plot them. 
+
 
