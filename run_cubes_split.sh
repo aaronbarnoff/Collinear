@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --account=rrg-cbright
+#SBATCH --account=def-cbright
 #SBATCH --job-name=CUBE_ARRAY
 #SBATCH --cpus-per-task=1
 #mem-per-cpu moved out

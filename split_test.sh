@@ -63,6 +63,7 @@ echo "Generating cubes."
 python3 generate_cubes_diag_2.py -s "$s" -n "$n" -fx "$x" -fy "$y" -o cubes.icnf -f "res_k7_n${n}_x${x}_y${y}_b2_f${f}_r0_j10_w0_z0_g0_q0_${run_id}"
 sleep 1
 
+last=$((cnt - 1))
 mkdir "$dir/slurm_logs"
 
 echo "Scheduling cubes with timeout: ${t} hours, 12G ram"
