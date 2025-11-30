@@ -208,4 +208,4 @@ def create_cubed_dimacs():
 
 if __name__ == "__main__":
     create_cubes_file()
-    create_cubed_dimacs()
+    #create_cubed_dimacs() #now streaming in place to avoid creating too many files

@@ -55,27 +55,22 @@ run_id="$(date +%F_%H-%M-%S)"
 dir="$PWD/output/res_k7_n${n}_x${x}_y${y}_b2_f${f}_r0_j10_w0_z0_g0_q0_${run_id}"
 
 echo "Generating dimacs file for n${n}_x${x}_y${y}_f${f}_${run_id}"
-./run.sh -k 7 -n $n -x $x -y $y -f $f -j 10 -p 1 -m 0  
+./run.sh -k 7 -n $n -x $x -y $y -f $f -j 10 -p 1 -m 0 
 sleep 1
 
+s=$((f+1))
 echo "Generating cubes."
-python3 generate_cubes_diag_2.py -s 2 -n $n -fx $x -fy $y -o cubes.icnf -f "res_k7_n${n}_x${x}_y${y}_b2_f${f}_r0_j10_w0_z0_g0_q0_${run_id}"
+python3 generate_cubes_diag_2.py -s "$s" -n "$n" -fx "$x" -fy "$y" -o cubes.icnf -f "res_k7_n${n}_x${x}_y${y}_b2_f${f}_r0_j10_w0_z0_g0_q0_${run_id}"
 sleep 1
 
-cnt=$(find "$dir" -type f \( -iname '*_dimacsfile.knf' -o -iname '*_dimacsfile.cnf' \) | wc -l)
-
-if (( cnt == 0 )); then
-    echo "No cube files found in $dir"
-    exit 1
-fi
-last=$((cnt - 1))
+mkdir "$dir/slurm_logs"
 
 echo "Scheduling cubes with timeout: ${t} hours, 12G ram"
-echo sbatch --array=0-"$last" --mem-per-cpu=12G --time="${t}:00:00" \
-    run_cubes.sh -k 7 -n "$n" -s "$f" \
+echo sbatch --array=0-"$last" --mem-per-cpu=12G --time="${t}:00:00" --output="$dir/slurm_logs/k7_n${n}_x${x}_y${y}_f${f}_%A_%a.out" \
+    run_cubes_split.sh -k 7 -n "$n" -s "$s" \
+    -f "res_k7_n${n}_x${x}_y${y}_b2_f${f}_r0_j10_w0_z0_g0_q0_${run_id}" 
+sbatch --array=0-"$last" --mem-per-cpu=12G --time="${t}:00:00" --output="$dir/slurm_logs/k7_n${n}_x${x}_y${y}_f${f}_%A_%a.out" \
+    run_cubes_split.sh -k 7 -n "$n" -s "$s" \
     -f "res_k7_n${n}_x${x}_y${y}_b2_f${f}_r0_j10_w0_z0_g0_q0_${run_id}"
-sbatch --array=0-"$last" --mem-per-cpu=12G --time="${t}:00:00" \
-    run_cubes.sh -k 7 -n "$n" -s "$f" \
-    -f "res_k7_n${n}_x${x}_y${y}_b2_f${f}_r0_j10_w0_z0_g0_q0_${run_id}"
-echo "Done"
 
+echo "Done"
