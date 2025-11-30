@@ -33,6 +33,10 @@ while [[ $# -gt 0 ]]; do
             CNF_DIR="$2"
             shift 2
             ;;
+        -i) 
+            cubes_file_name="$2"
+            shift 2
+            ;;           
         *)
             echo "Unknown option: $1"
             exit 1
@@ -74,7 +78,7 @@ INPUT_FILE="$output_dir/dimacsFile.cnf"
 BASE_FILE="$output_dir/dimacsFile.cnf" 
 fi
 
-CUBES_FILE="$output_dir/cubes.icnf"
+CUBES_FILE="$output_dir/$cubes_file_name"
 
 if [[ ! -f "$BASE_FILE" ]]; then
     echo "Error: BASE_FILE '$BASE_FILE' not found"

@@ -7,26 +7,30 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", required=True, help="results folder containing the dimacsfile")
     parser.add_argument("-n", required=True, help="n")
-    parser.add_argument("-d", required=True, help="cubing line y=(n//d)-x-1")
     parser.add_argument("-s", required=True, help="create cubes for 1: CNF, 2: KNF file")
     parser.add_argument("-i", default="", help="cubes source file to branch on")
     parser.add_argument("-o", required=True, help="cubes dest file name")
+    parser.add_argument("-fx", required=True, help="final x")
+    parser.add_argument("-fy", required=True, help="final y")
+    parser.add_argument("-t", required=True, help="t=1: split on n/3 and 2n/3; t=2: split on n/2; ")
     return vars(parser.parse_args())
 
 args = parse_arguments()
 
 results_folder = args["f"]
 n = int(args["n"])
-d = int(args["d"])
 solver_type = int(args["s"])
 cubes_src_filename = args["i"]
 cubes_dest_filename = args["o"]
+fx = int(args["fx"])
+fy = int(args["fy"])
+split_type = int(args["t"])
 
 cwd_path = os.getcwd()
 results_folder_path = os.path.join(cwd_path, f"output/{results_folder}")
 
 cubes_src_path   = os.path.join(results_folder_path, cubes_src_filename)
-cubes_dest_path = os.path.join(results_folder_path, cubes_dest_filename)
+cubes_dest_path  = os.path.join(results_folder_path, cubes_dest_filename)
 
 template_file = ""
 if solver_type == 1:
@@ -39,19 +43,20 @@ else:
     print("-s must be 1 (CNF) or 2 (KNF)")
     exit(-1)
 
-template_file_path = os.path.join(results_folder_path, template_file) 
+template_file_path = os.path.join(results_folder_path, template_file)
 
 src_cubes = []
 dest_cubes = []
 
+# variable map
 var_cnt = 1
 v = [[0 for _ in range(n)] for _ in range(n)]
 v_map = {}
 for x in range(n):
     for y in range(n):
-        if x+y < n:
+        if x + y < n:
             v[x][y] = var_cnt
-            v_map[var_cnt] = x,y
+            v_map[var_cnt] = (x, y)
             var_cnt += 1
 
 points_k7_upper_bounds = """
@@ -74,69 +79,163 @@ points_k7_lower_bounds = """
 """
 
 pat = r'\((\d+),\s*(\d+)\)'
-upper_pts = re.findall(pat, points_k7_upper_bounds)
-lower_pts = re.findall(pat, points_k7_lower_bounds)            
+upper_pts = [(int(a), int(b)) for (a, b) in re.findall(pat, points_k7_upper_bounds)]
+lower_pts = [(int(a), int(b)) for (a, b) in re.findall(pat, points_k7_lower_bounds)]
 
+def upper_lower_bounds_origin(x, y):
+    if y < 0:
+        return False
+    if x < 0 or x >= n or y >= n:
+        return False
+    if x + y >= n:
+        return False
 
-# Create a cubed dimacs file 
+    for px, py in upper_pts:
+        if x <= px and y >= py:
+            # print(f"({x},{y}), ", end="")
+            return False
+    for px, py in lower_pts:
+        if x >= px and y <= py:
+            # print(f"({x},{y}), ", end="")
+            return False
+    return True
+
+def upper_sym_bounds(dx, dy):
+    # dx,dy are the displacement from the starting point
+    if dx < 0 or dy < 0:
+        return False
+    for px, py in upper_pts:
+        if dx <= px and dy >= py:
+            return False
+    for px, py in upper_pts:
+        if dy <= px and dx >= py:  # reflected
+            return False
+    return True
+
+def upper_reflected_bounds_final(x, y):
+    dx = fx - x
+    dy = fy - y
+    ok = upper_sym_bounds(dx, dy)
+    # if not ok:
+    #     print(f"({x},{y}), ", end="")
+    return ok
+
+def line1_line2_reachable(x1, y1, x2, y2):
+    dx = x2 - x1  # get displacement so can compare against boundary points relative to (0,0)
+    dy = y2 - y1
+    return upper_sym_bounds(dx, dy)  # from point on line 1
+
+# Create a cubed dimacs file: split on n/3 and 2n/3
 def create_cubes_file():
 
-    if cubes_src_filename != "":
+    if cubes_src_filename != "": # not using for initial split
         cubes_src_file = open(cubes_src_path, "r")
         print(f"Opening clause file {cubes_src_path}")
         for line in cubes_src_file:
             if line.startswith('a '):
                 trim_line = line.split('a ')[1].split('# ')[0]
-                #print(trim_line)
-                cube = trim_line.rsplit(' ',1)[0]
-                #print(cube)
+                cube = trim_line.rsplit(' ', 1)[0]
                 src_cubes.append(cube)
-    
-    cube_dest_file = open(cubes_dest_path,"w+")
-    for x in range(n):
-        y = (n//d)-x
-        if y < 0:
-            continue
-        skip=False
-        for pts in (upper_pts):
-            if x <= int(pts[0]) and y >= int(pts[1]):
-                #print(f"({x},{y}), ", end="")
-                #print(f"skip ({x},{y}) from ({pts[0]},{pts[1]})")
-                skip=True
-                break
-        for pts in (lower_pts):
-            if x >= int(pts[0]) and y <= int(pts[1]):
-                #print(f"({x},{y}), ", end="")
-                #print(f"skip ({x},{y}) from ({pts[0]},{pts[1]})")
-                skip=True
-                break
-        if skip:
-            continue
-        
 
-        if len(src_cubes):
+    cube_dest_file = open(cubes_dest_path, "w+")
+
+    line_list_1 = []
+    line_list_2 = []
+
+    for x in range(n):
+        y1 = (n // 3) - x
+        y2 = (2 * n // 3) - x
+
+        for y, which in ((y1, 1), (y2, 2)):
+            if not upper_lower_bounds_origin(x, y):
+                continue
+            if not upper_reflected_bounds_final(x, y):
+                continue
+
+            if which == 1:
+                line_list_1.append((x, y))
+            else:
+                line_list_2.append((x, y))
+
+    line_pair_list = []
+    for (x1, y1) in line_list_1:
+        for (x2, y2) in line_list_2:
+            if line1_line2_reachable(x1, y1, x2, y2):
+                line_pair_list.append(((x1, y1), (x2, y2)))
+
+    for (x1, y1), (x2, y2) in line_pair_list:
+        if src_cubes:
             for src_cube in src_cubes:
                 comment = []
-
-                cube_dest_file.write(f"a {v[x][y]} ")
-                #print(f"a {v[x][y]} ", end="")
-                comment.append(f"# ({x},{y}) ")
+                cube_dest_file.write(f"a {v[x1][y1]} {v[x2][y2]} ")
+                comment.append(f"# ({x1},{y1}) ({x2},{y2}) ")
 
                 for lit in src_cube.split():
                     cube_dest_file.write(f"{lit} ")
-                    #print(f"{lit} ", end="")
-                    comment.append(f"({v_map[abs(int(lit))][0]}, {v_map[abs(int(lit))][1]}) ")
+                    vx, vy = v_map[abs(int(lit))]
+                    comment.append(f"({vx}, {vy}) ")
 
                 cube_dest_file.write(f'0 {"".join(comment)}\n')
-                #print(f'0 {"".join(comment)}')
         else:
-            cube_dest_file.write(f"a ")
-            #print("a ", end="")
-            comment_str=f"# ({x},{y}) "
-            cube_dest_file.write(f"{v[x][y]} 0 {comment_str}\n")
-            #print(f"{v[x][y]} 0 {comment_str}")  
+            comment_str = f"# ({x1},{y1}) ({x2},{y2}) "
+            cube_dest_file.write(f"a {v[x1][y1]} {v[x2][y2]} 0 {comment_str}\n")
 
+# Create a cubed dimacs file: split on n/2 using existing cubes as input (-i)
+def create_cubes_file_2():
 
+    if cubes_src_filename == "":
+        print("Error: -i cubes source file is required for split_type=2")
+        return
+
+    print(f"Opening cubes source file {cubes_src_path}")
+    with open(cubes_src_path, "r") as cubes_src_file, \
+         open(cubes_dest_path, "w+") as cube_dest_file:
+
+        for line in cubes_src_file:
+            if not line.startswith("a "):
+                continue
+
+            parts = line.strip().split("#", 1)
+            lhs = parts[0].strip()        
+            rhs = parts[1] if len(parts) > 1 else ""
+
+            tokens = lhs.split()
+            lits = [int(tok) for tok in tokens[1:] if tok != "0"]
+
+            coords = re.findall(r'\((\d+),\s*(\d+)\)', rhs)
+            if len(coords) < 2:
+                continue
+
+            x1, y1 = map(int, coords[0])
+            x2, y2 = map(int, coords[1])
+
+            for xm in range(n):
+                ym = (n // 2) - xm
+                if ym < 0:
+                    continue
+                if xm < 0 or xm >= n or ym >= n:
+                    continue
+                if xm + ym >= n:
+                    continue
+                if v[xm][ym] == 0:
+                    continue
+
+                dx1 = xm - x1
+                dy1 = ym - y1
+                if not upper_sym_bounds(dx1, dy1):
+                    continue
+
+                dx2 = x2 - xm
+                dy2 = y2 - ym
+                if not upper_sym_bounds(dx2, dy2):
+                    continue
+
+                new_lits = lits + [v[xm][ym]]
+
+                comment_str = f"# ({x1},{y1}) ({x2},{y2}) ({xm},{ym}) "
+                cube_dest_file.write(
+                    "a " + " ".join(str(l) for l in new_lits) + f" 0 {comment_str}\n"
+                )
 
 # Create a <num>_dimacsFile for each cube
 def create_cubed_dimacs():
@@ -144,18 +243,16 @@ def create_cubed_dimacs():
 
     with open(cubes_dest_path) as cube_file:
         print(f"Opening cubes file {cubes_dest_path}")
-
         for line in cube_file:
             if line.startswith('a '):
-                #print(line.split('a ')[1].split('# ')[0].rsplit(' ',1)[0])
-                cubes.append(line.split('a ')[1].split('# ')[0].rsplit(' ',1)[0])
-    
+                cubes.append(line.split('a ')[1].split('# ')[0].rsplit(' ', 1)[0])
+
     print(f"Number of cubes found: {len(cubes)}. Creating cubed dimacsFiles.")
 
     for i, cube in enumerate(cubes):
         dest = os.path.join(results_folder_path, f"{i}_{template_file}")
 
-        shutil.copyfile(template_file_path, dest) 
+        shutil.copyfile(template_file_path, dest)
 
         with open(dest, 'a') as out:
             for lit in cube.split():
@@ -170,5 +267,8 @@ def create_cubed_dimacs():
         open(dest, 'w').write('\n'.join(lines))
 
 if __name__ == "__main__":
-    create_cubes_file()
-    create_cubed_dimacs()
+    if split_type == 1:
+        create_cubes_file()   # n/3 and 2n/3
+    if split_type == 2:
+        create_cubes_file_2() # n/2 using trimmed cube input file -i
+    # create_cubed_dimacs()  # now streaming in place to avoid creating too many files
