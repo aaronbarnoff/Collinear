@@ -63,10 +63,10 @@ echo "Generating cubes."
 python3 generate_cubes_diag_2.py -s "$s" -n "$n" -fx "$x" -fy "$y" -o cubes.icnf -f "res_k7_n${n}_x${x}_y${y}_b2_f${f}_r0_j10_w0_z0_g0_q0_${run_id}"
 sleep 1
 
-cnt=$(find "$dir" -type f \( -iname '*_dimacsfile.knf' -o -iname '*_dimacsfile.cnf' \) | wc -l)
+cnt=$(grep -c '^a ' "$dir/cubes.icnf")
 
 if (( cnt == 0 )); then
-    echo "No cube files found in $dir"
+    echo "No cube lines found in $dir/cubes.icnf"
     exit 1
 fi
 last=$((cnt - 1))
