@@ -98,8 +98,12 @@ last=$((cnt - 1))
 
 mkdir "$dir/slurm_logs"
 
-if ((c==2 || c==3)); then
+if ((c==2)); then
 cubes_file_name="cubes_trimmed_2.icnf"
+fi
+
+if ((c==3)); then
+cubes_file_name="cubes_trimmed_3.icnf"
 fi
 
 if ((c!=3)); then
