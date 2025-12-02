@@ -2,20 +2,26 @@
 import argparse
 import os
 import re
-import matplotlib
-matplotlib.use('Agg')
-
-import matplotlib.pyplot as plt
-import numpy as np
-from matplotlib.patches import Rectangle
 
 start_color = 0.125
 var_cnt = 1
 
 def parse_arguments():
     p = argparse.ArgumentParser()
-    p.add_argument("-f", required=True)
+    p.add_argument("-f", required=True,                     help="results folder name in output directory")
+    p.add_argument("-i", default="fixed_assignments.txt",   help="fixed assignments file name")
+    p.add_argument("-p", type=int, default=0,               help="p=0 plot to stdout; p=1 matplotlib pdf")
     return vars(p.parse_args())
+
+args = parse_arguments()
+folder = args["f"]
+fa_file_name = args["i"]
+print_pdf = args["p"]
+
+cwd_path = os.getcwd()
+parent = os.path.dirname(cwd_path)
+FA_file = os.path.join(parent, "output", folder, fa_file_name)
+
 
 def get_n_value(folder_name):
     m = re.search(r"n(\d+)", folder_name)
@@ -25,12 +31,14 @@ def get_n_value(folder_name):
     my = re.search(r"y(\d+)", folder_name)
     return int(mx.group(1)) + int(my.group(1)) + 1
 
+
 def get_xy(folder_name):
     mx = re.search(r"x(\d+)", folder_name)
     my = re.search(r"y(\d+)", folder_name)
     fx = int(mx.group(1)) if mx else None
     fy = int(my.group(1)) if my else None
     return fx, fy
+
 
 def build_var_map(n):
     global var_cnt
@@ -43,21 +51,8 @@ def build_var_map(n):
                 var_cnt += 1
     return var_map
 
-def draw_cell(ax, x, y, face, z=0, alpha=1.0):
-    ax.add_patch(Rectangle((x, y), 1.0, 1.0,
-                           facecolor=face, edgecolor='none',
-                           zorder=z, alpha=alpha))
 
-def draw_cell_inner_outline(ax, x, y, edge='black', lw=0.8, inset=0.08, z=0):
-    ax.add_patch(Rectangle((x + inset, y + inset),
-                           1.0 - 2*inset, 1.0 - 2*inset,
-                           facecolor='none', edgecolor=edge,
-                           linewidth=lw, zorder=z))
-
-def plot_path(FA_file, n, fx=None, fy=None):
-    fig, ax = plt.subplots(figsize=(10, 10), dpi=300)
-    ax.tick_params(axis='x', rotation=90)
-
+def build_boundary_set(n):
     k7_upper_bounds = """
     (0, 6), (1, 11), (2, 16), (3, 21), (4, 26), (5, 31), (6, 30), (7, 33), (8, 37), (9, 41), (10, 44), (11, 45), (12, 47), (13, 49), (14, 52), (15, 55), (16, 58), (17, 60), (18, 63), (19, 65), (20, 67), (21, 69), (22, 70), (23, 71), (24, 73), (25, 75), (26, 78), (27, 80), (28, 82), (29, 83), (30, 86), (31, 86), (32, 88), (33, 88), (34, 89), (35, 91), (36, 92), (37, 91), (38, 90), (39, 91), (40, 93), (41, 95), (42, 97), (43, 99), (44, 101), (45, 102), (46, 104), (47, 106), (48, 108), (49, 109), (50, 111), (51, 113), (52, 115), (53, 117), (54, 119), (55, 121), (56, 123), (57, 125), (58, 126), (59, 128), (60, 130), (61, 131), (62, 133), (63, 135), (64, 136), (65, 138), (66, 140), (67, 141), (68, 143), (69, 144), (70, 146), (71, 148), (72, 149), (73, 151), (74, 153), (75, 155), (76, 156), (77, 156), (78, 157), (79, 156), (80, 158), (81, 159), (82, 162), (83, 163), (84, 165), (85, 166), (86, 167), (87, 168), (88, 170), (89, 171)
     """
@@ -69,13 +64,60 @@ def plot_path(FA_file, n, fx=None, fy=None):
     lb_all = [(int(a), int(b)) for a, b in re.findall(r'\((\d+),\s*(\d+)\)', k7_lower_bounds)]
     ub = [(x, y) for (x, y) in ub_all if x + y + 1 < n]
     lb = [(x, y) for (x, y) in lb_all if x + y + 1 < n]
+    return lb, ub
 
-    var_map = build_var_map(n)
+
+def build_FA_list(var_map):
+    seen_lits = set()
+    FA_list = []
+    with open(FA_file, 'r') as f:
+        for line in f:
+            if not line.startswith('z'): # z <lit> <#conflicts>
+                continue
+            toks = line.split()
+            v = int(toks[1])
+            conflicts = int(toks[2]) if len(toks) > 2 else 0
+            if abs(v) > var_cnt:
+                continue
+            if v in seen_lits:
+                continue
+            seen_lits.add(v)
+            xy = var_map.get(abs(v))
+            if not xy:
+                continue
+            sign = 'pos' if v > 0 else 'neg'
+            FA_list.append((sign, xy, v, conflicts))
+    return FA_list
+    
+
+def plot_path_pdf(FA_file, n, fx=None, fy=None):
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from matplotlib.patches import Rectangle
 
     outdir = os.path.dirname(FA_file)
-    with open(os.path.join(outdir, "var_to_xy.txt"), "w") as m:
-        for v,(x,y) in var_map.items():
-            m.write(f"{v}=({x},{y})\n")
+    pdf_path = os.path.join(outdir, f'FA_plot.pdf')
+    var_path = os.path.join(outdir, f'var_map.txt')
+
+    def draw_cell(ax, x, y, face, z=0, alpha=1.0):
+        ax.add_patch(Rectangle((x, y), 1.0, 1.0,
+                            facecolor=face, edgecolor='none',
+                            zorder=z, alpha=alpha))
+
+    def draw_cell_inner_outline(ax, x, y, edge='black', lw=0.8, inset=0.08, z=0):
+        ax.add_patch(Rectangle((x + inset, y + inset),
+                            1.0 - 2*inset, 1.0 - 2*inset,
+                            facecolor='none', edgecolor=edge,
+                            linewidth=lw, zorder=z))
+        
+    fig, ax = plt.subplots(figsize=(10, 10), dpi=300)
+    ax.tick_params(axis='x', rotation=90)
+
+    var_map = build_var_map(n)
+    FA_list = build_FA_list(var_map)
+    lb,ub = build_boundary_set(n)
 
     ymax_ub_list = [y for (_, y) in ub]
     xmax_lb_list = [x for (x, _) in lb]
@@ -98,27 +140,6 @@ def plot_path(FA_file, n, fx=None, fy=None):
     if x_line_max > 0:
         x_vals_line = np.linspace(0, x_line_max, 200)
         ax.plot(x_vals_line, x_vals_line + 1, color='gray', linestyle='--', linewidth=0.25, zorder=100)
-
-    seen_lits = set()
-    FA_list = []
-
-    with open(FA_file, 'r') as f:
-        for line in f:
-            if not line.startswith('z'): # z <lit> <#conflicts>
-                continue
-            toks = line.split()
-            v = int(toks[1])
-            conflicts = int(toks[2]) if len(toks) > 2 else 0
-            if abs(v) > var_cnt:
-                continue
-            if v in seen_lits:
-                continue
-            seen_lits.add(v)
-            xy = var_map.get(abs(v))
-            if not xy:
-                continue
-            sign = 'pos' if v > 0 else 'neg'
-            FA_list.append((sign, xy, v, conflicts))
 
     cmap = plt.cm.viridis
     color_by_idx = {}
@@ -149,7 +170,6 @@ def plot_path(FA_file, n, fx=None, fy=None):
         if (x == fx and y == fy): continue 
         ax.add_patch(Rectangle((x, y), 1.0, 1.0, facecolor='red', edgecolor='none', zorder=15))
 
-
     ax.set_xlim(0, x_extent)
     ax.set_ylim(0, y_extent)
     xticks = list(range(0, x_extent + 1, 5))
@@ -159,21 +179,81 @@ def plot_path(FA_file, n, fx=None, fy=None):
     ax.set_xticklabels([str(v) for v in xticks], fontsize=6)
     ax.set_yticklabels([str(v) for v in yticks], fontsize=6)
 
-    outdir = os.path.dirname(FA_file)
-    pdf_path = os.path.join(outdir, f'FA_plot.pdf')
     fig.savefig(pdf_path, bbox_inches='tight')
     plt.close(fig)
     print(f"Saved plot: {pdf_path}")
 
+    m = open(os.path.join(outdir, "var_to_xy.txt"), "w")
+    for v,(x,y) in var_map.items():
+        m.write(f"{v}=({x},{y})\n")
+    print(f"Saved var map to: {var_path}")
+
+
+def plot_path_stdout(FA_file, n, fx=None, fy=None):
+    outdir = os.path.dirname(FA_file)           
+    plot_path = os.path.join(outdir, "FA_plot.txt")
+    var_path = os.path.join(outdir, f'var_map.txt')
+
+    var_map = build_var_map(n)
+    FA_list = build_FA_list(var_map)
+    lb,ub = build_boundary_set(n)
+
+    charmap=[[0 for x in range(n)] for y in range(n)]
+
+    for i, (sign, xy, _, _) in enumerate(FA_list):
+        if sign == 'neg':
+            charmap[xy[0]][xy[1]] = ' '
+        else:
+            charmap[xy[0]][xy[1]] = '+'
+
+    for (x, y) in ub: 
+        if (x == fx and y == fy): 
+            continue 
+        charmap[x][y] = 'x'
+    
+    for (x, y) in lb: 
+        if (x == fx and y == fy): 
+            continue 
+        charmap[x][y] = 'x'
+
+    charmap[fx][fy] = 'e'
+    charmap[0][0] = 's'
+
+    for x in range(0,n):
+        for y in range(0,n):
+            if charmap[x][y] == 0:
+                charmap[x][y] = '.'
+         
+    plot_file = open(plot_path, "w")
+    skip=False
+    for y in range(n-1,-1,-1):
+        for x in range(0,n):
+            if y > fy:
+                skip=True
+                continue
+            if x > fx:
+                break
+            skip=False
+            print(f"{charmap[x][y]}",end="")
+            plot_file.write(f"{charmap[x][y]}")
+        if not skip:
+            print("")
+            plot_file.write(f"\n")
+    print(f"Saved plot to: {plot_path}")
+
+    m = open(var_path, "w")
+    for v,(x,y) in var_map.items():
+        m.write(f"{v}=({x},{y})\n")       
+    print(f"Saved var map to: {var_path}")
+
 def main():
-    args = parse_arguments()
-    cwd_path = os.getcwd()
-    parent = os.path.dirname(cwd_path)
-    folder = args["f"]
-    FA_file = os.path.join(parent, "output", folder, "fixed_assignments.txt")
     n = get_n_value(folder)
     fx, fy = get_xy(folder)
-    plot_path(FA_file, n, fx, fy)
+
+    if print_pdf:
+        plot_path_pdf(FA_file, n, fx, fy)
+    else:
+        plot_path_stdout(FA_file, n, fx, fy)
 
 if __name__ == '__main__':
     main()
