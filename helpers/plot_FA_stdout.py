@@ -114,9 +114,7 @@ def plot_path(FA_file, n, fx=None, fy=None):
                 skip=True
                 continue
             if x > fx:
-                continue
-            if x+y >= n:
-                continue
+                break
             skip=False
             print(f"{charmap[x][y]}",end="")
             m.write(f"{charmap[x][y]}")
