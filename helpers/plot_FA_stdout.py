@@ -15,6 +15,7 @@ var_cnt = 1
 def parse_arguments():
     p = argparse.ArgumentParser()
     p.add_argument("-f", required=True)
+    p.add_argument("-i", required=True)
     return vars(p.parse_args())
 
 def get_n_value(folder_name):
@@ -130,7 +131,8 @@ def main():
     cwd_path = os.getcwd()
     parent = os.path.dirname(cwd_path)
     folder = args["f"]
-    FA_file = os.path.join(parent, "output", folder, "fixed_assignments.txt")
+    fa_file_name = args["i"]
+    FA_file = os.path.join(parent, "output", folder, fa_file_name)
     n = get_n_value(folder)
     fx, fy = get_xy(folder)
     plot_path(FA_file, n, fx, fy)
