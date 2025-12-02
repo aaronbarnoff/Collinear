@@ -10,7 +10,7 @@ var_cnt = 1
 def parse_arguments():
     p = argparse.ArgumentParser()
     p.add_argument("-f", required=True)
-    p.add_argument("-i", required=True)
+    p.add_argument("-i", default="fixed_assignments.txt")
     return vars(p.parse_args())
 
 def get_n_value(folder_name):
