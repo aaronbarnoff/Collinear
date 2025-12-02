@@ -90,7 +90,7 @@ if (( cnt == 0 )); then
     echo "No cube lines found in ${results_folder}"
     exit 1
 fi
-last=$((cnt - 1))
+last=$((cnt - 1)) 
 
 mkdir -p "$full_dir/slurm_logs"
 

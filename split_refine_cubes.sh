@@ -32,7 +32,7 @@ fi
 base_dir="$PWD/output/$res_folder"
 slurm_dir="$base_dir/slurm_logs"
 
-cubes_file="$base_dir/$cubes_file_name"
+cubes_file="$base_dir/$cubes_file_name" 
 base_name="${cubes_file_name%.icnf}"
 trimmed_file="$base_dir/${base_name}_trimmed.icnf"
 

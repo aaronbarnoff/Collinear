@@ -29,7 +29,7 @@ while true; do
     esac
 done
 
-cwd="$(pwd)"
+cwd="$(pwd)" 
 echo "n:$n, k:$k, solver:$solver_type, folder: $results_folder"
 
 if [[ -z "$res_folder" ]]; then
