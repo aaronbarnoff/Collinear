@@ -2,14 +2,9 @@
 import argparse
 import os
 import re
-#import matplotlib
-#matplotlib.use('Agg')
 
-#import matplotlib.pyplot as plt
-#import numpy as np
-#from matplotlib.patches import Rectangle
+# python3 plot_FA_stdout.py -f res_k7_n165_x112_y52_b2_f0_r0_j0_w0_z0_g0_q0_2025-11-08_00-57-46 -i fixed_assignmentss.txt
 
-start_color = 0.125
 var_cnt = 1
 
 def parse_arguments():
@@ -112,19 +107,22 @@ def plot_path(FA_file, n, fx=None, fy=None):
         for y in range(0,n):
             if charmap[x][y] == 0:
                 charmap[x][y] = '.'
-
+    skip=False
     for y in range(n-1,-1,-1):
         for x in range(0,n):
-            if x > fx:
-                continue
             if y > fy:
+                skip=True
+                continue
+            if x > fx:
                 continue
             if x+y >= n:
                 continue
+            skip=False
             print(f"{charmap[x][y]}",end="")
             m.write(f"{charmap[x][y]}")
-        print("")
-        m.write(f"\n")
+        if not skip:
+            print("")
+            m.write(f"\n")
 
 def main():
     args = parse_arguments()
