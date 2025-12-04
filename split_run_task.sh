@@ -32,7 +32,7 @@ done
 cwd="$(pwd)" 
 echo "n:$n, k:$k, solver:$solver_type, folder: $results_folder"
 
-if [[ -z "$res_folder" ]]; then
+if [[ -z "$results_folder" ]]; then
     echo "Error: require folder"
     exit 1
 fi
@@ -45,7 +45,7 @@ if (( k < 0 )); then
     exit 1
 fi
 if (( solver_type < 0 )); then
-    echo "Error: missing or invalid -s/--solver"
+    echo "Error: missing or invalid -f"
     exit 1
 fi
 

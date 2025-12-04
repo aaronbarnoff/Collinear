@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if ! options=$(getopt -o i:f: -- "$@"); then
+if ! options=$(getopt -o i:r: -- "$@"); then
     echo "Error: invalid options"
     exit 2
 fi
 eval set -- "$options"
 
-res_folder=""
+results_folder=""
 cubes_file_name=""
 
 while true; do
     case "$1" in
-        -f) res_folder="$2"; shift 2;;
+        -r) results_folder="$2"; shift 2;;
         -i) cubes_file_name="$2"; shift 2;;   
         --) shift; break;;
         *) echo "Unknown option: $1"; exit 1;;
@@ -24,12 +24,12 @@ if [[ -z "$cubes_file_name" ]]; then
     exit 1
 fi
 
-if [[ -z "$res_folder" ]]; then
+if [[ -z "$results_folder" ]]; then
     echo "Error: require results folder"
     exit 1
 fi
 
-base_dir="$PWD/output/$res_folder"
+base_dir="$PWD/output/$results_folder"
 slurm_dir="$base_dir/slurm_logs"
 
 cubes_file="$base_dir/$cubes_file_name" 
@@ -69,7 +69,7 @@ for f in "$slurm_dir"/*.out; do
     if grep -q 'UNSATISFIABLE' "$f"; then
         continue
     else
-        echo $((10#$num_part + 1)) >> "$tmp_lines"
+        echo "$((10#$num_part + 1))" >> "$tmp_lines"
     fi
 done
 
