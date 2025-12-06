@@ -63,6 +63,13 @@ while true; do
   esac
 done
 
+if ((fx != 0 && fy != 0)); then
+    if ((n != fx+fy+1));then
+        echo "Error: n != x+y+1"
+        exit 1
+    fi
+fi
+
 if [[ "$input_file_name" == "none" ]]; then
     run_id="$(date +%F_%H-%M-%S)"
     results_folder="res_k7_n${n}_x${fx}_y${fy}_b2_f${solve_type}_r0_j10_w0_z0_g0_q0_${run_id}"

@@ -211,11 +211,11 @@ def encode_path_constraints():
 
 
 """
-Cardinality Constraints
+Cardinality Constraints. Line y = (m_p/m_q) x + (b_p/b_q). Valid points lie inside the triangle given by (n-1,0) and (0,n-1) and the line y=n-x-1.
 
 Slope(= m_p/m_q):                                         only positive slopes are considered
-  + Vertical Check:           (k-1)*m_p <= n-1            ensures that y-coord still fits inside triangle (given by y=n-x-1) after k-1 steps of m_p (rise)
-  + Horizontal Check:         (k-1)*m_q <= n-1            ensures that x-coord still fits after k-1 steps of m_q (run)
+  + Vertical Check:           (k-1)*m_p <= n-1            ensures that y-coord still fits inside triangle after k steps of m_p (rise)
+  + Horizontal Check:         (k-1)*m_q <= n-1            ensures that x-coord still fits after k steps of m_q (run)
   + Valid Slope Check:        1/(k-2) < m_p/m_q < (k-2)   ensures only slopes that allow fewer than k horizontal/vertical steps are considered.
 y-intercept(= b_p/b_q):
   + Lower bound intercept:    m_q*b_p >= -m_p*(n-1)*b_q   ensures the line is not below y=0 by the time x=n-1, so it enters the triangle
@@ -234,9 +234,6 @@ def encode_cardinality_constraints_KNF():   # At most k constraint: (excluding v
         length_hist = defaultdict(int)
         total_added = 0
 
-    # filter threshold: 0=no filter, block lines with k+0 or more points
-    # lengths where a correct SAT/UNSAT was found (single-seed test)
-
     if filter_threshold > 0:
         print(f"cardinality constraint: Line-length filter heuristic - only include length at least k+{filter_threshold}")
         out_log_file.write(f"cardinality constraint: Linelength filter heuristic - only include length at least k+{filter_threshold}\n")
@@ -244,105 +241,113 @@ def encode_cardinality_constraints_KNF():   # At most k constraint: (excluding v
         print("cardinality constraint: No heuristic")
         out_log_file.write("cardinality constraint: No heuristic\n")
 
-    for m_p in range(0, n):
-        if (k - 1) * m_p > (n - 1):         # ensure at least k points can span the triangle vertically 
-            continue 
+    ########################################################################                                                                                       
+    # Step 1: Generate all distinct lines that pass through the triangle   #
+    ########################################################################
 
-        m_q = 1
-        while (k - 1) * m_q <= (n - 1):     # ensure at least k points can span the triangle horizontally
-            if (m_p == 0 and m_q != 1) or (math.gcd(m_p, m_q) > 1):
-                m_q += 1
+    mp_min = 1                                          # m_p lower bound: exclude horizontal lines
+    mp_max = ((n-1)//(k-1))                             # m_p upper bound: ensure at least k points can span the triangle vertically 
+    for m_p in range(mp_min, mp_max + 1):                    
+
+        mq_min = 1                                      # m_q lower bound: exclude vertical lines
+        mq_max = ((n-1)//(k-1))                         # m_q upper bound: ensure at least k points can span the triangle horizontally
+        for m_q in range(mq_min, mq_max + 1): 
+
+            if (math.gcd(m_p, m_q) > 1):                # optimization: require m_p/m_q in lowest terms
                 continue
-
-            if (m_p * (k-2)) < m_q:             # Trying slope > (k-2) and slope < 1/(k-2) now instead of slope >= (k-1) and slope <= 1/(k-2)
+            if (m_p * (k-2)) < m_q:                     # optimization: valid slope check
                 break
-            if m_p > ((k-2) * m_q):     
-                m_q += 1
+            if m_p > ((k-2) * m_q):                     # optimization: valid slope check   
                 continue
+            
+            bq_min = 1                                  # b_q lower bound: b_q should be positive since b_p is already allowed to be negative
+            bq_max = m_q                                # b_q upper bound: b_q must divide m_q, so m_q is highest value
+            for b_q in range(bq_min, bq_max + 1):             
+                
+                bp_min = -((m_p*(n-1)*b_q)//m_q)        # b_p lower bound: When x=n-1, to have y >=0, then b_p/b_q >= -m*(n-1)*b_q. Because 0 = (m_p/m_q)(n-1)+(b_p/b_q) -> b_p = -((m_p/m_q)(n-1))*b_q 
+                bp_max = (n-1)*b_q                      # b_p upper bound: When x=0, to have y <= n-x-1, then b_p <= (n-1)*b_q. Because n-0-1 = (m_p/m_q)(0)+(b_p/b_q) -> b_p = (n-1)*b_q
+                for b_p in range(bp_min, bp_max + 1):      
 
-            for b_q in range(1, m_q + 1):       # y = (m_p/m_q) x + (b_p/b_q); b_q must divide m_q         
-                for b_p in range(-m_p * n, (n - 1) * b_q + 1):      # upper bound on b_p: b=b_p/b_q < n when x=0, so y <= n-x-1
-                    
-                    # lower bound on b_p: b >= -m(n-1) when x=n-1, so that y >=0
-                    if m_q * b_p < - m_p * (n - 1) * b_q:
+                    if (math.gcd(b_p, b_q) > 1):            # optimization: require b_p/b_q in lowest terms
+                        continue
+                    if (m_q % b_q != 0):                    # optimization: b_q must divide m_q   
                         continue
                     
-                    if (b_p == 0 and b_q != 1) or (math.gcd(b_p, b_q) > 1) or (m_q % b_q != 0):
-                        continue
-                    tmp_str = []
-                    debug_str = []
-                    x = 0
+
+                    ##############################################################################################################                                                                                     
+                    # Step 2: Find the first point on the current line y = (m_p/m_q)*x + (b_p/b_q) that lies within the triangle #
+                    ##############################################################################################################
+
+                    y_denominator = m_q * b_q                           # y = [(m_p*x*b_q) + (b_p*m_q)] / [m_q*b_q] = y_numerator / y_denominator
                     y_is_integer = False
-                    denominator = m_q * b_q
+                    first_x, first_y = None, None                       # (first_x, first_y) will be the first point on this line inside the triangle
 
-                    while x < n:
-                        # find first valid point on this line
-                        numerator = m_p * x * b_q + b_p * m_q         # replaced y=(m_p/m_q)*x+(b_p/b_q) floating point calculation with this
-                        y = numerator // denominator
-                        if y >= n:
+                    for x in range(0,n):                                # require first_x to be within the triangle
+                        y_numerator = m_p * x * b_q + b_p * m_q           
+                        y = y_numerator // y_denominator
+                        if y > n-1:                                     # require first_y to be within (or below) the triangle
                             break
-                        if numerator % denominator != 0:              # y is not an integer
-                            x += 1
-                            continue                                                    
-                        y_is_integer = True
+                        if y_numerator % y_denominator != 0:            # require first_y to be an integer
+                            continue
+                        y_is_integer = True                                                                       
+                        first_x = x 
+                        first_y = y                                     # (first_x, first_y) is now the first point within (or below) the triangle
                         break
 
-                    if y_is_integer:
-                        # step along line until (x,y) is within triangle (y >= 0, x+y < n)
-                        while y < 0 and x < n:
-                            x += m_q
-                            y += m_p
-                        if x >= n:
-                            continue
+                    if not y_is_integer:                                # no valid points on this line were found within (or below) the triangle
+                        continue
 
-                        # ensure at least k points on the line can actually fit inside the triangle before making list
-                        point_cnt = 0
-                        px, py = x, y
-                        while px < n and 0 <= py < n - px and point_cnt < k:
-                            point_cnt += 1
-                            px += m_q
-                            py += m_p
-                        if point_cnt < k:
-                            continue
-                        
-                        # enumerate points on the line within the triangle
-                        reachable_cnt = 0
-                        while x < n:
-                            if 0 <= y < n - x:
-                                # exclude points that can't be reached from origin without k horizontal/vertical steps
-                                if sym_break == 1:
-                                    if not ((x < (k-2)*y+1) and (y < (k-2)*x+(k-1))): 
-                                        x += m_q
-                                        y += m_p
-                                        continue
-                                else:
-                                    if not ((x < (k-2)*y+(k-1)) and (y < (k-2)*x+(k-1))): 
-                                        x += m_q
-                                        y += m_p
-                                        continue
-                                tmp_str.append(str(-v[x][y]))
-                                tmp_str.append(" ")
-                                reachable_cnt += 1
-                                if dbg_card: debug_str.append(f"({x},{y})")
-                            else:
-                                break
-                            x += m_q
-                            y += m_p
+                    while first_y < 0:                                  # step along the line until first_y is within the triangle
+                        first_x += m_q
+                        first_y += m_p
                     
-                    # add the line as KNF cardinality constraint
-                    if tmp_str and reachable_cnt >= k+filter_threshold:
-                        clause = f'k {reachable_cnt - k + 1} {"".join(tmp_str)}0'
-                        num_clauses += 1
-                        dimacs_buffer.append(clause)
-                        num_card_clauses += 1
-                        
-                        if dbg_card: 
-                            out_log_file.write(" ".join(debug_str) + "\n")
+                    if first_x > n-1:                                   # require first_x to still be inside the triangle after first_y is determined                                       
+                        continue
+   
 
-                        if extra_debug:
-                            length_hist[reachable_cnt] += 1
-                            total_added += 1
-            m_q += 1
+                    ########################################################################                                                                                     
+                    # Step 3: Add the valid points on the line as a cardinality constraint #
+                    ########################################################################    
+
+                    tmp_str = []
+                    debug_str = []                                                    
+                    reachable_cnt = 0
+                    x = first_x
+                    y = first_y
+
+                    while x + y < n:
+                        if sym_break == 1:
+                            if not ((x < (k-2)*y+1) and (y < (k-2)*x+(k-1))):       # optimization: exclude points from the line that require k horizontal/vertical steps
+                                x += m_q
+                                y += m_p
+                                continue
+                        else:
+                            if not ((x < (k-2)*y+(k-1)) and (y < (k-2)*x+(k-1))): 
+                                x += m_q
+                                y += m_p
+                                continue                        
+                        reachable_cnt += 1                                
+                        tmp_str.append(str(-v[x][y]))
+                        tmp_str.append(" ")
+                        if dbg_card: 
+                            debug_str.append(f"({x},{y})")
+                        x += m_q
+                        y += m_p
+                    
+                    if reachable_cnt < (k + filter_threshold):                      # require enough points on the line to meet the collinearity constraint and line-filter heuristic
+                        continue
+
+                    clause = f'k {reachable_cnt - k + 1} {"".join(tmp_str)}0'       # add the line as KNF cardinality constraint
+                    dimacs_buffer.append(clause)
+                    num_clauses += 1
+                    num_card_clauses += 1
+                    
+                    if dbg_card: 
+                        out_log_file.write(" ".join(debug_str) + "\n")
+
+                    if extra_debug:
+                        length_hist[reachable_cnt] += 1
+                        total_added += 1
 
     if extra_debug:    
         if length_hist:
