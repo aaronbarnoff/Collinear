@@ -107,10 +107,10 @@ if (( c == 1 && slurm_timeout <= 0 )); then
 fi
 
 if ((c==1)); then
-    echo "Scheduling cubes with timeout: ${slurm_timeout} hours, 12G ram"
-    echo sbatch --array=0-$last --mem-per-cpu=12G --time="${slurm_timeout}:00:00" --output="$full_dir/slurm_logs/k7_n${n}_x${fx}_y${fy}_f${solve_type}_o${output_file_name%.icnf}_%A_%a.out" \
+    echo "Scheduling cubes with timeout: ${slurm_timeout} hours, 4G ram (expected for n~=288 and j=10)"
+    echo sbatch --array=0-$last --mem-per-cpu=4G --time="${slurm_timeout}:00:00" --output="$full_dir/slurm_logs/k7_n${n}_x${fx}_y${fy}_f${solve_type}_o${output_file_name%.icnf}_%A_%a.out" \
         split_run_task.sh -k 7 -n "$n" -f "$solve_type" -i "$output_file_name" -r "$results_folder"
-    sbatch --array=0-$last --mem-per-cpu=12G --time="${slurm_timeout}:00:00" --output="$full_dir/slurm_logs/k7_n${n}_x${fx}_y${fy}_f${solve_type}_o${output_file_name%.icnf}_%A_%a.out" \
+    sbatch --array=0-$last --mem-per-cpu=4G --time="${slurm_timeout}:00:00" --output="$full_dir/slurm_logs/k7_n${n}_x${fx}_y${fy}_f${solve_type}_o${output_file_name%.icnf}_%A_%a.out" \
         split_run_task.sh -k 7 -n "$n" -f "$solve_type" -i "$output_file_name" -r "$results_folder"
 fi
 echo "Done"
