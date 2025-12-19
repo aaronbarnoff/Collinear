@@ -214,8 +214,8 @@ def encode_path_constraints():
 Cardinality Constraints. Line y = (m_p/m_q) x + (b_p/b_q). Valid points lie inside the triangle given by (n-1,0) and (0,n-1) and the line y=n-x-1.
 
 Slope(= m_p/m_q):                                         only positive slopes are considered
-  + Vertical Check:           (k-1)*m_p <= n-1            ensures that y-coord still fits inside triangle after k steps of m_p (rise)
-  + Horizontal Check:         (k-1)*m_q <= n-1            ensures that x-coord still fits after k steps of m_q (run)
+  + Vertical Check:           (k)*m_p <= n-1              ensures that y-coord still fits inside triangle after k steps of m_p (rise)
+  + Horizontal Check:         (k)*m_q <= n-1              ensures that x-coord still fits after k steps of m_q (run)
   + Valid Slope Check:        1/(k-2) < m_p/m_q < (k-2)   ensures only slopes that allow fewer than k horizontal/vertical steps are considered.
 y-intercept(= b_p/b_q):
   + Lower bound intercept:    m_q*b_p >= -m_p*(n-1)*b_q   ensures the line is not below y=0 by the time x=n-1, so it enters the triangle
@@ -246,11 +246,11 @@ def encode_cardinality_constraints_KNF():   # At most k constraint: (excluding v
     ########################################################################
 
     mp_min = 1                                          # m_p lower bound: exclude horizontal lines
-    mp_max = ((n-1)//(k-1))                             # m_p upper bound: ensure at least k points can span the triangle vertically 
+    mp_max = ((n-1)//(k))                               # m_p upper bound: ensure at least k points can span the triangle vertically 
     for m_p in range(mp_min, mp_max + 1):                    
 
         mq_min = 1                                      # m_q lower bound: exclude vertical lines
-        mq_max = ((n-1)//(k-1))                         # m_q upper bound: ensure at least k points can span the triangle horizontally
+        mq_max = ((n-1)//(k))                           # m_q upper bound: ensure at least k points can span the triangle horizontally
         for m_q in range(mq_min, mq_max + 1): 
 
             if (math.gcd(m_p, m_q) > 1):                # optimization: require m_p/m_q in lowest terms
