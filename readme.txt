@@ -4,12 +4,14 @@ Repos Used:
   Cadical: https://github.com/arminbiere/cadical
   Cardinality Cadical: https://github.com/jreeves3/Cardinality-CDCL
   Cadical Exhaust: https://github.com/curtisbright/cadical-exhaust
+  Cube-and-Conquer: https://github.com/curtisbright/CnC.git
 
 The script expects the directories:
   solvers/Cardinality-CDCL/Tools/knf2cnf (and pysat_encode.py)
   solvers/Cardinality-CDCL/cardinality-cadical/build/cadical
   solvers/cadical/build/cadical
   solvers/cadical-exhaust/build/cadical-exhaust
+  solvers/CnC-max-cubing-var/march_cu/march_cu
 
 run.sh usage:
   Usage: ./run.sh -k <k> -n <n> [options]
