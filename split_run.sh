@@ -25,6 +25,7 @@ Options:
   -t   sbatch wall clock timeout in hours
   -s   seed
   -c   schedule resulting cubes on compute canada 
+  -z   z=1: don't split (use same -i and -o file name)
   -h   help
 EOF
 }
