@@ -23,12 +23,13 @@ Options:
   -o   output cube file 
   -r   results folder for input cube file
   -t   sbatch wall clock timeout in hours
+  -s   seed
   -c   schedule resulting cubes on compute canada 
   -h   help
 EOF
 }
 
-if ! options=$(getopt -o hx:y:f:n:t:r:i:o:m:d:c: -- "$@"); then
+if ! options=$(getopt -o hx:y:f:n:t:r:i:o:m:d:c:s:z: -- "$@"); then
     usage
     exit 2
 fi
@@ -44,6 +45,8 @@ slurm_timeout=0
 input_file_name="none"
 output_file_name="cubes_out.icnf"
 results_folder="none"
+seed=0
+nosplit=0
 while true; do
   case "$1" in
     -h) usage; exit 0 ;;
@@ -58,6 +61,8 @@ while true; do
     -m) m="$2"; shift 2 ;;
     -d) d="$2"; shift 2 ;;
     -c) c="$2"; shift 2 ;;  
+    -s) seed="$2"; shift 2 ;;
+    -z) nosplit="$2"; shift 2 ;;
     --) shift; break ;;
     *)  echo "Bad option"; usage; exit 2 ;;
   esac
@@ -70,24 +75,26 @@ if ((fx != 0 && fy != 0)); then
     fi
 fi
 
-if [[ "$input_file_name" == "none" ]]; then
-    run_id="$(date +%F_%H-%M-%S)"
-    results_folder="res_k7_n${n}_x${fx}_y${fy}_b2_f${solve_type}_r0_j10_w0_z0_g0_q0_${run_id}"
-    echo "Generating dimacs file for ${results_folder}"
-    ./run.sh -k 7 -n $n -x $fx -y $fy -f $solve_type -j 10 -p 1 -m 0
-    sleep 1
-    
-    echo "Generating split cubes on line y=(${m}/${d})${n}-x"
-    python3 split_generate_cubes.py -n $n -fx $fx -fy $fy -m $m -d $d -o "${output_file_name}" -r "${results_folder}"
-    sleep 1
-else
-    if [[ "$results_folder" == "none" ]]; then
-        echo "results folder required for input cubes"
-        exit 2
+if ((nosplit==0)); then
+    if [[ "$input_file_name" == "none" ]]; then
+        run_id="$(date +%F_%H-%M-%S)"
+        results_folder="res_k7_n${n}_x${fx}_y${fy}_b2_f${solve_type}_r0_j10_w0_z0_g0_q0_${run_id}"
+        echo "Generating dimacs file for ${results_folder}"
+        ./run.sh -k 7 -n $n -x $fx -y $fy -f $solve_type -j 10 -p 1 -m 0
+        sleep 1
+        
+        echo "Generating split cubes on line y=(${m}/${d})${n}-x"
+        python3 split_generate_cubes.py -n $n -fx $fx -fy $fy -m $m -d $d -o "${output_file_name}" -r "${results_folder}"
+        sleep 1
+    else
+        if [[ "$results_folder" == "none" ]]; then
+            echo "results folder required for input cubes"
+            exit 2
+        fi
+        echo "Generating split cubes on line y=(${m}/${d})${n}-x"
+        python3 split_generate_cubes.py -n $n -fx $fx -fy $fy -m $m -d $d -i "${input_file_name}" -o "${output_file_name}" -r "${results_folder}"
+        sleep 1
     fi
-    echo "Generating split cubes on line y=(${m}/${d})${n}-x"
-    python3 split_generate_cubes.py -n $n -fx $fx -fy $fy -m $m -d $d -i "${input_file_name}" -o "${output_file_name}" -r "${results_folder}"
-    sleep 1
 fi
 
 full_dir="$PWD/output/${results_folder}"
@@ -109,8 +116,8 @@ fi
 if ((c==1)); then
     echo "Scheduling cubes with timeout: ${slurm_timeout} hours, 4G ram (expected for n~=288 and j=10)"
     echo sbatch --array=0-$last --mem-per-cpu=4G --time="${slurm_timeout}:00:00" --output="$full_dir/slurm_logs/k7_n${n}_x${fx}_y${fy}_f${solve_type}_o${output_file_name%.icnf}_%A_%a.out" \
-        split_run_task.sh -k 7 -n "$n" -f "$solve_type" -i "$output_file_name" -r "$results_folder"
+        split_run_task.sh -k 7 -n "$n" -f "$solve_type" -i "$output_file_name" -r "$results_folder" -s "$seed"
     sbatch --array=0-$last --mem-per-cpu=4G --time="${slurm_timeout}:00:00" --output="$full_dir/slurm_logs/k7_n${n}_x${fx}_y${fy}_f${solve_type}_o${output_file_name%.icnf}_%A_%a.out" \
-        split_run_task.sh -k 7 -n "$n" -f "$solve_type" -i "$output_file_name" -r "$results_folder"
+        split_run_task.sh -k 7 -n "$n" -f "$solve_type" -i "$output_file_name" -r "$results_folder" -s "$seed"
 fi
 echo "Done"

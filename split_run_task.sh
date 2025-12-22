@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-#SBATCH --account=rrg-cbright
+#SBATCH --account=def-cbright
 #SBATCH --job-name=CUBE_ARRAY
 #SBATCH --cpus-per-task=1
 #mem-per-cpu moved out
 
 # Parse options
-if ! options=$(getopt -o r:n:k:f:i: -- "$@"); then
+if ! options=$(getopt -o r:n:k:f:i:s: -- "$@"); then
     echo "Error: invalid options"
     exit 2
 fi
@@ -16,6 +16,7 @@ n=-1
 k=-1
 results_folder=""
 cubes_file_name=""
+seed=0
 
 while true; do
     case "$1" in
@@ -24,13 +25,14 @@ while true; do
         -k) k="$2";                     shift 2;;
         -r) results_folder="$2";        shift 2;;
         -i) cubes_file_name="$2";       shift 2;;
+        -s) seed="$2";                  shift 2;;   
         --)                             shift; break;;
         *) echo "Unknown option: $1"; exit 1;;
     esac
 done
 
 cwd="$(pwd)" 
-echo "n:$n, k:$k, solver:$solver_type, folder: $results_folder"
+echo "n:$n, k:$k, solver:$solver_type, folder: $results_folder, seed: $seed"
 
 if [[ -z "$results_folder" ]]; then
     echo "Error: require folder"
@@ -113,7 +115,7 @@ echo "Fixed assignments (and errors) saved to: $output_dir/${SLURM_ARRAY_TASK_ID
   for lit in $lits; do
       printf "%s 0\n" "$lit"
   done
-) | "$solver_path" > "$log_dir/${SLURM_ARRAY_TASK_ID}_solver_log.txt" 2> "$output_dir/${SLURM_ARRAY_TASK_ID}_fixed_assignments.txt"
+) | "$solver_path" --seed="$seed" > "$log_dir/${SLURM_ARRAY_TASK_ID}_solver_log.txt" 2> "$output_dir/${SLURM_ARRAY_TASK_ID}_fixed_assignments.txt"
 
 SOLVER_EXIT_CODE=$?
 
