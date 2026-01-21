@@ -37,6 +37,7 @@ if ! options=$(getopt -o hx:y:f:n:t:r:i:o:m:d:c:s:z:v: -- "$@"); then
 fi
 eval set -- "$options"
 c=0
+z=0
 n=0
 fx=0
 fy=0
@@ -102,13 +103,14 @@ if ((nosplit==0)); then
 fi
 
 full_dir="$PWD/output/${results_folder}"
-cnt=$(grep -c '^a ' "$full_dir/$output_file_name")
+file="$full_dir/$output_file_name"
+cnt=$(grep -c -E '^[0-9]+(_[0-9]+)+[[:space:]]+a[[:space:]]' "$file")
 
 if (( cnt == 0 )); then
     echo "No cube lines found in ${results_folder}"
     exit 1
 fi
-last=$((cnt - 1)) 
+last=$((cnt)) 
 
 mkdir -p "$full_dir/slurm_logs"
 
@@ -119,9 +121,9 @@ fi
 
 if ((c==1)); then
     echo "Scheduling cubes with timeout: ${slurm_timeout} hours, 4G ram (expected for n~=288 and j=10)"
-    echo sbatch --array=0-$last --mem-per-cpu=4G --time="${slurm_timeout}:00:00" --output="$full_dir/slurm_logs/k7_n${n}_x${fx}_y${fy}_f${solve_type}_o${output_file_name%.icnf}_%A_%a.out" \
+    echo sbatch --array=1-$last --mem-per-cpu=4G --time="${slurm_timeout}:00:00" --output="$full_dir/slurm_logs/k7_n${n}_x${fx}_y${fy}_f${solve_type}_o${output_file_name%.icnf}_%A_%a.out" \
         split_run_task.sh -k 7 -n "$n" -f "$solve_type" -i "$output_file_name" -r "$results_folder" -s "$seed" -v "$fa_in_dir"
-    sbatch --array=0-$last --mem-per-cpu=4G --time="${slurm_timeout}:00:00" --output="$full_dir/slurm_logs/k7_n${n}_x${fx}_y${fy}_f${solve_type}_o${output_file_name%.icnf}_%A_%a.out" \
+    sbatch --array=1-$last --mem-per-cpu=4G --time="${slurm_timeout}:00:00" --output="$full_dir/slurm_logs/k7_n${n}_x${fx}_y${fy}_f${solve_type}_o${output_file_name%.icnf}_%A_%a.out" \
         split_run_task.sh -k 7 -n "$n" -f "$solve_type" -i "$output_file_name" -r "$results_folder" -s "$seed" -v "$fa_in_dir"
 fi
 echo "Done"

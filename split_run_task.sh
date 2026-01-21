@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --account=def-cbright
+#SBATCH --account=rrg-cbright
 #SBATCH --job-name=CUBE_ARRAY
 #SBATCH --cpus-per-task=1
 #mem-per-cpu moved out
@@ -50,6 +50,14 @@ fa_in_dir=$FA_in_dir #"$output_dir/fixed_assignments_in"
 tmp_dimacs_dir="$output_dir/tmp_dimacs"
 mkdir -p "$tmp_dimacs_dir"
 
+knf_header_file="$output_dir/dimacsFile.knf"
+knf_max_var=$(awk '/^p[ \t]/{print $3; exit}' "$knf_header_file")
+
+if [[ -z "$knf_max_var" ]]; then
+  echo "Error: could not read max var from $knf_header_file for fixed assignments"
+  exit 1
+fi
+
 if (( solver_type == 1 )); then
     echo "Solving KNF with Cardinality-CDCL"
     solver_path="$cwd/solvers/Cardinality-CDCL/cardinality-cadical/build/cadical"
@@ -87,7 +95,7 @@ fi
 fa_in_dir="$FA_in_dir"
 fa_in=""
 if [[ -n "$fa_in_dir" && -n "$fa_points" ]]; then
-  fa_in="$fa_in_dir/${fa_points}_FA_in.txt"
+  fa_in="$fa_in_dir/${fa_points}_FA_out.txt"
 fi
 
 tmp_dimacs_file="$tmp_dimacs_dir/pts${points}_task${SLURM_ARRAY_TASK_ID}_tmp_dimacs.txt"
@@ -97,6 +105,7 @@ echo "task id: $SLURM_ARRAY_TASK_ID"
 echo "cube: $cube_line"
 echo "points: $points"
 echo "FA input: $fa_in"
+echo "max var to include from FA input: $knf_max_var"
 echo "tmp dimacs: $tmp_dimacs_file"
 
 mapfile -t lits < <(awk '
@@ -117,7 +126,12 @@ echo "cube lits ($extra): ${lits[*]}"
 fa_lits=()
 fa_extra=0
 if [[ -n "$fa_in" && -f "$fa_in" ]]; then
-    mapfile -t fa_lits < <(awk '/^z[ \t]+[+-]?[0-9]+/ {print $2}' "$fa_in")
+    mapfile -t fa_lits < <(awk -v maxv="$knf_max_var" '
+        /^z[ \t]+[+-]?[0-9]+/ {
+            v = $2
+            if (v < 0) v = -v
+            if (v <= maxv) print $2
+        }' "$fa_in")
     fa_extra=${#fa_lits[@]}
     echo "FA lits ($fa_extra): ${fa_lits[*]}"
 fi
@@ -139,14 +153,14 @@ echo "Fixed assignment output (and errors) saved to: $fa_out_dir/${points}_FA_ou
   for lit in "${fa_lits[@]}"; do
       printf "%s 0\n" "$lit"
   done
-) | tee "$tmp_dimacs_file" | "$solver_path" --seed="$seed" > "$log_dir/${points}_solver_log.txt" 2> "$fa_out_dir/${points}_FA_out.txt"
+) | tee "$tmp_dimacs_file" | "$solver_path" --seed="$seed" > "$log_dir/pts${points}_task${SLURM_ARRAY_TASK_ID}_solver_log.txt" 2> "$fa_out_dir/${points}_FA_out.txt"
 
 SOLVER_EXIT_CODE=$?
 
 case $SOLVER_EXIT_CODE in
     10)
         echo "Result: SATISFIABLE"
-        python3 -u helpers/verify_solution.py -k "$k" -n "$n" -f "$log_dir/${points}_solver_log.txt"
+        python3 -u helpers/verify_solution.py -k "$k" -n "$n" -f "$log_dir/pts${points}_task${SLURM_ARRAY_TASK_ID}_solver_log.txt"
         VERIFY_EXIT_CODE=$?
         if (( VERIFY_EXIT_CODE == 0 )); then
             echo "Solution verified, cancelling remaining cube jobs in array ${SLURM_ARRAY_JOB_ID}..."
