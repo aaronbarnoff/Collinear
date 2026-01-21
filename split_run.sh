@@ -26,11 +26,12 @@ Options:
   -s   seed
   -c   schedule resulting cubes on compute canada 
   -z   z=1: don't split (use same -i and -o file name)
+  -v   fixed assignments input directory (full path)
   -h   help
 EOF
 }
 
-if ! options=$(getopt -o hx:y:f:n:t:r:i:o:m:d:c:s:z: -- "$@"); then
+if ! options=$(getopt -o hx:y:f:n:t:r:i:o:m:d:c:s:z:v: -- "$@"); then
     usage
     exit 2
 fi
@@ -46,6 +47,7 @@ slurm_timeout=0
 input_file_name="none"
 output_file_name="cubes_out.icnf"
 results_folder="none"
+fa_in_dir=""
 seed=0
 nosplit=0
 while true; do
@@ -64,6 +66,7 @@ while true; do
     -c) c="$2"; shift 2 ;;  
     -s) seed="$2"; shift 2 ;;
     -z) nosplit="$2"; shift 2 ;;
+    -v) fa_in_dir="$2"; shift 2 ;;
     --) shift; break ;;
     *)  echo "Bad option"; usage; exit 2 ;;
   esac
@@ -117,8 +120,8 @@ fi
 if ((c==1)); then
     echo "Scheduling cubes with timeout: ${slurm_timeout} hours, 4G ram (expected for n~=288 and j=10)"
     echo sbatch --array=0-$last --mem-per-cpu=4G --time="${slurm_timeout}:00:00" --output="$full_dir/slurm_logs/k7_n${n}_x${fx}_y${fy}_f${solve_type}_o${output_file_name%.icnf}_%A_%a.out" \
-        split_run_task.sh -k 7 -n "$n" -f "$solve_type" -i "$output_file_name" -r "$results_folder" -s "$seed"
+        split_run_task.sh -k 7 -n "$n" -f "$solve_type" -i "$output_file_name" -r "$results_folder" -s "$seed" -v "$fa_in_dir"
     sbatch --array=0-$last --mem-per-cpu=4G --time="${slurm_timeout}:00:00" --output="$full_dir/slurm_logs/k7_n${n}_x${fx}_y${fy}_f${solve_type}_o${output_file_name%.icnf}_%A_%a.out" \
-        split_run_task.sh -k 7 -n "$n" -f "$solve_type" -i "$output_file_name" -r "$results_folder" -s "$seed"
+        split_run_task.sh -k 7 -n "$n" -f "$solve_type" -i "$output_file_name" -r "$results_folder" -s "$seed" -v "$fa_in_dir"
 fi
 echo "Done"

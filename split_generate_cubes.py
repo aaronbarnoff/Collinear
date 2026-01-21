@@ -141,12 +141,31 @@ def load_src_cubes():
         return
     print(f"Opening cubes source file {cubes_src_path}")
     with open(cubes_src_path, "r") as cubes_src_file:
-        for line in cubes_src_file:
-            if line.startswith("a "):
-                trim_line = line.split("a ")[1].split("# ")[0]
-                cube = trim_line.rsplit(" ", 1)[0]
-                src_cubes.append(cube)
-                init_cube_cnt += 1
+        for raw_line in cubes_src_file:
+            line = raw_line.split("#", 1)[0].strip()
+            if not line:
+                continue
+
+            parts = line.split()
+            if len(parts) < 4:
+                continue
+            if parts[1] != "a":
+                continue
+
+            points_str = parts[0]
+
+            lits_tokens = []
+            for tok in parts[2:]:
+                if tok == "0":
+                    break
+                lits_tokens.append(tok)
+
+            if not lits_tokens:
+                continue
+
+            cube = " ".join(lits_tokens)
+            src_cubes.append((points_str, cube))
+            init_cube_cnt += 1
     print(f"Read {init_cube_cnt} cubes from {cubes_src_filename}.")
 
 def create_line_cubes():
@@ -174,7 +193,7 @@ def create_line_cubes():
 
         for (x_new, y_new) in line_points:
             if src_cubes:
-                for src_cube in src_cubes:
+                for (src_points, src_cube) in src_cubes:
                     lits = [int(tok) for tok in src_cube.split() if tok != "0"]
 
                     # check reachability of each point in cube with the new point 
@@ -187,19 +206,14 @@ def create_line_cubes():
 
                     if not compatible_with_all:
                         continue
-
-                    comment_parts = [f"# ({x_new},{y_new}) "]
-                    cube_dest_file.write(f"a {v[x_new][y_new]} ")
-                    for lit in lits:
-                        cube_dest_file.write(f"{lit} ")
-                        vx, vy = v_map[abs(lit)]
-                        comment_parts.append(f"({vx}, {vy}) ")
-
-                    cube_dest_file.write(f"0 {''.join(comment_parts)}\n")
-                    final_cube_cnt +=1
+                    
+                    out_points = f"{src_points}_{x_new}_{y_new}"                        # new lits/points are appended to end of lit/point list
+                    out_lits = src_cube.split() + [str(v[x_new][y_new])]
+                    cube_dest_file.write(f"{out_points} a {' '.join(out_lits)} 0\n")
+                    final_cube_cnt += 1
             else:
-                comment_str = f"# ({x_new},{y_new}) "
-                cube_dest_file.write(f"a {v[x_new][y_new]} 0 {comment_str}\n")
+                comment_str = f"{x_new}_{y_new}"
+                cube_dest_file.write(f"{comment_str} a {v[x_new][y_new]} 0\n")
                 final_cube_cnt +=1
 
 if __name__ == "__main__":

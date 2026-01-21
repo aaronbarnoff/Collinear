@@ -23,8 +23,8 @@ cwd_path = os.getcwd()
 results_folder_path = os.path.join(cwd_path, f"output/{results_folder}")
 slurm_logs_path = os.path.join(results_folder_path, "slurm_logs")
 
-cubes_src_path = os.path.join(cwd_path, cubes_src_filename)
-cubes_dest_path = cubes_dest_filename if os.path.isabs(cubes_dest_filename) else os.path.join(cwd_path, cubes_dest_filename)
+cubes_src_path = os.path.join(results_folder_path, cubes_src_filename)
+cubes_dest_path = os.path.join(results_folder_path, cubes_dest_filename)
 
 task_pat = re.compile(r'_(\d+)\.out$')
 
