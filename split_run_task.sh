@@ -153,7 +153,8 @@ echo "Fixed assignment output (and errors) saved to: $fa_out_dir/${points}_FA_ou
   for lit in "${fa_lits[@]}"; do
       printf "%s 0\n" "$lit"
   done
-) | tee "$tmp_dimacs_file" | "$solver_path" --seed="$seed" > "$log_dir/pts${points}_task${SLURM_ARRAY_TASK_ID}_solver_log.txt" 2> "$fa_out_dir/${points}_FA_out.txt"
+) | "$solver_path" --seed="$seed" > "$log_dir/pts${points}_task${SLURM_ARRAY_TASK_ID}_solver_log.txt" 2> "$fa_out_dir/${points}_FA_out.txt"
+# | tee "$tmp_dimacs_file" 
 
 SOLVER_EXIT_CODE=$?
 
