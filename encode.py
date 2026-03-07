@@ -769,19 +769,6 @@ def konly(): # for HYBRID
     cnf_encode_file.close()
     time.sleep(1) 
 
-def block_midline_range(dist):
-    print(f"Blocking points > {dist} points of midline")
-    out_log_file.write(f"Blocking points > {dist} points of midline\n")
-
-    for x in range(n):
-        for y in range(n):
-            if x+y < n:
-                if y > x+dist*2+1 or x > y+dist*2-1:
-                    #print(f"blocking({x},{y}): {-v[x][y]}")
-                    add_clause(-v[x][y])
-
-
-
 
 def encode_steps(): # from lex constraints
     global right_step
@@ -812,143 +799,6 @@ def encode_steps(): # from lex constraints
                 add_clause( r,         -v[x][y],  v[x][y-1])
 
 
-def encode_step_sequence_middle():
-    if not flip_steps:
-        return
-    # diag n=288: 11111011111011100011011111011111010000100000111011111011111000111101111101010001100100000100000100000100000100000100111101110010000010000010000010000010000010011101111101111101111101110100000100000100000100000100000100111110001000001000001001101111101100111011111011111011111011111011111
-    # diag n=286: 100000100000100000100000100000110111000010000010000011101111101111101111101100010001111101111101111101111101111100010000010000010000010011101111101111101111101111101110000010011111011111011111011111011111001011110000010000011111000100010000010000010111110111110001000001000010000100000
-    # diag n=282: 10000010010001000001011110111000010000010000101111101000001000001110011011111011111011111011111011111000001000111110111110111110111110111110110001000001000001000001001111101111101111101111101111101100111101110010000111110111100010000010000010001101110100000100000100000100000100000
-    # diag n=280: 111110111110111110111101111011100101111011100010000010000010011111010000010000010000010000010000011011111011111011111011100100000100000100000100000100000100111011110010000010000010000010000010000010011000101011111011110111110111110111001000001000001101111101111101111101111101111
-    # Original (up=1, right=0):     "100100000111101111101110010001100100000100000100000100000100000100111101110010000010000010000010000010000010111101111101101111101110110001000001110010000010000010000010000010000010011111000"
-    step_sequence = "11111011111011100011011111011111010000100000111011111011111000111101111101010001100100000100000100000100000100000100111101110010000010000010000010000010000010011101111101111101111101110100000100000100000100000100000100111110001000001000001001101111101100111011111011111011111011111011111"
-    remove_from_ends = trim_steps // 2
-    remove_from_middle = trim_steps // 2
-
-    half_len = (len(step_sequence) + 1) // 2
-
-    trimmed_step_sequence_LHS = step_sequence[remove_from_ends : half_len - remove_from_middle]
-    trimmed_step_sequence_RHS = step_sequence[half_len + remove_from_middle : len(step_sequence) - remove_from_ends]
-
-    print(f"original: {step_sequence}")
-    print(f"LHS: {trimmed_step_sequence_LHS}")
-    print(f"RHS: {trimmed_step_sequence_RHS}")
-
-    print("." * remove_from_ends, end="")
-    print(f"{trimmed_step_sequence_LHS}", end="")
-    print("." * remove_from_middle*2, end="")
-    print(f"{trimmed_step_sequence_RHS}", end="")
-    print("." *remove_from_ends)
-
-    print(f"encoding middle step sequence: trim:{trim_steps}, orientation:{'regular' if flip_steps == 1 else 'flipped'}")
-    out_log_file.write(f"encoding middle step sequence: trim:{trim_steps}, orientation:{'regular' if flip_steps == 1 else 'flipped'}\n")
-
-    steps_LHS = [c for c in trimmed_step_sequence_LHS.strip() if c in ('0','1')]
-    steps_RHS = [c for c in trimmed_step_sequence_RHS.strip() if c in ('0','1')]
-    num_steps_LHS = len(steps_LHS)
-    num_steps_RHS = len(steps_RHS)
-
-    encode_steps()
-
-    step_orientation = "0" if flip_steps == 1 else "1"  
-    start_vars_LHS = []
-    print(f"truncated LHS string len: {num_steps_LHS}. range: {1} to {half_len-num_steps_LHS+1}")
-    for start_step in range(1, half_len - num_steps_LHS + 2):
-        path_start_var = new_var()
-        start_vars_LHS.append(path_start_var)
-        for j in range(num_steps_LHS):
-            step_var = right_step[start_step + j]
-            if steps_LHS[j] == step_orientation:
-                add_clause(-path_start_var, step_var)
-            else:
-                add_clause(-path_start_var, -step_var)
-    add_clause(*start_vars_LHS)
-
-    left_half_len = (len(step_sequence) + 1) // 2
-    right_half_len = len(step_sequence) - left_half_len
-    rhs_base = left_half_len
-    start_vars_RHS = []
-    print(f"truncated RHS string len: {num_steps_RHS}. range: {rhs_base+1} to {rhs_base+ (right_half_len - num_steps_RHS) + 1}")
-    for start_step in range(rhs_base + 1, rhs_base + (right_half_len - num_steps_RHS) + 2):
-        path_start_var = new_var()
-        start_vars_RHS.append(path_start_var)
-        for j in range(num_steps_RHS):
-            step_var = right_step[start_step + j]
-            if steps_RHS[j] == step_orientation:
-                add_clause(-path_start_var, step_var)
-            else:
-                add_clause(-path_start_var, -step_var)
-    add_clause(*start_vars_RHS)
-
-def encode_step_sequence_middle_full():
-    if not flip_steps:
-        return
-    # diag n=288: 11111011111011100011011111011111010000100000111011111011111000111101111101010001100100000100000100000100000100000100111101110010000010000010000010000010000010011101111101111101111101110100000100000100000100000100000100111110001000001000001001101111101100111011111011111011111011111011111
-    # diag n=286: 100000100000100000100000100000110111000010000010000011101111101111101111101100010001111101111101111101111101111100010000010000010000010011101111101111101111101111101110000010011111011111011111011111011111001011110000010000011111000100010000010000010111110111110001000001000010000100000
-    # diag n=282: 10000010010001000001011110111000010000010000101111101000001000001110011011111011111011111011111011111000001000111110111110111110111110111110110001000001000001000001001111101111101111101111101111101100111101110010000111110111100010000010000010001101110100000100000100000100000100000
-    # diag n=280: 111110111110111110111101111011100101111011100010000010000010011111010000010000010000010000010000011011111011111011111011100100000100000100000100000100000100111011110010000010000010000010000010000010011000101011111011110111110111110111001000001000001101111101111101111101111101111
-    # Original (up=1, right=0):     "100100000111101111101110010001100100000100000100000100000100000100111101110010000010000010000010000010000010111101111101101111101110110001000001110010000010000010000010000010000010011111000"
-    step_sequence = "11111011111011100011011111011111010000100000111011111011111000111101111101010001100100000100000100000100000100000100111101110010000010000010000010000010000010011101111101111101111101110100000100000100000100000100000100111110001000001000001001101111101100111011111011111011111011111011111"
-    remove_from_ends = 0 #trim_steps // 2
-    remove_from_middle = trim_steps // 1
-
-    half_len = (len(step_sequence) + 1) // 2
-
-    trimmed_step_sequence_LHS = step_sequence[remove_from_ends : half_len - remove_from_middle]
-    trimmed_step_sequence_RHS = step_sequence[half_len + remove_from_middle : len(step_sequence) - remove_from_ends]
-
-    print(f"original: {step_sequence}")
-    print(f"LHS: {trimmed_step_sequence_LHS}")
-    print(f"RHS: {trimmed_step_sequence_RHS}")
-
-    print("." * remove_from_ends, end="")
-    print(f"{trimmed_step_sequence_LHS}", end="")
-    print("." * remove_from_middle*2, end="")
-    print(f"{trimmed_step_sequence_RHS}", end="")
-    print("." *remove_from_ends)
-
-    print(f"encoding middle step sequence: trim:{trim_steps}, orientation:{'regular' if flip_steps == 1 else 'flipped'}")
-    out_log_file.write(f"encoding middle step sequence: trim:{trim_steps}, orientation:{'regular' if flip_steps == 1 else 'flipped'}\n")
-
-    steps_LHS = [c for c in trimmed_step_sequence_LHS.strip() if c in ('0','1')]
-    steps_RHS = [c for c in trimmed_step_sequence_RHS.strip() if c in ('0','1')]
-    num_steps_LHS = len(steps_LHS)
-    num_steps_RHS = len(steps_RHS)
-
-    encode_steps()
-
-    step_orientation = "0" if flip_steps == 1 else "1"  
-    start_vars_LHS = []
-    print(f"truncated LHS string len: {num_steps_LHS}. range: {1} to {half_len-num_steps_LHS+1}")
-    for start_step in range(1, half_len - num_steps_LHS + 2):
-        path_start_var = new_var()
-        start_vars_LHS.append(path_start_var)
-        for j in range(num_steps_LHS):
-            step_var = right_step[start_step + j]
-            if steps_LHS[j] == step_orientation:
-                add_clause(-path_start_var, step_var)
-            else:
-                add_clause(-path_start_var, -step_var)
-    add_clause(*start_vars_LHS)
-
-    left_half_len = (len(step_sequence) + 1) // 2
-    right_half_len = len(step_sequence) - left_half_len
-    rhs_base = left_half_len
-    start_vars_RHS = []
-    print(f"truncated RHS string len: {num_steps_RHS}. range: {rhs_base+1} to {rhs_base+ (right_half_len - num_steps_RHS) + 1}")
-    for start_step in range(rhs_base + 1, rhs_base + (right_half_len - num_steps_RHS) + 2):
-        path_start_var = new_var()
-        start_vars_RHS.append(path_start_var)
-        for j in range(num_steps_RHS):
-            step_var = right_step[start_step + j]
-            if steps_RHS[j] == step_orientation:
-                add_clause(-path_start_var, step_var)
-            else:
-                add_clause(-path_start_var, -step_var)
-    add_clause(*start_vars_RHS)
-
-
-
-
 def encode_step_sequence():
     if not flip_steps:
         return
@@ -957,7 +807,7 @@ def encode_step_sequence():
     # diag n=282: 10000010010001000001011110111000010000010000101111101000001000001110011011111011111011111011111011111000001000111110111110111110111110111110110001000001000001000001001111101111101111101111101111101100111101110010000111110111100010000010000010001101110100000100000100000100000100000
     # diag n=280: 111110111110111110111101111011100101111011100010000010000010011111010000010000010000010000010000011011111011111011111011100100000100000100000100000100000100111011110010000010000010000010000010000010011000101011111011110111110111110111001000001000001101111101111101111101111101111
     # Original (up=1, right=0):     "100100000111101111101110010001100100000100000100000100000100000100111101110010000010000010000010000010000010111101111101101111101110110001000001110010000010000010000010000010000010011111000"
-    step_sequence = "11111011111011100011011111011111010000100000111011111011111000111101111101010001100100000100000100000100000100000100111101110010000010000010000010000010000010011101111101111101111101110100000100000100000100000100000100111110001000001000001001101111101100111011111011111011111011111011111"
+    step_sequence = "100100000111101111101110010001100100000100000100000100000100000100111101110010000010000010000010000010000010111101111101101111101110110001000001110010000010000010000010000010000010011111000"
     if trim_steps:
         trimmed_step_sequence = step_sequence[trim_steps:-trim_steps]
     else:
@@ -1123,8 +973,6 @@ def main():
     create_lexicographic_encoding(lex_len)
 
     encode_step_sequence() # for forcing the sequence of steps seen with n=323 and n=325 solutions
-    #encode_step_sequence_middle() # testing
-    #encode_step_sequence_middle_full() # testing
 
     input_fixed_assignments() # read fixed assignments from previous solves
 
