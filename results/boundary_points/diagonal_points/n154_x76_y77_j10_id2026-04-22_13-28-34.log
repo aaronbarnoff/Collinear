@@ -1,0 +1,12 @@
+/mnt/e/Important Scripts/New scripts/Upper and Lower Bounds/boundary_logs/New folder/res_k7_n154_x76_y77_s1_c0_v1_a0_l0_b2_f0_r0_enone_2026-04-22_13-28-34
+k:7, n:154, x:76, y:77, sym_break:1, vh_card:0, vh_line:1, antidiag:0, cutoff:0, boundary:2, solver:0, encoding: None, seed:0, timeout:0, lex:0
+n=154
+x=76
+y=77
+j=10
+f=0
+SATISFIABLE
+cpu_time=20.87
+real_time=21.10
+max_rss_mb=619.06
+011100000100010000010000010010111110111110100100000100001110111110111110111110111110110100001011111011111010100000111011110100000100000100010000100001111

@@ -1,0 +1,10 @@
+/scratch/barnoffa/heur/cnf_bounds_181/Collinear/output/res_k7_n241_x81_y159_b2_f0_r1_j10_w0_z0_2025-10-07_20-14-44
+k:7, n:241, x:81, y:159, sym_break:1, vh_card:0, vh_line:1, antidiag:0, cutoff:0, boundary:2, solver:0, hybrid_mode: 0, encoding: None, seed:1, timeout:0, lex:0, card_filter: 10
+n=241
+x=81
+y=159
+j=10
+UNSATISFIABLE
+cpu_time=111523.08
+real_time=112252.35
+max_rss_mb=1411.08

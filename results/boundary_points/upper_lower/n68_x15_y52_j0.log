@@ -1,0 +1,12 @@
+/scratch/barnoffa/heur/bounds_180/Collinear/output/points_all_180/res_k7_n68_x15_y52_b2_f0_r13_j0_w0_z0_2025-10-06_19-58-27
+k:7, n:68, x:15, y:52, sym_break:1, vh_card:0, vh_line:1, antidiag:0, cutoff:0, boundary:2, solver:0, hybrid_mode: 0, encoding: None, seed:13, timeout:0, lex:0, card_filter: 0
+n=68
+x=15
+y=52
+j=0
+f=0
+SATISFIABLE
+cpu_time=0.04
+real_time=0.04
+max_rss_mb=21.00
+0000010000010000010000010000010001100111100000100100000100000100000

@@ -1,0 +1,12 @@
+/scratch/barnoffa/heur/bounds_180/Collinear/output/points_all_180/res_k7_n126_x35_y90_b2_f0_r10_j0_w0_z0_2025-10-06_20-21-51
+k:7, n:126, x:35, y:90, sym_break:1, vh_card:0, vh_line:1, antidiag:0, cutoff:0, boundary:2, solver:0, hybrid_mode: 0, encoding: None, seed:10, timeout:0, lex:0, card_filter: 0
+n=126
+x=35
+y=90
+j=0
+f=0
+SATISFIABLE
+cpu_time=48.12
+real_time=48.39
+max_rss_mb=251.28
+00001000010111000001101000001000001000001000001000001011000001111100000111001000001000001000001000001000001001100011100001000

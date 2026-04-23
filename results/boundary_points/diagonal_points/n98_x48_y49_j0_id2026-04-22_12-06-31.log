@@ -1,0 +1,12 @@
+/scratch/barnoffa/heur/no_cubing/Collinear/output/res_k7_n98_x48_y49_s1_c0_v1_a0_l0_b2_f0_r0_enone_2026-04-22_12-06-31
+k:7, n:98, x:48, y:49, sym_break:1, vh_card:0, vh_line:1, antidiag:0, cutoff:0, boundary:2, solver:0, encoding: None, seed:0, timeout:0, lex:0
+n=98
+x=48
+y=49
+j=0
+f=0
+SATISFIABLE
+cpu_time=0.20
+real_time=0.22
+max_rss_mb=76.95
+0000010000010000010001010001010101011110011101111101111101111101110110010001110000010000011111011

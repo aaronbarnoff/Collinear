@@ -17,3 +17,11 @@ src/__pycache__/
 *.drat
 *.cnf
 *.knf
+!results/
+!results/*
+!results/boundary_points/
+!results/boundary_points/*
+!results/boundary_points/diagonal_points/
+!results/boundary_points/diagonal_points/*
+!results/boundary_points/upper_lower/
+!results/boundary_points/upper_lower/*

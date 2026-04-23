@@ -1,0 +1,11 @@
+/home/cbright/Collinear/output/upper_x89_y171_CNF_j10_2025-11-18_19-20-34
+k:7, n:261, x:89, y:171, sym_break:1, vh_card:0, vh_line:1, antidiag:0, cutoff:0, boundary:2, solver:0, hybrid_mode: 0, encoding: None, seed:25577, timeout:0, lex:0, card_filter: 10
+region=upper
+n=261
+x=89
+y=171
+j=10
+UNSATISFIABLE
+cpu_time=3143791.05
+real_time=3144196.99
+max_rss_mb=4452.97

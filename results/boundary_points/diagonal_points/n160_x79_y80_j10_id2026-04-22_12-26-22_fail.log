@@ -1,0 +1,14 @@
+/scratch/barnoffa/heur/no_cubing/Collinear/output/res_k7_n160_x79_y80_s1_c0_v1_a0_l0_b2_f0_r0_enone_2026-04-22_12-26-22
+k:7, n:160, x:79, y:80, sym_break:1, vh_card:0, vh_line:1, antidiag:0, cutoff:0, boundary:2, solver:0, encoding: None, seed:0, timeout:0, lex:0
+n=160
+x=79
+y=80
+j=10
+f=0
+SATISFIABLE
+cpu_time=14.11
+real_time=14.19
+max_rss_mb=313.81
+001000001000001000001000001000001110000011111000001011011111011111010000011101101111101111101111000001000001001111011111011111011111001101110011001000100000111
+Failure: 7 or more points found on the same line.
+slope: 0.6; m_p: 3, m_q: 5; points: (22,40) (27,43) (37,49) (47,55) (62,64) (67,67) (72,70) 

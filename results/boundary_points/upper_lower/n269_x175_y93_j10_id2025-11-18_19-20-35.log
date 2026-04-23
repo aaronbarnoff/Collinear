@@ -1,0 +1,11 @@
+/home/cbright/Collinear/output/lower_x175_y93_CNF_j10_2025-11-18_19-20-35
+k:7, n:269, x:175, y:93, sym_break:1, vh_card:0, vh_line:1, antidiag:0, cutoff:0, boundary:2, solver:0, hybrid_mode: 0, encoding: None, seed:21420, timeout:0, lex:0, card_filter: 10
+region=lower
+n=269
+x=175
+y=93
+j=10
+UNSATISFIABLE
+cpu_time=2487160.35
+real_time=2487523.73
+max_rss_mb=4163.60
