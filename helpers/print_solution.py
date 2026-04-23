@@ -142,26 +142,42 @@ def extract_solution(v, n, k, sat_log_file_path):
 
 def verify_solution(n, k, points_list):
     collinear_list = []
-    S = set(points_list)
+    point_set = set(points_list)
+    
     for (x1, y1) in points_list:
         for (x2, y2) in points_list:
             if (x1, y1) == (x2, y2):
                 continue
             if (x2 < x1) or (y2 < y1):
                 continue
-            m_p = x2 - x1
-            m_q = y2 - y1
-            tmp_points_list = [(x1, y1), (x2, y2)]
-            count = 2
-            x, y = x2, y2
-            while (x < n) and (y < n - x):
+
+            # get the primitive distance between points on the line
+            g = math.gcd(x2 - x1, y2 - y1)
+            m_p = (x2 - x1) // g
+            m_q = (y2 - y1) // g
+
+            tmp_point_list = []
+            count = 0
+
+            # move to first point on the line
+            x = x1
+            y = y1
+            while (x - m_p, y - m_q) in point_set: 
+                x -= m_p
+                y -= m_q
+
+            # walk forward with reduced step along the line, collect all path-points along it
+            while (x, y) in point_set:
+                count += 1
+                tmp_point_list.append((x, y))
                 x += m_p
                 y += m_q
-                if (x, y) in S:
-                    count += 1
-                    tmp_points_list.append((x, y))
+
             if count >= k:
-                collinear_list.append(tmp_points_list)
+                # print(tmpPointsList)
+                if tmp_point_list not in collinear_list:
+                    collinear_list.append(tmp_point_list)
+
 
     if collinear_list:
         print(f"Failure: {k} or more points found on the same line.")
@@ -192,8 +208,6 @@ def main():
     define_vars(n, v)
 
     points_list = extract_solution(v, n, k, dimacs_file)
-    #points_list.append((15,14))
-    #points_list.append((14,15))
     collinear_list = verify_solution(n, k, points_list)
     plot_solution(points_list, collinear_list, n, k, dimacs_file)
 

@@ -2,6 +2,7 @@
 import argparse
 import os
 import sys
+import math
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="e.g. python3 printSolution.py -k 6 -n 90 -f output/res_k6_n90_x0_y0_s1_c0_v1_a0_l0_b0.0_f0_r0_2025-09-18_17-43-04/satOutput_k.log")
@@ -57,28 +58,44 @@ def extract_solution(v, n, k, sat_log_file_path):
     return points_list
 
 
+
 def verify_solution(n, k, points_list):
     collinear_list = []
-    S = set(points_list)
+    point_set = set(points_list)
+    
     for (x1, y1) in points_list:
         for (x2, y2) in points_list:
             if (x1, y1) == (x2, y2):
                 continue
             if (x2 < x1) or (y2 < y1):
                 continue
-            m_p = x2 - x1
-            m_q = y2 - y1
-            tmp_points_list = [(x1, y1), (x2, y2)]
-            count = 2
-            x, y = x2, y2
-            while (x < n) and (y < n - x):
+
+            # get the primitive distance between points on the line
+            g = math.gcd(x2 - x1, y2 - y1)
+            m_p = (x2 - x1) // g
+            m_q = (y2 - y1) // g
+
+            tmp_point_list = []
+            count = 0
+
+            # move to first point on the line
+            x = x1
+            y = y1
+            while (x - m_p, y - m_q) in point_set: 
+                x -= m_p
+                y -= m_q
+
+            # walk forward with reduced step along the line, collect all path-points along it
+            while (x, y) in point_set:
+                count += 1
+                tmp_point_list.append((x, y))
                 x += m_p
                 y += m_q
-                if (x, y) in S:
-                    count += 1
-                    tmp_points_list.append((x, y))
+
             if count >= k:
-                collinear_list.append(tmp_points_list)
+                # print(tmpPointsList)
+                if tmp_point_list not in collinear_list:
+                    collinear_list.append(tmp_point_list)
 
     result = 0
 
