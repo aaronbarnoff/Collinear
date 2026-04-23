@@ -5,6 +5,7 @@ import os
 import subprocess
 import argparse
 import sys
+import math
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="")
@@ -256,31 +257,40 @@ Verify
 """
 def verify_solution(point_list):
     print("Confirming Results:", time.time() - start_time, "seconds")
+    point_set = set(point_list)
     for (x1, y1) in point_list:
         for (x2, y2) in point_list:
             if (x1, y1) == (x2, y2):
                 continue
             if (x2 < x1) or (y2 < y1):
                 continue
-            m_p = x2-x1
-            m_q = y2-y1
-            tmp_point_list = []
-            count = 2
-            tmp_point_list.append((x1,y1))
-            tmp_point_list.append((x2,y2))
 
-            #print(f'({x1},{y1}), ({x2}, {y2}); slope: {m_p}/{m_q} = {m_p/m_q}')
-            x = x2
-            y = y2
-            while (x < n) and (y < n - x):
+            # get the primitive distance between points on the line
+            g = math.gcd(x2 - x1, y2 - y1)
+            m_p = (x2 - x1) // g
+            m_q = (y2 - y1) // g
+
+            tmp_point_list = []
+            count = 0
+
+            # move to first point on the line
+            x = x1
+            y = y1
+            while (x - m_p, y - m_q) in point_set: 
+                x -= m_p
+                y -= m_q
+
+            # walk forward with reduced step along the line, collect all path-points along it
+            while (x, y) in point_set:
+                count += 1
+                tmp_point_list.append((x, y))
                 x += m_p
                 y += m_q
-                if (x, y) in point_list:
-                    count += 1
-                    tmp_point_list.append((x, y))
+
             if count >= k:
                 # print(tmpPointsList)
-                collinear_list.append(tmp_point_list)    
+                if tmp_point_list not in collinear_list:
+                    collinear_list.append(tmp_point_list)
 
     if collinear_list:
         print(f"Failure: {k} or more points found on the same line.")
