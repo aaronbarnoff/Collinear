@@ -25,3 +25,4 @@ src/__pycache__/
 !results/boundary_points/diagonal_points/*
 !results/boundary_points/upper_lower/
 !results/boundary_points/upper_lower/*
+/new_results
