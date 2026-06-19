@@ -255,9 +255,13 @@ def get_num_solns():
 """
 Verify
 """
+def point_is_valid(x, y, n):
+    return x >= 0 and y >= 0 and x + y < n
+
 def verify_solution(point_list):
     print("Confirming Results:", time.time() - start_time, "seconds")
     point_set = set(point_list)
+    seen_lines = set()
     for (x1, y1) in point_list:
         for (x2, y2) in point_list:
             if (x1, y1) == (x2, y2):
@@ -271,25 +275,27 @@ def verify_solution(point_list):
             m_q = (y2 - y1) // g
 
             tmp_point_list = []
-            count = 0
 
-            # move to first point on the line
+            # move to first point on grid
             x = x1
             y = y1
-            while (x - m_p, y - m_q) in point_set: 
+            while point_is_valid(x - m_p, y - m_q, n): 
                 x -= m_p
                 y -= m_q
 
             # walk forward with reduced step along the line, collect all path-points along it
-            while (x, y) in point_set:
-                count += 1
-                tmp_point_list.append((x, y))
+            while point_is_valid(x,y,n):
+                if (x,y) in point_set:
+                    tmp_point_list.append((x, y))
                 x += m_p
                 y += m_q
 
-            if count >= k:
+            if len(tmp_point_list) >= k:
+                line = tuple(tmp_point_list)
+
                 # print(tmpPointsList)
-                if tmp_point_list not in collinear_list:
+                if line not in seen_lines:
+                    seen_lines.add(line)
                     collinear_list.append(tmp_point_list)
 
     if collinear_list:

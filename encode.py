@@ -35,8 +35,9 @@ def parse_arguments():
     parser.add_argument("-w", default=0, help="Solve using CCDCL Hybrid Mode")
     parser.add_argument("--flip", default=0, help="flip the step sequence (0=steps off, 1=normal, 2=flipped)")
     parser.add_argument("--trim", default=0, help="trim the step sequence at both ends")
+    parser.add_argument("--rev", default=0, help="reverse the step sequence")
     parser.add_argument("--FA", default=1, help="look for 'fixed_assignments.txt' in main directory and read in FAs")
-    
+    parser.add_argument("--seq", default=1, help="step sequence passed")
     return vars(parser.parse_args())
 
 args = parse_arguments()
@@ -64,8 +65,12 @@ march_cube_limit=int(args["zl"])
 march_cadical_conflict_value=int(args["zc"])
 use_hybrid=int(args["w"])
 
+step_sequence=args["seq"]
+
+
 flip_steps=int(args["flip"])
 trim_steps=int(args["trim"])
+rev_steps=int(args["rev"])
 
 read_FA=int(args["FA"])
 
@@ -800,6 +805,7 @@ def encode_steps(): # from lex constraints
 
 
 def encode_step_sequence():
+    global step_sequence
     if not flip_steps:
         return
     # diag n=288: 11111011111011100011011111011111010000100000111011111011111000111101111101010001100100000100000100000100000100000100111101110010000010000010000010000010000010011101111101111101111101110100000100000100000100000100000100111110001000001000001001101111101100111011111011111011111011111011111
@@ -807,7 +813,12 @@ def encode_step_sequence():
     # diag n=282: 10000010010001000001011110111000010000010000101111101000001000001110011011111011111011111011111011111000001000111110111110111110111110111110110001000001000001000001001111101111101111101111101111101100111101110010000111110111100010000010000010001101110100000100000100000100000100000
     # diag n=280: 111110111110111110111101111011100101111011100010000010000010011111010000010000010000010000010000011011111011111011111011100100000100000100000100000100000100111011110010000010000010000010000010000010011000101011111011110111110111110111001000001000001101111101111101111101111101111
     # Original (up=1, right=0):     "100100000111101111101110010001100100000100000100000100000100000100111101110010000010000010000010000010000010111101111101101111101110110001000001110010000010000010000010000010000010011111000"
-    step_sequence = "100100000111101111101110010001100100000100000100000100000100000100111101110010000010000010000010000010000010111101111101101111101110110001000001110010000010000010000010000010000010011111000"
+    #step_sequence = "100100000111101111101110010001100100000100000100000100000100000100111101110010000010000010000010000010000010111101111101101111101110110001000001110010000010000010000010000010000010011111000"
+    
+    # if origin and end point are truncated then reverse should not give different result
+    if rev_steps:
+        step_sequence = step_sequence[::-1]
+    
     if trim_steps:
         trimmed_step_sequence = step_sequence[trim_steps:-trim_steps]
     else:
@@ -817,8 +828,9 @@ def encode_step_sequence():
     #print(f"encoding REVERSE step sequence: trim:{trim_steps}, orientation:{'regular' if flip_steps == 1 else 'flipped'}")
     #out_log_file.write(f"encoding REVERSE step sequence: trim:{trim_steps}, orientation:{'regular' if flip_steps == 1 else 'flipped'}\n")
 
-    print(f"encoding FWD step sequence: trim:{trim_steps}, orientation:{'regular' if flip_steps == 1 else 'flipped'}")
-    out_log_file.write(f"encoding FWD step sequence: trim:{trim_steps}, orientation:{'regular' if flip_steps == 1 else 'flipped'}\n")
+    print(f"encoding {'forward' if rev_steps == 0 else 'reverse'} step sequence - trim:{trim_steps}, orientation:{'regular' if flip_steps == 1 else 'flipped'}")
+
+    out_log_file.write(f"encoding {'forward' if rev_steps == 0 else 'reverse'} step sequence - trim:{trim_steps}, orientation:{'regular' if flip_steps == 1 else 'flipped'}\n")
 
     print(trimmed_step_sequence)
     steps = [c for c in trimmed_step_sequence.strip() if c in ('0','1')]

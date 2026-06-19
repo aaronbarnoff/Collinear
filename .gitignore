@@ -26,3 +26,5 @@ src/__pycache__/
 !results/boundary_points/upper_lower/
 !results/boundary_points/upper_lower/*
 /new_results
+/diagonal_points_new/
+/diagonal_points_new/*

@@ -2,7 +2,7 @@
 #SBATCH --account=def-cbright
 #SBATCH --cpus-per-task=1
 # pulled out mem-per-cpu;
-set -euo pipefail
+set -uo pipefail
 
 # CNF requires 8-12GB+ past k=7, n=220
 # KNF can stay with 4GB for k=7 until very high n
@@ -33,16 +33,18 @@ Options:
   -w   (KNF) 0=use pure CCDCL, 1=use hybrid mode (default 0)
   -q   flip direction (step sequence)
   -g   trim amount (step sequence)
+  -i   step sequence  
+  -d   reverse step sequence 
   -m   read in FAs from file Collinear/fixed_assignments/fixed_assignments_n<n>_x<x>_y<y>_f<f>_j<j>.txt (default:1, on)
   -h   help
   -p   p=1: create encoding only, don't solve
 EOF
 }
 
-options=$(getopt "hk:n:l:s:v:a:c:x:y:b:f:t:r:e:z:j:w:q:g:m:p:" "$@")
+options=$(getopt "hk:n:l:s:v:a:c:x:y:b:f:t:r:e:z:j:w:q:g:m:p:i:d:" "$@")
 eval set -- "$options"
 
-k= n= l= s= v= a= c= x= y= b= f= t= r= e= z= j= w= q= g= m= p=
+k= n= l= s= v= a= c= x= y= b= f= t= r= e= z= j= w= q= g= m= p= i= d=
   
 while true; do
   case "$1" in
@@ -67,7 +69,9 @@ while true; do
     -q) q="$2"; shift 2 ;;    
     -g) g="$2"; shift 2 ;;       
     -m) m="$2"; shift 2 ;;       
-    -p) p="$2"; shift 2 ;;       
+    -p) p="$2"; shift 2 ;;     
+    -i) i="$2"; shift 2 ;;  
+    -d) d="$2"; shift 2 ;;    
     --) shift; break ;;
     *)  echo "Bad option"; usage; exit 2 ;;
   esac
@@ -84,7 +88,7 @@ if [[ -n "${e:-}" ]]; then
 fi
 
 run_id="$(date +%F_%H-%M-%S)"
-: "${k:=7}" "${x:=0}" "${y:=0}" "${s:=1}" "${c:=0}" "${v:=1}" "${a:=0}" "${l:=0}" "${b:=2}" "${f:=1}" "${t:=0}" "${r:=0}" "${z:=0}" "${j:=0}" "${w:=0}" "${q:=0}" "${g:=0}" "${m:=1}" "${p:=0}"
+: "${k:=7}" "${x:=0}" "${y:=0}" "${s:=1}" "${c:=0}" "${v:=1}" "${a:=0}" "${l:=0}" "${b:=2}" "${f:=1}" "${t:=0}" "${r:=0}" "${z:=0}" "${j:=0}" "${w:=0}" "${q:=0}" "${g:=0}" "${m:=1}" "${p:=0}" "${d:=0}" "${i:=0}"
 
 if ((z==0)) # non-exhaustive search
 then
@@ -95,12 +99,19 @@ else
   res_name="ex/res_k${k}_n${n}_x${x}_y${y}_s${s}_c${c}_v${v}_a${a}_l${l}_b${b}_f${f}_r${r}_e${e:-none}_j${j}_w${w}_${run_id}"
 fi
 
-python3 -u encode.py -k "$k" -n "$n" -l "$l" -a "$a" -v "$v" -c "$c" -s "$s" -x "$x" -y "$y" -b "$b" -t "$t" -f "$f" -r "$r" -p "$res_name" ${e:+-e "$e"} -j "$j" -w "$w" --trim "$g" --flip "$q" --FA "$m" #-o "1" 
+solve_rc=0
+
+python3 -u encode.py -k "$k" -n "$n" -l "$l" -a "$a" -v "$v" -c "$c" -s "$s" -x "$x" -y "$y" -b "$b" -t "$t" -f "$f" -r "$r" -p "$res_name" ${e:+-e "$e"} -j "$j" -w "$w" --trim "$g" --flip "$q" --FA "$m" --rev "$d" --seq "$i" #-o "1"
 if ((p == 0)); then
 python3 -u solve.py  -k "$k" -n "$n" -x "$x" -y "$y" -t "$t" -f "$f" -r "$r" -p "$res_name" ${e:+-e "$e"} -z "$z" -w "$w" -j "$j"
+solve_rc=$?
 fi
 #python3 -u helpers/print_solution.py -k "$k" -n "$n" -f "$PWD/output/$res_name/satOutput.log"
 
-echo "Done."
+cwd=$(pwd)
+rm -rf "${cwd}/output/${res_name}/dimacsFile.knf"
+rm -rf "${cwd}/output/${res_name}/dimacsFile.cnf"
 
+echo "Done."
+exit "$solve_rc"
 # grep -r "Failure" --include="logOutput.log" .

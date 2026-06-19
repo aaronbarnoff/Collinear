@@ -59,12 +59,15 @@ def extract_solution(v, n, k, sat_log_file_path):
 
 
 
-def verify_solution(n, k, points_list):
+def point_is_valid(x, y, n):
+    return x >= 0 and y >= 0 and x + y < n
+
+def verify_solution(n,k,point_list):
     collinear_list = []
-    point_set = set(points_list)
-    
-    for (x1, y1) in points_list:
-        for (x2, y2) in points_list:
+    point_set = set(point_list)
+    seen_lines = set()
+    for (x1, y1) in point_list:
+        for (x2, y2) in point_list:
             if (x1, y1) == (x2, y2):
                 continue
             if (x2 < x1) or (y2 < y1):
@@ -76,50 +79,45 @@ def verify_solution(n, k, points_list):
             m_q = (y2 - y1) // g
 
             tmp_point_list = []
-            count = 0
 
-            # move to first point on the line
+            # move to first point on grid
             x = x1
             y = y1
-            while (x - m_p, y - m_q) in point_set: 
+            while point_is_valid(x - m_p, y - m_q, n): 
                 x -= m_p
                 y -= m_q
 
             # walk forward with reduced step along the line, collect all path-points along it
-            while (x, y) in point_set:
-                count += 1
-                tmp_point_list.append((x, y))
+            while point_is_valid(x,y,n):
+                if (x,y) in point_set:
+                    tmp_point_list.append((x, y))
                 x += m_p
                 y += m_q
 
-            if count >= k:
+            if len(tmp_point_list) >= k:
+                line = tuple(tmp_point_list)
+
                 # print(tmpPointsList)
-                if tmp_point_list not in collinear_list:
+                if line not in seen_lines:
+                    seen_lines.add(line)
                     collinear_list.append(tmp_point_list)
-
-    result = 0
-
+    
     if collinear_list:
         print(f"Failure: {k} or more points found on the same line.")
         for line in collinear_list:
-            (a1, b1) = line[0]
-            (a2, b2) = line[1]
-            if (a2 - a1) == 0:
+            (x1, y1)= line[0]
+            (x2, y2)= line[1]
+            if (x2 - x1) == 0:
                 print('vline. points: ', end="")
-            elif (b2 - b1) == 0:
+            elif (y2 - y1) == 0:
                 print('hline. points: ', end="")
             else:
-                print(f'slope: {((b2 - b1) / (a2 - a1)):.2g}; m_p: {(b2 - b1)}, m_q: {(a2 - a1)}; points: ', end="")
-            for pt in line:
-                (x, y) = pt
+                print(f'slope: {((y2 - y1) / (x2 - x1)):.2g}; m_p: {(y2-y1)}, m_q: {(x2-x1)}; points: ',end="")
+            for points in line:
+                (x, y)=points
                 print(f'({x},{y}) ', end="")
             print("")
-        result = 1
-    else:
-        print("Verification successful.")
-        result = 0
-
-    return result
+    return collinear_list
 
 
 def main():
