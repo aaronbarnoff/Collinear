@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --account=def-cbright
+#SBATCH --account=def-cbright-ab
 #SBATCH --job-name=CUBE_ARRAY
 #SBATCH --cpus-per-task=1
 #mem-per-cpu moved out
@@ -164,8 +164,10 @@ case $SOLVER_EXIT_CODE in
         python3 -u helpers/verify_solution.py -k "$k" -n "$n" -f "$log_dir/pts${points}_task${SLURM_ARRAY_TASK_ID}_solver_log.txt"
         VERIFY_EXIT_CODE=$?
         if (( VERIFY_EXIT_CODE == 0 )); then
-            echo "Solution verified, cancelling remaining cube jobs in array ${SLURM_ARRAY_JOB_ID}..."
+            echo "Solution verified, cancelling remaining cube jobs in array ${SLURM_ARRAY_JOB_ID}..." 
             scancel "${SLURM_ARRAY_JOB_ID}"
+        else
+            echo "Verification failed with exit code $VERIFY_EXIT_CODE"
         fi
         ;;
     20)

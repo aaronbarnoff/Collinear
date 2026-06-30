@@ -131,8 +131,18 @@ def main():
     define_vars(n, v)
 
     points_list = extract_solution(v, n, k, dimacs_file)
-    res = verify_solution(n, k, points_list)
-    return res
+    print(f"Extracted {len(points_list)} path points.")
+    if len(points_list) != n:
+        print(f"Failure: Only found {len(points_list)} points instead of {n}.")
+        return 2
+
+    collinear_list = verify_solution(n, k, points_list)
+
+    if collinear_list:
+        return 1
+    
+    print("Solution verified.")
+    return 0
 
 if __name__ == '__main__':
     sys.exit(main())
