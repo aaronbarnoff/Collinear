@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --account=def-cbright
+#SBATCH --account=def-cbright-ab
 #SBATCH --cpus-per-task=1
 # pulled out mem-per-cpu;
 set -uo pipefail

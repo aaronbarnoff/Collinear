@@ -130,7 +130,9 @@ def solve_regular():
         print(f"SAT {sat_time_wc}s (wall)")
         out_log_file.write(f"SAT {sat_time_wc}s (wall)\n")
         extract_solution()
-        verify_solution(point_list)
+        collinear_list = verify_solution(point_list)
+        if collinear_list:
+            return 30
         return proc.returncode
     elif proc.returncode == 20:
         print(f"UNSAT {sat_time_wc}s")
@@ -319,7 +321,10 @@ def verify_solution(point_list):
                 out_log_file.write(f"({x},{y}) ")
             print("")
             out_log_file.write(f"\n")
+    else:
+        print("Solution verified.")
 
+    return collinear_list
 
 
 def main():
